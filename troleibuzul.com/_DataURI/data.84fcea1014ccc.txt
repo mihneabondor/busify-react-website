@@ -1,1 +1,0 @@
-chrome-extension://majdfhpaihoncoakbjgbdhglocklcgno/ublock/js/vapi-client.js

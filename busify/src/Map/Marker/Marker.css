@@ -1,0 +1,10 @@
+.body {
+  font-size: 22px;
+  width: max-content;
+  height: max-content;
+  color: white;
+  background-color: purple;
+  border-radius: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
