@@ -1,7 +1,7 @@
 .marker {
   display: grid;
   align-items: center;
-  font-size: 20px;
+  font-size: 14px;
   width: max-content;
   height: max-content;
   color: white;
