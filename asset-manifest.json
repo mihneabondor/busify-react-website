@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/busify-react-website/static/css/main.4c936a12.css",
-    "main.js": "/busify-react-website/static/js/main.0edba2e8.js",
+    "main.js": "/busify-react-website/static/js/main.33d9a9ee.js",
     "static/media/logo.svg": "/busify-react-website/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
     "index.html": "/busify-react-website/index.html",
     "main.4c936a12.css.map": "/busify-react-website/static/css/main.4c936a12.css.map",
-    "main.0edba2e8.js.map": "/busify-react-website/static/js/main.0edba2e8.js.map"
+    "main.33d9a9ee.js.map": "/busify-react-website/static/js/main.33d9a9ee.js.map"
   },
   "entrypoints": [
     "static/css/main.4c936a12.css",
-    "static/js/main.0edba2e8.js"
+    "static/js/main.33d9a9ee.js"
   ]
 }
