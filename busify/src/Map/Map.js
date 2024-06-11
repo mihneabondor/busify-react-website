@@ -99,11 +99,13 @@ function Map() {
                             let tripDataVehicle = tripData.find((elem) => elem.trip_id === vehicle.trip_id);
                             let routeDataVehicle = routeData.find((elem) => elem.route_id === vehicle.route_id);
 
-                            let headsign = tripDataVehicle.trip_headsign;
-                            let line = routeDataVehicle.route_short_name;
+                            if (tripDataVehicle && routeDataVehicle) {
+                                let headsign = tripDataVehicle.trip_headsign;
+                                let line = routeDataVehicle.route_short_name;
 
-                            let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude]);
-                            vehicles.push(newVehicle);
+                                let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude]);
+                                vehicles.push(newVehicle);
+                            }
                         }
                     });
 
@@ -161,7 +163,7 @@ function Map() {
 
         setInterval(() => {
             fetchData()
-        }, 15000);
+        }, 5000);
     }, []);
 
     return (
