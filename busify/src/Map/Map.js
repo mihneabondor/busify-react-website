@@ -169,9 +169,8 @@ function Map() {
     return (
         <div className='body'>
             <MapNavbar />
-            <div id='map' className="map-container" style={{ visibility: !loaded ? 'hidden' : 'visible' }}>
-                <Spinner animation="grow" style={{ visibility: loaded ? 'hidden' : 'visible' }} variant='dark' />
-            </div>
+            <div id='map' className="map-container" style={{ visibility: loaded ? 'visible' : 'hidden' }} />
+            <Spinner animation="grow" variant='dark' className='spinner-container' style={{ visibility: !loaded ? 'visible' : 'hidden' }} />
         </div >
     );
 }
