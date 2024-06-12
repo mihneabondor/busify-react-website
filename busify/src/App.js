@@ -8,7 +8,7 @@ function App() {
   const nav = useNavigate();
 
   useEffect(() => {
-    nav('/Map');
+    nav('/map');
   }, []);
   return (
     <div className="App">

@@ -22,7 +22,7 @@ root.render(
       />
       <Route
         exact
-        path="/Map"
+        path="/map"
         element={<Map />}
       />
     </Routes>
