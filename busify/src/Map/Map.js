@@ -34,7 +34,7 @@ function Map() {
         assignBtn.className = 'form-check form-switch';
         assignBtn.innerHTML += '<input class="form-check-input" type="checkbox" role="switch" id="' + switchState;
         assignBtn.innerHTML += 'Linie favorita';
-        divElement.innerHTML = innerHtmlContent;
+        divElement.innerHTML = innerHtmlContent + '<br/>';
         divElement.appendChild(assignBtn);
 
         assignBtn.addEventListener('click', (e) => {
