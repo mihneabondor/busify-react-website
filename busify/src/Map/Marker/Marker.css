@@ -9,3 +9,15 @@
   border-radius: 5px;
   padding: 5px;
 }
+
+.marker-linie-favorita {
+  display: grid;
+  align-items: center;
+  font-size: 14px;
+  width: max-content;
+  height: 30px;
+  color: white;
+  background-color: indigo;
+  border-radius: 5px;
+  padding: 5px;
+}

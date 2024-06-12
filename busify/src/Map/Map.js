@@ -24,12 +24,49 @@ function Map() {
     var loadedFirstTime = false;
 
     const addMarker = (vehicle) => {
+        //popup
+        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div>';
+
+        const divElement = document.createElement('div');
+        const assignBtn = document.createElement('div');
+        const linieFavorita = !(!localStorage.getItem('linii_favorite') || localStorage.getItem('linii_favorite').search(vehicle.line) == -1);
+        const switchState = !linieFavorita ? 'flexSwitchCheckDefault">' : 'flexSwitchCheckChecked" checked>';
+        assignBtn.className = 'form-check form-switch';
+        assignBtn.innerHTML += '<input class="form-check-input" type="checkbox" role="switch" id="' + switchState;
+        assignBtn.innerHTML += 'Linie favorita';
+        divElement.innerHTML = innerHtmlContent;
+        divElement.appendChild(assignBtn);
+
+        assignBtn.addEventListener('click', (e) => {
+            var linii = localStorage.getItem('linii_favorite');
+            if (!linii)
+                linii = '';
+
+            if (linii.search(vehicle.line) != -1) {
+                linii = linii.replace(vehicle.line + ' ', '')
+            } else linii += vehicle.line + ' ';
+
+            localStorage.setItem('linii_favorite', linii)
+
+            if (!localStorage.getItem('linii_favorite_tutorial')) {
+                alert('Schimbarile vor lua efect la urmatorul refresh :)')
+                localStorage.setItem('linii_favorite_tutorial', true)
+            }
+        });
+
+        const popup = new mapboxgl.Popup({
+            offset: 25
+        })
+            .setDOMContent(divElement);
+
+        //marker
         var el = document.createElement('div');
-        el.className = 'marker';
+        el.className = linieFavorita ? 'marker-linie-favorita' : 'marker';
         el.innerHTML = vehicle.line;
 
         const marker = new mapboxgl.Marker(el)
             .setLngLat(vehicle.lngLat)
+            .setPopup(popup)
             .addTo(map);
 
         markers.current.push({ marker, vehicle });
@@ -46,18 +83,18 @@ function Map() {
                 const start = marker.vehicle.lngLat;
 
                 const vehi = vehicles.find(elem => elem.label == marker.vehicle.label);
-                if (vehi == null)
-                    return;
-                const end = vehi.lngLat;
+                if (vehi != null) {
+                    const end = vehi.lngLat;
 
-                const lng = start[0] + (end[0] - start[0]) * progress;
-                const lat = start[1] + (end[1] - start[1]) * progress;
+                    const lng = start[0] + (end[0] - start[0]) * progress;
+                    const lat = start[1] + (end[1] - start[1]) * progress;
 
-                marker.marker.setLngLat([lng, lat]);
-                marker.vehicle.lngLat = [lng, lat];
+                    marker.marker.setLngLat([lng, lat]);
+                    marker.vehicle.lngLat = [lng, lat];
 
-                if (progress < 1) {
-                    requestAnimationFrame(animateMarker);
+                    if (progress < 1) {
+                        requestAnimationFrame(animateMarker);
+                    }
                 }
             };
 
@@ -102,9 +139,10 @@ function Map() {
                             if (tripDataVehicle && routeDataVehicle) {
                                 let headsign = tripDataVehicle.trip_headsign;
                                 let line = routeDataVehicle.route_short_name;
-
-                                let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude]);
-                                vehicles.push(newVehicle);
+                                if (headsign && line) {
+                                    let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude]);
+                                    vehicles.push(newVehicle);
+                                }
                             }
                         }
                     });
