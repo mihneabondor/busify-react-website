@@ -16,6 +16,7 @@ function Map() {
     var defLng = 23.591423;
     var defLat = 46.770439;
     var [lastCoords, setLastCoords] = useState([]);
+    var [lastZoom, setLastZoom] = useState([]);
     var markers = useRef([]);
     let vehicles = new Array();
     const [uniqueLines, setUniqueLines] = useState([]);
@@ -53,7 +54,6 @@ function Map() {
             }
 
             localStorage.setItem('linii_favorite', linii)
-
             if (!localStorage.getItem('linii_favorite_tutorial')) {
                 alert('Schimbarile vor avea efect la urmatorul refresh :)')
                 localStorage.setItem('linii_favorite_tutorial', true)
@@ -209,14 +209,6 @@ function Map() {
         vehicles.forEach(elem => addMarker(elem, true))
     }
 
-    const filtrareLinii = () => {
-        markers.current.forEach(marker => {
-            const line = uniqueLines.find(elem => elem[0] == marker.vehicle.line);
-            marker.marker._element.className += line[1] === true ? ' marker-visible' : ' marker-invisible';
-        })
-        resetMarkers()
-    }
-
     function addSettingsButton() {
         class settingsButton {
             onAdd(map) {
@@ -258,13 +250,14 @@ function Map() {
                 map.flyTo({
                     center: lastCoords,
                     duration: 2000,
+                    zoom: lastZoom,
                     essential: true
                 })
             else geo.trigger();
         });
         map.on('dragend', (e) => {
             setLastCoords(map.getCenter().toArray())
-            console.log(lastCoords)
+            setLastZoom(map.getZoom());
         })
     }
 
@@ -287,7 +280,7 @@ function Map() {
                 show={showSettings}
                 onHide={() => {
                     setShowSettings(false)
-                    filtrareLinii()
+                    resetMarkers()
                     localStorage.setItem('linii_selectate', uniqueLines)
                 }}
                 vehicles={uniqueLines}
