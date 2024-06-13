@@ -6,7 +6,7 @@ function MapNavbar() {
     return (
         <Navbar className="bg-body-tertiary">
             <Container fluid>
-                <Navbar.Brand href="/" style={{ 'padding-left': 10 }}>Busify</Navbar.Brand>
+                <Navbar.Brand href="/" style={{ 'paddingLeft': 10 }}>Busify</Navbar.Brand>
                 <Navbar.Toggle />
                 <Nav className="justify-content-end">
                     <Nav.Link href="/"> Acasă </Nav.Link>

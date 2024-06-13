@@ -21,3 +21,11 @@
   border-radius: 5px;
   padding: 5px;
 }
+
+.marker-invisible {
+  visibility: hidden;
+}
+
+.marker-visible {
+  visibility: visible;
+}
