@@ -268,7 +268,7 @@ function Map() {
 
         setInterval(() => {
             fetchData()
-        }, 5000);
+        }, 2000);
     }, []);
 
     return (
