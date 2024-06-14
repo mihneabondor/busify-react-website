@@ -2,7 +2,7 @@ import MapNavbar from "./MapNavbar";
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './Map.css';
-import { useEffect, useRef, useState, useReducer } from "react";
+import { useEffect, useRef, useState } from "react";
 import './Marker/Marker.css';
 import Spinner from 'react-bootstrap/Spinner';
 import Settings from './Settings';
@@ -11,14 +11,14 @@ import React from 'react';
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
 function Map() {
-    var map = null;
+    var map = useRef();
 
     var defLng = 23.591423;
     var defLat = 46.770439;
     var [lastCoords, setLastCoords] = useState([]);
     var [lastZoom, setLastZoom] = useState([]);
     var markers = useRef([]);
-    let vehicles = new Array();
+    let vehicles = useRef([]);
     const [uniqueLines, setUniqueLines] = useState([]);
     const [allChecked, setCheckAllChecked] = useState(true);
     let unique = [];
@@ -54,10 +54,7 @@ function Map() {
             }
 
             localStorage.setItem('linii_favorite', linii)
-            if (!localStorage.getItem('linii_favorite_tutorial')) {
-                alert('Schimbarile vor avea efect la urmatorul refresh :)')
-                localStorage.setItem('linii_favorite_tutorial', true)
-            }
+            resetMarkers()
         });
 
         const popup = new mapboxgl.Popup({
@@ -67,7 +64,7 @@ function Map() {
 
         //marker
         el.className = linieFavorita ? 'marker-linie-favorita ' : 'marker ';
-        if (reload)
+        if (uniqueLines.length > 0)
             el.className += uniqueLines.find(elem => elem[0] === vehicle.line)[1] ? 'marker-visible' : 'marker-invisible';
         else el.className += unique.find(elem => elem[0] === vehicle.line)[1] ? 'marker-visible' : 'marker-invisible';
         el.innerHTML = vehicle.line;
@@ -75,7 +72,7 @@ function Map() {
         const marker = new mapboxgl.Marker(el)
             .setLngLat(vehicle.lngLat)
             .setPopup(popup)
-            .addTo(map);
+            .addTo(map.current);
 
         markers.current.push({ marker, vehicle });
     };
@@ -90,7 +87,7 @@ function Map() {
 
                 const start = marker.vehicle.lngLat;
 
-                const vehi = vehicles.find(elem => elem.label == marker.vehicle.label);
+                const vehi = vehicles.current.find(elem => elem.label == marker.vehicle.label);
                 if (vehi != null) {
                     const end = vehi.lngLat;
 
@@ -144,7 +141,7 @@ function Map() {
                 try {
                     response = await fetch(url, options);
                     const routeData = await response.json();
-                    vehicles = [];
+                    vehicles.current = [];
                     vehicleData.forEach(vehicle => {
                         if (vehicle.trip_id != null && vehicle.route_id != null) {
 
@@ -156,7 +153,7 @@ function Map() {
                                 let line = routeDataVehicle.route_short_name;
                                 if (headsign && line) {
                                     let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude]);
-                                    vehicles.push(newVehicle);
+                                    vehicles.current.push(newVehicle);
                                 }
                             }
                         }
@@ -165,7 +162,7 @@ function Map() {
                     if (!loaded && !loadedFirstTime) {
                         let s = [];
                         if (localStorage.getItem('linii_selectate')) s = localStorage.getItem('linii_selectate').split(',');
-                        unique = [...new Set(vehicles.map(item => item.line))].sort().map(elem => [elem, true])
+                        unique = [...new Set(vehicles.current.map(item => item.line))].sort().map(elem => [elem, true])
                         let saved = [];
                         for (let i = 0; i < s.length; i += 2)
                             saved.push([s[i], s[i + 1] === 'true']);
@@ -182,7 +179,7 @@ function Map() {
 
                         loadedFirstTime = true
                         setLoaded(true)
-                        vehicles.forEach(elem => { addMarker(elem) })
+                        vehicles.current.forEach(elem => { addMarker(elem) })
                     } else {
                         updateMarker()
                     }
@@ -202,11 +199,10 @@ function Map() {
     }
 
     const resetMarkers = () => {
-        vehicles = markers.current.map(elem => elem.vehicle)
         markers.current.forEach(elem => { elem.marker.remove() })
         markers.current = []
-        generateMap(true)
-        vehicles.forEach(elem => addMarker(elem, true))
+        // generateMap(true)
+        vehicles.current.forEach(elem => addMarker(elem, true))
     }
 
     function addSettingsButton() {
@@ -222,11 +218,11 @@ function Map() {
             }
         }
         const button = new settingsButton();
-        map.addControl(button, "top-right");
+        map.current.addControl(button, "top-right");
     }
 
     const generateMap = (refresh = false) => {
-        map = new mapboxgl.Map({
+        map.current = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/streets-v12',
             center: [defLng, defLat],
@@ -243,11 +239,11 @@ function Map() {
             showAccuracyCircle: true
         })
         addSettingsButton();
-        map.addControl(geo);
-        map.on('load', () => {
+        map.current.addControl(geo);
+        map.current.on('load', () => {
             console.log(lastCoords)
             if (refresh)
-                map.flyTo({
+                map.current.flyTo({
                     center: lastCoords,
                     duration: 2000,
                     zoom: lastZoom,
@@ -255,20 +251,20 @@ function Map() {
                 })
             else geo.trigger();
         });
-        map.on('dragend', (e) => {
-            setLastCoords(map.getCenter().toArray())
-            setLastZoom(map.getZoom());
+        map.current.on('dragend', (e) => {
+            setLastCoords(map.current.getCenter().toArray())
+            setLastZoom(map.current.getZoom());
         })
     }
 
     useEffect(() => {
-        if (map) return;
+        if (map.current) return;
         generateMap()
         fetchData();
 
         setInterval(() => {
             fetchData()
-        }, 2000);
+        }, 5000);
     }, []);
 
     return (
