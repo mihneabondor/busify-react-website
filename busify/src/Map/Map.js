@@ -21,7 +21,7 @@ function Map() {
     let vehicles = useRef([]);
     const [uniqueLines, setUniqueLines] = useState([]);
     const [allChecked, setCheckAllChecked] = useState(true);
-    let unique = [];
+    let unique = useRef([]);
 
     const [loaded, setLoaded] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
@@ -64,9 +64,7 @@ function Map() {
 
         //marker
         el.className = linieFavorita ? 'marker-linie-favorita ' : 'marker ';
-        if (uniqueLines.length > 0)
-            el.className += uniqueLines.find(elem => elem[0] === vehicle.line)[1] ? 'marker-visible' : 'marker-invisible';
-        else el.className += unique.find(elem => elem[0] === vehicle.line)[1] ? 'marker-visible' : 'marker-invisible';
+        el.className += unique.current.find(elem => elem[0] === vehicle.line)[1] ? 'marker-visible' : 'marker-invisible';
         el.innerHTML = vehicle.line;
 
         const marker = new mapboxgl.Marker(el)
@@ -112,6 +110,10 @@ function Map() {
             if (arr[i][0] === target)
                 return i
         return -1;
+    }
+
+    const lineExistsInSchedules = (line) => {
+
     }
 
     const fetchData = async () => {
@@ -162,24 +164,48 @@ function Map() {
                     if (!loaded && !loadedFirstTime) {
                         let s = [];
                         if (localStorage.getItem('linii_selectate')) s = localStorage.getItem('linii_selectate').split(',');
-                        unique = [...new Set(vehicles.current.map(item => item.line))].sort().map(elem => [elem, true])
+                        // unique.current = [...new Set(vehicles.current.map(item => item.line))].sort().map(elem => [elem, true])
+
+                        try {
+                            const resp = await fetch('https://orare.busify.ro/public/buses_basic.json');
+                            const buses_basic = await resp.json();
+                            const joinArray = (arr) => {
+                                arr.forEach(elem => {
+                                    unique.current.push([elem.name, true])
+                                })
+                            }
+                            joinArray(buses_basic.urbane)
+                            joinArray(buses_basic.metropolitane)
+                            joinArray(buses_basic.market)
+                        } catch (err) {
+                            console.log(err)
+                        }
+                        // console.log(unique.current)
+
                         let saved = [];
                         for (let i = 0; i < s.length; i += 2)
                             saved.push([s[i], s[i + 1] === 'true']);
 
                         for (let i = 0; i < saved.length; i++) {
-                            let index = getIndex(saved[i][0], unique)
+                            let index = getIndex(saved[i][0], unique.current)
                             if (index != -1) {
-                                unique[index][1] = saved[i][1];
+                                unique.current[index][1] = saved[i][1];
                                 if (saved[i][1] === false)
                                     setCheckAllChecked(false)
                             }
                         }
-                        setUniqueLines(unique)
-
+                        setUniqueLines(unique.current)
                         loadedFirstTime = true
                         setLoaded(true)
-                        vehicles.current.forEach(elem => { addMarker(elem) })
+                        vehicles.current.forEach(elem => {
+                            let exista = false
+                            unique.current.forEach((uniqueLine) => {
+                                if (uniqueLine[0] === elem.line)
+                                    exista = true
+                            })
+                            if (exista)
+                                addMarker(elem)
+                        })
                     } else {
                         updateMarker()
                     }
@@ -201,8 +227,15 @@ function Map() {
     const resetMarkers = () => {
         markers.current.forEach(elem => { elem.marker.remove() })
         markers.current = []
-        // generateMap(true)
-        vehicles.current.forEach(elem => addMarker(elem, true))
+        vehicles.current.forEach(elem => {
+            let exista = false
+            unique.current.forEach((uniqueLine) => {
+                if (uniqueLine[0] === elem.line)
+                    exista = true
+            })
+            if (exista)
+                addMarker(elem)
+        })
     }
 
     function addSettingsButton() {
@@ -276,6 +309,7 @@ function Map() {
                 show={showSettings}
                 onHide={() => {
                     setShowSettings(false)
+                    unique.current = uniqueLines
                     resetMarkers()
                     localStorage.setItem('linii_selectate', uniqueLines)
                 }}

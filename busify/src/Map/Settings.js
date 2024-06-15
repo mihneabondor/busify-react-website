@@ -21,9 +21,9 @@ function Settings(props) {
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <Accordion defaultActiveKey="0">
+                <Accordion>
                     <Accordion.Item eventKey="0">
-                        <Accordion.Header>Filtreaza linii</Accordion.Header>
+                        <Accordion.Header>Ascunde linii</Accordion.Header>
                         <Accordion.Body>
                             <Form>
                                 <div className="mb-3">
