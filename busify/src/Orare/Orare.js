@@ -11,6 +11,7 @@ function Orare() {
     const searchValueRef = useRef();
     const [lines, setLines] = useState([]);
     const linesRef = useRef();
+    const copie = useRef();
     const nav = useNavigate();
 
     const search = (e) => {
@@ -36,8 +37,19 @@ function Orare() {
             joinArray(buses_basic.market)
             setLines(sol)
             linesRef.current = sol
+            copie.current = sol
         } catch (err) {
             console.log(err)
+        }
+    }
+
+    const change = (e) => {
+        if (searchValueRef.current.value === '') {
+            linesRef.current = copie.current
+            setLines(linesRef.current)
+        } else {
+            linesRef.current = linesRef.current.filter(elem => elem.name.includes(searchValueRef.current.value))
+            setLines(linesRef.current)
         }
     }
 
@@ -45,14 +57,14 @@ function Orare() {
         fetchData()
     }, [])
     return (
-        <div style={{ backgroundColor: 'lightgray' }}>
+        <div style={{ backgroundColor: 'lightgray', height: '100vh' }}>
             <MapNavbar />
             <div className='orare-body-container'>
                 <br />
                 <div className='orare-content-container'>
                     <h4>Orarele liniilor CTP Cluj</h4>
                     <br />
-                    <Form onSubmit={(e) => search(e)}>
+                    <Form onSubmit={(e) => search(e)} onChange={(e) => change(e)}>
                         <InputGroup className="mb-3">
                             <Form.Control
                                 placeholder="Cauta o linie"
@@ -63,14 +75,19 @@ function Orare() {
                             <Button type='submit' className='orare-search-button' id="button-addon2"> Cautare </Button>
                         </InputGroup>
                     </Form>
-                    <ListGroup>
+                    <ListGroup style={{ overflow: 'auto', height: '65vh' }}>
                         {lines.map((line) => (
-                            <ListGroup.Item className='orare-cell' onClick={() => {
-                                let url = '/orar/' + line.name;
-                                nav(url);
-                            }}>
-                                <p> <b>Linia {line.name}</b> </p>
-                                <p>{line.route}</p>
+                            <ListGroup.Item
+                                className="d-flex justify-content-between align-items-start orare-cell"
+                                onClick={() => {
+                                    let url = '/orar/' + line.name
+                                    nav(url)
+                                }}
+                            >
+                                <div className="ms-2 me-auto">
+                                    <div className="fw-bold">Linia {line.name}</div>
+                                    {line.route}
+                                </div>
                             </ListGroup.Item>
                         ))}
                     </ListGroup>

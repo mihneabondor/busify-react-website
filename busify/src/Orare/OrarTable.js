@@ -22,7 +22,7 @@ function OrarTable(props) {
     return (
         <div className='orar-table'>
             {typeof (props.orar) !== 'undefined' ?
-                <Table striped>
+                <Table striped bordered>
                     <thead>
                         <tr>
                             <th>{props.orar.in_stop_name}</th>

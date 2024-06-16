@@ -18,3 +18,7 @@ thead th {
  z-index: 1;
 }
 
+td, th {
+  text-align: center;
+}
+

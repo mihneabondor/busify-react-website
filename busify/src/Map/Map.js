@@ -29,15 +29,14 @@ function Map() {
 
     const addMarker = (vehicle, reload = false) => {
         //popup
-        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div>';
+        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orar/' + vehicle.line + '">Vezi orar</a>';
 
         const divElement = document.createElement('div');
         const assignBtn = document.createElement('div');
         const linieFavorita = !(!localStorage.getItem('linii_favorite') || (' ' + localStorage.getItem('linii_favorite') + ' ').search(' ' + vehicle.line + ' ') == -1);
         const switchState = !linieFavorita ? 'flexSwitchCheckDefault">' : 'flexSwitchCheckChecked" checked>';
         assignBtn.className = 'form-check form-switch';
-        assignBtn.innerHTML += '<input class="form-check-input" type="checkbox" role="switch" id="' + switchState;
-        assignBtn.innerHTML += 'Linie favorita';
+        assignBtn.innerHTML += '<input class="form-check-input" type="checkbox" role="switch" id="' + switchState + 'Linie favorita</input>';
         divElement.innerHTML = innerHtmlContent;
         divElement.appendChild(assignBtn);
 
@@ -94,6 +93,7 @@ function Map() {
 
                     marker.marker.setLngLat([lng, lat]);
                     marker.vehicle.lngLat = [lng, lat];
+                    marker.marker.innerHTML = marker.vehicle.line
 
                     if (progress < 1) {
                         requestAnimationFrame(animateMarker);

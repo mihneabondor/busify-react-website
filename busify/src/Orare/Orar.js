@@ -4,11 +4,15 @@ import { useState, useEffect, useRef } from 'react';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import OrarTable from './OrarTable';
+import Button from 'react-bootstrap/Button';
+import { useNavigate } from "react-router-dom";
 
 function Orar(props) {
     const [page, setPage] = useState('lv');
     const orarFullRef = useRef();
     const [orar, setOrar] = useState();
+
+    const nav = useNavigate();
 
     const fetchData = async () => {
         try {
@@ -43,6 +47,7 @@ function Orar(props) {
     return (
         <div>
             <MapNavbar />
+            <Button variant="outline-primary" style={{ margin: 10 }} onClick={() => nav(-1)}> {'< Inapoi'} </Button>
             <div className='orar-body'>
                 <br />
                 <h3>Orarul liniei {props.vehicle.name}</h3>
