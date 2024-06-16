@@ -1,4 +1,4 @@
-import MapNavbar from "./MapNavbar";
+import MapNavbar from "../MapNavbar";
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './Map.css';

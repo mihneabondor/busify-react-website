@@ -9,8 +9,8 @@ function MapNavbar() {
                 <Navbar.Brand href="/" style={{ 'paddingLeft': 10 }}>Busify</Navbar.Brand>
                 <Navbar.Toggle />
                 <Nav className="justify-content-end">
-                    <Nav.Link href="/"> Acasă </Nav.Link>
-                    <Nav.Link href="/"> Orare </Nav.Link>
+                    <Nav.Link href="/map"> Hartă </Nav.Link>
+                    <Nav.Link href="/orare"> Orare </Nav.Link>
                 </Nav>
             </Container>
         </Navbar>

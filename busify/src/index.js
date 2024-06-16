@@ -9,8 +9,12 @@ import {
   Routes,
   Route,
 } from "react-router-dom";
+import Orare from './Orare/Orare';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+const orareRoutes = () => {
+
+}
 root.render(
   <React.StrictMode>
     <BrowserRouter>
@@ -24,6 +28,11 @@ root.render(
           exact
           path="/map"
           element={<Map />}
+        />
+        <Route
+          exact
+          path="/orare"
+          element={<Orare />}
         />
       </Routes>
     </BrowserRouter>
