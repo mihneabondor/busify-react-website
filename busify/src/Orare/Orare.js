@@ -5,14 +5,20 @@ import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import { useState, useRef, useEffect } from 'react'
 import ListGroup from 'react-bootstrap/ListGroup'
+import { useNavigate } from "react-router-dom";
 
 function Orare() {
     const searchValueRef = useRef();
     const [lines, setLines] = useState([]);
     const linesRef = useRef();
+    const nav = useNavigate();
 
     const search = (e) => {
         e.preventDefault();
+        if (linesRef.current.find(elem => elem.name === searchValueRef.current.value)) {
+            let url = '/orar/' + searchValueRef.current.value;
+            nav(url);
+        } else alert('Linia pe care ai introdus-o nu exista!')
     }
 
     const fetchData = async () => {
@@ -59,7 +65,10 @@ function Orare() {
                     </Form>
                     <ListGroup>
                         {lines.map((line) => (
-                            <ListGroup.Item className='orare-cell' onClick={() => { window.location.href += '/' + line.name }}>
+                            <ListGroup.Item className='orare-cell' onClick={() => {
+                                let url = '/orar/' + line.name;
+                                nav(url);
+                            }}>
                                 <p> <b>Linia {line.name}</b> </p>
                                 <p>{line.route}</p>
                             </ListGroup.Item>

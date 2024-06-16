@@ -10,11 +10,28 @@ import {
   Route,
 } from "react-router-dom";
 import Orare from './Orare/Orare';
+import Orar from './Orare/Orar';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-const orareRoutes = () => {
-
+const fetchData = async () => {
+  try {
+    const resp = await fetch('https://orare.busify.ro/public/buses_basic.json');
+    const buses_basic = await resp.json();
+    const sol = []
+    const joinArray = (arr) => {
+      arr.forEach(elem => {
+        sol.push(elem)
+      })
+    }
+    joinArray(buses_basic.urbane)
+    joinArray(buses_basic.metropolitane)
+    joinArray(buses_basic.market)
+    return sol
+  } catch (err) {
+    console.log(err)
+  }
 }
+const vehicles = await fetchData();
 root.render(
   <React.StrictMode>
     <BrowserRouter>
@@ -34,6 +51,13 @@ root.render(
           path="/orare"
           element={<Orare />}
         />
+        {vehicles.map(elem => (
+          <Route
+            exact
+            path={'/orar/' + elem.name}
+            element={<Orar vehicle={elem} />}
+          />
+        ))}
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
