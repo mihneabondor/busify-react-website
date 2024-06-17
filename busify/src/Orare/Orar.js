@@ -23,7 +23,6 @@ function Orar(props) {
             orarFullRef.current.station.d.lines = orarFullRef.current.station.d.lines.filter(elem => elem[0] || elem[1])
             orarFullRef.current.station.lv.lines = orarFullRef.current.station.lv.lines.filter(elem => elem[0] || elem[1])
             orarFullRef.current.station.s.lines = orarFullRef.current.station.s.lines.filter(elem => elem[0] || elem[1])
-
             const weekday = (new Date()).getDay();
             if (weekday === 0) {
                 setPage('d')

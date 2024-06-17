@@ -44,11 +44,10 @@ function Orare() {
     }
 
     const change = (e) => {
-        if (searchValueRef.current.value === '') {
-            linesRef.current = copie.current
-            setLines(linesRef.current)
-        } else {
-            linesRef.current = linesRef.current.filter(elem => elem.name.includes(searchValueRef.current.value))
+        linesRef.current = copie.current
+        setLines(linesRef.current)
+        if (searchValueRef.current.value !== '') {
+            linesRef.current = linesRef.current.filter(elem => elem.name.includes(searchValueRef.current.value.toUpperCase()))
             setLines(linesRef.current)
         }
     }

@@ -3,6 +3,7 @@ import Table from 'react-bootstrap/Table';
 function OrarTable(props) {
     function minutesUntilCurrentTime(timeString) {
         if (typeof (timeString) !== 'undefined') {
+            timeString = timeString.replace('🚲', '')
             const [inputHours, inputMinutes] = timeString.split(':').map(Number);
 
             const now = new Date();
@@ -31,7 +32,7 @@ function OrarTable(props) {
                     </thead>
                     <tbody>
                         {props.orar.lines.map((elem, index) => (
-                            <tr ref={props.orar.lines[index]}>
+                            <tr>
                                 <td style={{ color: minutesUntilCurrentTime(elem[0]) < 0 ? 'gray' : 'black', fontWeight: minutesUntilCurrentTime(elem[0]) <= 15 && minutesUntilCurrentTime(elem[0]) >= 0 ? 'bold' : 'initial' }}>{elem[0]}</td>
                                 <td style={{ color: minutesUntilCurrentTime(elem[1]) < 0 ? 'gray' : 'black', fontWeight: minutesUntilCurrentTime(elem[1]) <= 15 && minutesUntilCurrentTime(elem[1]) >= 0 ? 'bold' : 'initial' }}>{elem[1]}</td>
                             </tr>

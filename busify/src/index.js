@@ -26,39 +26,43 @@ const fetchData = async () => {
     joinArray(buses_basic.urbane)
     joinArray(buses_basic.metropolitane)
     joinArray(buses_basic.market)
-    return sol
+    // return sol
+    root.render(
+      <React.StrictMode>
+        <BrowserRouter>
+          <Routes>
+            <Route
+              exact
+              path="/"
+              element={<App />}
+            />
+            <Route
+              exact
+              path="/map"
+              element={<Map />}
+            />
+            <Route
+              exact
+              path="/orare"
+              element={<Orare />}
+            />
+            {sol.map(elem => (
+              <Route
+                exact
+                path={'/orar/' + elem.name}
+                element={<Orar vehicle={elem} />}
+              />
+            ))}
+          </Routes>
+        </BrowserRouter>
+      </React.StrictMode>
+    );
   } catch (err) {
     console.log(err)
   }
 }
-const vehicles = await fetchData();
+
 root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route
-          exact
-          path="/"
-          element={<App />}
-        />
-        <Route
-          exact
-          path="/map"
-          element={<Map />}
-        />
-        <Route
-          exact
-          path="/orare"
-          element={<Orare />}
-        />
-        {vehicles.map(elem => (
-          <Route
-            exact
-            path={'/orar/' + elem.name}
-            element={<Orar vehicle={elem} />}
-          />
-        ))}
-      </Routes>
-    </BrowserRouter>
-  </React.StrictMode>
-);
+  <div>Se incarca...</div>
+)
+fetchData();
