@@ -62,7 +62,7 @@ const fetchData = async () => {
   }
 }
 
-root.render(
-  <div>Se incarca...</div>
-)
+// root.render(
+//   <div>Se incarca...</div>
+// )
 fetchData();
