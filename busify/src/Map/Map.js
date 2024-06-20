@@ -2,7 +2,7 @@ import MapNavbar from "../MapNavbar";
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './Map.css';
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import './Marker/Marker.css';
 import Spinner from 'react-bootstrap/Spinner';
 import Settings from './Settings';
@@ -15,8 +15,8 @@ function Map() {
 
     var defLng = 23.591423;
     var defLat = 46.770439;
-    var [lastCoords, setLastCoords] = useState([]);
-    var [lastZoom, setLastZoom] = useState([]);
+    var lastCoords = useRef([defLng, defLat]);
+    var lastZoom = useRef(12)
     var markers = useRef([]);
     let vehicles = useRef([]);
     const [uniqueLines, setUniqueLines] = useState([]);
@@ -26,6 +26,9 @@ function Map() {
     const [loaded, setLoaded] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     var loadedFirstTime = false;
+
+    var shapeExtremitiesRef = useRef();
+    var popupOpen = useRef(false);
 
     const addMarker = (vehicle, reload = false) => {
         //popup
@@ -60,6 +63,21 @@ function Map() {
             offset: 25
         })
             .setDOMContent(divElement);
+        popup.closeOnClick = false;
+        popup.on('close', () => {
+            removePolyline()
+            popupOpen.current = false
+            map.current.flyTo({
+                center: lastCoords.current,
+                duration: 2000,
+                zoom: lastZoom.current,
+                essential: true
+            })
+        })
+        popup.on('open', () => {
+            addPolyline(vehicle)
+            popupOpen.current = true
+        })
 
         //marker
         el.className = linieFavorita ? 'marker-linie-favorita ' : 'marker ';
@@ -112,10 +130,6 @@ function Map() {
         return -1;
     }
 
-    const lineExistsInSchedules = (line) => {
-
-    }
-
     const fetchData = async () => {
 
         var url = 'https://api.tranzy.ai/v1/opendata/vehicles';
@@ -154,7 +168,7 @@ function Map() {
                                 let headsign = tripDataVehicle.trip_headsign;
                                 let line = routeDataVehicle.route_short_name;
                                 if (headsign && line) {
-                                    let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude]);
+                                    let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude], tripDataVehicle.trip_id);
                                     vehicles.current.push(newVehicle);
                                 }
                             }
@@ -180,7 +194,6 @@ function Map() {
                         } catch (err) {
                             console.log(err)
                         }
-                        // console.log(unique.current)
 
                         let saved = [];
                         for (let i = 0; i < s.length; i += 2)
@@ -274,21 +287,189 @@ function Map() {
         addSettingsButton();
         map.current.addControl(geo);
         map.current.on('load', () => {
-            console.log(lastCoords)
             if (refresh)
                 map.current.flyTo({
-                    center: lastCoords,
+                    center: lastCoords.current,
                     duration: 2000,
-                    zoom: lastZoom,
+                    zoom: lastZoom.current,
                     essential: true
                 })
             else geo.trigger();
         });
         map.current.on('dragend', (e) => {
-            setLastCoords(map.current.getCenter().toArray())
-            setLastZoom(map.current.getZoom());
+            lastCoords.current = map.current.getCenter().toArray();
+            lastZoom.current = map.current.getZoom();
         })
     }
+
+    const addPolyline = useCallback(async (vehicle) => {
+        if (!map.current.getSource('route')) {
+            try {
+                var url = 'https://api.tranzy.ai/v1/opendata/shapes?shape_id=' + vehicle.tripId;
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'X-Agency-Id': '2',
+                        Accept: 'application/json',
+                        'X-API-KEY': 'ksRfq3mejazGhBobQYkPrgAUfnFaClVcgTa0eIlJ'
+                    }
+                };
+
+                var response = await fetch(url, options);
+                const shapeData = await response.json();
+
+                const polylineCoordinates = shapeData.map((elem) => [elem.shape_pt_lon, elem.shape_pt_lat])
+                let last = polylineCoordinates.length - 1
+                shapeExtremitiesRef.current = [(vehicle.lngLat[0] + polylineCoordinates[last][0]) / 2, (vehicle.lngLat[1] + polylineCoordinates[last][1]) / 2]
+                console.log()
+                if (popupOpen.current) {
+                    map.current.flyTo({
+                        center: shapeExtremitiesRef.current,
+                        duration: 2000,
+                        zoom: 13,
+                        essential: true
+                    })
+
+                    map.current.addSource('route', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'Feature',
+                            'properties': {},
+                            'geometry': {
+                                'type': 'LineString',
+                                'coordinates': polylineCoordinates
+                            }
+                        }
+                    });
+
+                    map.current.addLayer({
+                        'id': 'route',
+                        'type': 'line',
+                        'source': 'route',
+                        'layout': {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        'paint': {
+                            'line-color': '#888',
+                            'line-width': 5
+                        }
+                    });
+
+                    const size = 125;
+                    const pulsingDot = {
+                        width: size,
+                        height: size,
+                        data: new Uint8Array(size * size * 4),
+
+                        // When the layer is added to the map,
+                        // get the rendering context for the map canvas.
+                        onAdd: function () {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = this.width;
+                            canvas.height = this.height;
+                            this.context = canvas.getContext('2d');
+                        },
+
+                        // Call once before every frame where the icon will be used.
+                        render: function () {
+                            const duration = 1000;
+                            const t = (performance.now() % duration) / duration;
+
+                            const radius = (size / 2) * 0.3;
+                            const outerRadius = (size / 2) * 0.7 * t + radius;
+                            const context = this.context;
+
+                            // Draw the outer circle.
+                            context.clearRect(0, 0, this.width, this.height);
+                            context.beginPath();
+                            context.arc(
+                                this.width / 2,
+                                this.height / 2,
+                                outerRadius,
+                                0,
+                                Math.PI * 2
+                            );
+                            context.fillStyle = `rgba(128, 0, 128, ${1 - t})`;
+                            context.fill();
+
+                            // Draw the inner circle.
+                            context.beginPath();
+                            context.arc(
+                                this.width / 2,
+                                this.height / 2,
+                                radius,
+                                0,
+                                Math.PI * 2
+                            );
+                            context.fillStyle = 'rgba(128, 0, 128)'; // 
+                            context.strokeStyle = 'white';
+                            context.lineWidth = 2 + 4 * (1 - t);
+                            context.fill();
+                            context.stroke();
+
+                            // Update this image's data with data from the canvas.
+                            this.data = context.getImageData(
+                                0,
+                                0,
+                                this.width,
+                                this.height
+                            ).data;
+
+                            // Continuously repaint the map, resulting
+                            // in the smooth animation of the dot.
+                            map.current.triggerRepaint();
+
+                            // Return `true` to let the map know that the image was updated.
+                            return true;
+                        }
+                    };
+
+                    map.current.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
+
+                    map.current.addSource('dot-point', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'FeatureCollection',
+                            'features': [
+                                {
+                                    'type': 'Feature',
+                                    'geometry': {
+                                        'type': 'Point',
+                                        'coordinates': polylineCoordinates[last]
+                                    }
+                                }
+                            ]
+                        }
+                    });
+
+                    map.current.addLayer({
+                        'id': 'layer-with-pulsing-dot',
+                        'type': 'symbol',
+                        'source': 'dot-point',
+                        'layout': {
+                            'icon-image': 'pulsing-dot'
+                        }
+                    });
+                }
+            } catch { }
+        }
+    }, []);
+
+    const removePolyline = useCallback(() => {
+        if (map.current.getLayer('route')) {
+            map.current.removeLayer('route');
+        }
+        if (map.current.getSource('route')) {
+            map.current.removeSource('route');
+        }
+        if (map.current.getLayer('layer-with-pulsing-dot')) {
+            map.current.removeLayer('layer-with-pulsing-dot');
+        }
+        if (map.current.getSource('dot-point')) {
+            map.current.removeSource('dot-point');
+        }
+    }, []);
 
     useEffect(() => {
         if (map.current) return;
@@ -325,10 +506,11 @@ function Map() {
 export default Map;
 
 class Vehicle {
-    constructor(label, line, headsign, lngLat) {
+    constructor(label, line, headsign, lngLat, tripId) {
         this.label = label;
         this.line = line;
         this.headsign = headsign;
         this.lngLat = lngLat;
+        this.tripId = tripId
     }
 }

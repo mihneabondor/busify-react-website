@@ -8,6 +8,7 @@ import {
   BrowserRouter,
   Routes,
   Route,
+  Navigate
 } from "react-router-dom";
 import Orare from './Orare/Orare';
 import Orar from './Orare/Orar';
@@ -53,6 +54,7 @@ const fetchData = async () => {
                 element={<Orar vehicle={elem} />}
               />
             ))}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </BrowserRouter>
       </React.StrictMode>
@@ -62,7 +64,7 @@ const fetchData = async () => {
   }
 }
 
-// root.render(
-//   <div>Se incarca...</div>
-// )
+root.render(
+  <div>Se incarca...</div>
+)
 fetchData();
