@@ -63,7 +63,7 @@ function Orare() {
                 <div className='orare-content-container'>
                     <h4>Orarele liniilor CTP Cluj</h4>
                     <br />
-                    <Form onSubmit={(e) => search(e)} onChange={(e) => change(e)}>
+                    <Form onChange={(e) => change(e)}>
                         <InputGroup className="mb-3">
                             <Form.Control
                                 placeholder="Cauta o linie"

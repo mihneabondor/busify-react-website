@@ -44,6 +44,16 @@ const fetchData = async () => {
             />
             <Route
               exact
+              path="/harta"
+              element={<Map />}
+            />
+            <Route
+              exact
+              path="/map/undemibusu"
+              element={<Map />}
+            />
+            <Route
+              exact
               path="/orare"
               element={<Orare />}
             />

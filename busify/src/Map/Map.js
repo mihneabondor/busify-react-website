@@ -7,6 +7,7 @@ import './Marker/Marker.css';
 import Spinner from 'react-bootstrap/Spinner';
 import Settings from './Settings';
 import React from 'react';
+import Undemibusu from "./Undemibusu.js";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
@@ -29,6 +30,9 @@ function Map() {
 
     var shapeExtremitiesRef = useRef();
     var popupOpen = useRef(false);
+
+    const [showUndemibusu, setShowUndemibusu] = useState(false);
+    var undemibususearchref = useRef();
 
     const addMarker = (vehicle, reload = false) => {
         //popup
@@ -67,12 +71,6 @@ function Map() {
         popup.on('close', () => {
             removePolyline()
             popupOpen.current = false
-            map.current.flyTo({
-                center: lastCoords.current,
-                duration: 2000,
-                zoom: lastZoom.current,
-                essential: true
-            })
         })
         popup.on('open', () => {
             addPolyline(vehicle)
@@ -219,6 +217,8 @@ function Map() {
                             if (exista)
                                 addMarker(elem)
                         })
+                        if (window.location.pathname.search('undemibusu') !== -1)
+                            setShowUndemibusu(true)
                     } else {
                         updateMarker()
                     }
@@ -457,17 +457,30 @@ function Map() {
     }, []);
 
     const removePolyline = useCallback(() => {
+        let hasSomething = false;
         if (map.current.getLayer('route')) {
             map.current.removeLayer('route');
+            hasSomething = true
         }
         if (map.current.getSource('route')) {
             map.current.removeSource('route');
+            hasSomething = true
         }
         if (map.current.getLayer('layer-with-pulsing-dot')) {
             map.current.removeLayer('layer-with-pulsing-dot');
+            hasSomething = true
         }
         if (map.current.getSource('dot-point')) {
             map.current.removeSource('dot-point');
+            hasSomething = true
+        }
+        if (hasSomething) {
+            map.current.flyTo({
+                center: lastCoords.current,
+                duration: 2000,
+                zoom: lastZoom.current,
+                essential: true
+            })
         }
     }, []);
 
@@ -499,6 +512,24 @@ function Map() {
                 selectAllCheck={allChecked}
                 setChecked={setCheckAllChecked}
             />
+            <Undemibusu
+                show={showUndemibusu}
+                undemibususearchref={undemibususearchref}
+                onHide={() => {
+                    setShowUndemibusu(false)
+
+                    let oneMatch = false;
+                    unique.current = unique.current.map((elem) => [elem[0], elem[0] === undemibususearchref.current.value])
+                    unique.current.forEach(elem => {
+                        if (elem[1]) oneMatch = true
+                    });
+                    if (!oneMatch)
+                        unique.current = unique.current.map(elem => [elem[0], true]);
+
+                    setUniqueLines(unique.current)
+                    setCheckAllChecked(false)
+                    resetMarkers();
+                }} />
         </div >
     );
 }
