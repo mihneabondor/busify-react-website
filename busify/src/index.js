@@ -49,7 +49,7 @@ const fetchData = async () => {
             />
             <Route
               exact
-              path="/map/undemibusu"
+              path="/map/:undemibusu"
               element={<Map />}
             />
             <Route
@@ -60,7 +60,7 @@ const fetchData = async () => {
             {sol.map(elem => (
               <Route
                 exact
-                path={'/orar/' + elem.name}
+                path={'/orar/:linie'}
                 element={<Orar vehicle={elem} />}
               />
             ))}

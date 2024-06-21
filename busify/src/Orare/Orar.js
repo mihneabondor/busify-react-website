@@ -6,17 +6,20 @@ import Tabs from 'react-bootstrap/Tabs';
 import OrarTable from './OrarTable';
 import Button from 'react-bootstrap/Button';
 import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 function Orar(props) {
     const [page, setPage] = useState('lv');
     const orarFullRef = useRef();
     const [orar, setOrar] = useState();
+    const { linie } = useParams();
+    const [route, setRoute] = useState();
 
     const nav = useNavigate();
 
     const fetchData = async () => {
         try {
-            const url = 'https://orare.busify.ro/public/' + props.vehicle.name + '.json'
+            const url = 'https://orare.busify.ro/public/' + linie + '.json'
             const resp = await fetch(url)
             const data = await resp.json();
             orarFullRef.current = data;
@@ -35,22 +38,23 @@ function Orar(props) {
                 setPage('lv')
                 setOrar(orarFullRef.current.station.lv);
             }
+            setRoute(data.route);
+
         } catch (err) {
             console.log(err)
         }
     }
-
     useEffect(() => {
         fetchData()
     }, [])
     return (
         <div>
             <MapNavbar />
-            <Button variant="outline-primary" style={{ margin: 10 }} onClick={() => nav(-1)}> {'< Inapoi'} </Button>
+            <Button variant="outline-primary" style={{ margin: 10 }} onClick={() => nav('/map')}> {'< Inapoi'} </Button>
             <div className='orar-body'>
                 <br />
-                <h3>Orarul liniei {props.vehicle.name}</h3>
-                <h4>{props.vehicle.route}</h4>
+                <h3>Orarul liniei {linie}</h3>
+                <h4>{route}</h4>
                 <br />
                 <div className='orar-container'>
                     <Tabs

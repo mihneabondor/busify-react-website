@@ -8,6 +8,8 @@ import Spinner from 'react-bootstrap/Spinner';
 import Settings from './Settings';
 import React from 'react';
 import Undemibusu from "./Undemibusu.js";
+import { useParams } from 'react-router-dom';
+import UndemibusuToast from "./UndemibusuToast.js";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
@@ -33,6 +35,8 @@ function Map() {
 
     const [showUndemibusu, setShowUndemibusu] = useState(false);
     var undemibususearchref = useRef();
+    const { undemibusu } = useParams();
+    const [showUndemibusuToast, setShowUndemibusuToast] = useState(false);
 
     const addMarker = (vehicle, reload = false) => {
         //popup
@@ -217,7 +221,7 @@ function Map() {
                             if (exista)
                                 addMarker(elem)
                         })
-                        if (window.location.pathname.search('undemibusu') !== -1)
+                        if (undemibusu !== undefined)
                             setShowUndemibusu(true)
                     } else {
                         updateMarker()
@@ -525,9 +529,19 @@ function Map() {
                     });
                     if (!oneMatch)
                         unique.current = unique.current.map(elem => [elem[0], true]);
+                    else setShowUndemibusuToast(true);
 
                     setUniqueLines(unique.current)
-                    setCheckAllChecked(false)
+                    setCheckAllChecked(!oneMatch)
+                    resetMarkers();
+                }} />
+            <UndemibusuToast
+                show={showUndemibusuToast}
+                onHide={() => {
+                    setShowUndemibusuToast(false)
+                    unique.current = unique.current.map(elem => [elem[0], true]);
+                    setUniqueLines(unique.current)
+                    setCheckAllChecked(true)
                     resetMarkers();
                 }} />
         </div >
