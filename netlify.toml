@@ -1,7 +1,0 @@
-[[redirects]]
-from = "/*"
-to = "/"
-
-[[redirects]]
-from = "/orare/*"
-to = "/orare/:splat"
