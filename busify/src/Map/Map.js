@@ -482,7 +482,7 @@ function Map() {
             map.current.removeSource('dot-point');
             hasSomething = true
         }
-        if (hasSomething) {
+        if (hasSomething && lastCoords.current[0] !== defLng && lastCoords.current[1] !== defLat) {
             map.current.flyTo({
                 center: lastCoords.current,
                 duration: 2000,

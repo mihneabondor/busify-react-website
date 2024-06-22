@@ -1,9 +1,10 @@
 import Table from 'react-bootstrap/Table';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 function OrarTable(props) {
     let scrollToRef = useRef(null)
     let firstElemRef = useRef(null)
+    let [firstElem, setFirstElem] = useState(null)
 
     function minutesUntilCurrentTime(timeString) {
         if (typeof (timeString) !== 'undefined') {
@@ -32,20 +33,20 @@ function OrarTable(props) {
     }
 
     useEffect(() => {
-        if (typeof (props.orar) !== 'undefined' && !firstElemRef.current) {
-            firstElemRef.current = getFirstElemInSchedule();
+        if (typeof (props.orar) !== 'undefined' && typeof (props.orar.lines) !== 'undefined') {
+            setFirstElem(getFirstElemInSchedule());
             setTimeout(() => {
                 if (scrollToRef.current) {
                     scrollToRef.current.scrollIntoView({ behavior: 'smooth', block: "start", inline: "nearest" });
                 }
                 console.log(scrollToRef.current)
-            }, 500);
+            }, 1000);
         }
     }, [props.orar])
 
     return (
         <div className='orar-table'>
-            {typeof (props.orar) !== 'undefined' && firstElemRef.current !== null ?
+            {typeof (props.orar) !== 'undefined' ?
                 <Table striped bordered>
                     <thead>
                         <tr>
@@ -55,7 +56,7 @@ function OrarTable(props) {
                     </thead>
                     <tbody>
                         {props.orar.lines.map((elem, index) => (
-                            <tr key={index} ref={index === firstElemRef.current ? scrollToRef : null} >
+                            <tr key={index} ref={index === firstElem ? scrollToRef : null} >
                                 <td style={{ color: minutesUntilCurrentTime(elem[0]) < 0 ? 'gray' : 'black', fontWeight: minutesUntilCurrentTime(elem[0]) <= 15 && minutesUntilCurrentTime(elem[0]) >= 0 ? 'bold' : 'initial' }}>{elem[0]}</td>
                                 <td style={{ color: minutesUntilCurrentTime(elem[1]) < 0 ? 'gray' : 'black', fontWeight: minutesUntilCurrentTime(elem[1]) <= 15 && minutesUntilCurrentTime(elem[1]) >= 0 ? 'bold' : 'initial' }}>{elem[1]}</td>
                             </tr>
