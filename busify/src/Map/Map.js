@@ -221,7 +221,7 @@ function Map() {
                             if (exista)
                                 addMarker(elem)
                         })
-                        if (undemibusu !== undefined)
+                        if (undemibusu === 'undemibusu')
                             setShowUndemibusu(true)
                     } else {
                         updateMarker()
@@ -324,14 +324,18 @@ function Map() {
 
                 const polylineCoordinates = shapeData.map((elem) => [elem.shape_pt_lon, elem.shape_pt_lat])
                 let last = polylineCoordinates.length - 1
-                shapeExtremitiesRef.current = [(vehicle.lngLat[0] + polylineCoordinates[last][0]) / 2, (vehicle.lngLat[1] + polylineCoordinates[last][1]) / 2]
-                console.log()
+                // shapeExtremitiesRef.current = [(vehicle.lngLat[0] + polylineCoordinates[last][0]) / 2, (vehicle.lngLat[1] + polylineCoordinates[last][1]) / 2]
                 if (popupOpen.current) {
-                    map.current.flyTo({
-                        center: shapeExtremitiesRef.current,
-                        duration: 2000,
-                        zoom: 13,
-                        essential: true
+                    let bounds = new mapboxgl.LngLatBounds();
+                    bounds.extend(vehicle.lngLat);
+                    bounds.extend(polylineCoordinates[last]);
+                    map.current.fitBounds(bounds, {
+                        padding: {
+                            top: 50,
+                            bottom: 50,
+                            left: 50,
+                            right: 50
+                        }, duration: 2000
                     })
 
                     map.current.addSource('route', {

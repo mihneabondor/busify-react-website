@@ -50,7 +50,7 @@ function Orar(props) {
     return (
         <div>
             <MapNavbar />
-            <Button variant="outline-primary" style={{ margin: 10 }} onClick={() => nav('/map')}> {'< Inapoi'} </Button>
+            <Button variant="outline-primary" style={{ margin: 10 }} onClick={() => nav(-1)}> {'< Inapoi'} </Button>
             <div className='orar-body'>
                 <br />
                 <h3>Orarul liniei {linie}</h3>
