@@ -1,0 +1,13 @@
+.stiri-content {
+    padding-bottom: 10px;
+    overflow-x: scroll;
+}
+
+.stiri-card {
+    width: 18rem;
+    height: 10rem;
+}
+
+a {
+    color: purple;
+}

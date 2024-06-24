@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from 'react'
 import ListGroup from 'react-bootstrap/ListGroup'
 import { useNavigate } from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
+import Stiri from './Stiri';
 
 function Orare() {
     const searchValueRef = useRef();
@@ -61,10 +62,11 @@ function Orare() {
         <div style={{ height: '100vh' }}>
             <MapNavbar />
             <div className='orare-body-container'>
-                <br />
                 <div className='orare-content-container'>
-                    <h4>Orarele liniilor CTP Cluj</h4>
+                    <h4>Ultimele stiri</h4>
+                    <Stiri />
                     <br />
+                    <h4>Orarele liniilor CTP Cluj</h4>
                     <Form onChange={(e) => change(e)} onSubmit={search}>
                         <InputGroup className="mb-3">
                             <Form.Control
