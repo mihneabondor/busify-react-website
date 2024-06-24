@@ -1,6 +1,5 @@
 .orar-body {
     width: 100vw;
-    height: 90vh;
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -8,7 +7,7 @@
 }
 
 .orar-table {
-    max-height: 65vh;
+    max-height: 60vh;
     overflow: auto;
 }
 

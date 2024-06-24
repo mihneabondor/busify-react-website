@@ -29,45 +29,36 @@ const fetchData = async () => {
     joinArray(buses_basic.market)
     // return sol
     root.render(
-      <React.StrictMode>
-        <BrowserRouter>
-          <Routes>
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/"
+            element={<App />}
+          />
+          <Route
+            path="/map"
+            element={<Map />}
+          />
+          <Route
+            path="/harta"
+            element={<Map />}
+          />
+          <Route
+            path="/map/:undemibusu"
+            element={<Map />}
+          />
+          <Route
+            path="/orare"
+            element={<Orare />}
+          />
+          {sol.map(elem => (
             <Route
-              exact
-              path="/"
-              element={<App />}
+              path='/orar/:linie'
+              element={<Orar vehicle={elem} />}
             />
-            <Route
-              exact
-              path="/map"
-              element={<Map />}
-            />
-            <Route
-              exact
-              path="/harta"
-              element={<Map />}
-            />
-            <Route
-              exact
-              path="/map/:undemibusu"
-              element={<Map />}
-            />
-            <Route
-              exact
-              path="/orare"
-              element={<Orare />}
-            />
-            {sol.map(elem => (
-              <Route
-                exact
-                path={'/orar/:linie'}
-                element={<Orar vehicle={elem} />}
-              />
-            ))}
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </BrowserRouter>
-      </React.StrictMode>
+          ))}
+        </Routes>
+      </BrowserRouter>
     );
   } catch (err) {
     console.log(err)
