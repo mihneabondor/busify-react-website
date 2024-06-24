@@ -12,6 +12,7 @@ import {
 } from "react-router-dom";
 import Orare from './Orare/Orare';
 import Orar from './Orare/Orar';
+import Traseu from './Orare/Traseu';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const fetchData = async () => {
@@ -51,12 +52,14 @@ const fetchData = async () => {
             path="/orare"
             element={<Orare />}
           />
-          {sol.map(elem => (
-            <Route
-              path='/orar/:linie'
-              element={<Orar vehicle={elem} />}
-            />
-          ))}
+          <Route
+            path='/orar/:linie'
+            element={<Orar />}
+          />
+          <Route
+            path='/orar/:linie/traseu'
+            element={<Traseu />}
+          />
         </Routes>
       </BrowserRouter>
     );

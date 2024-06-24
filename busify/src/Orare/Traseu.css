@@ -1,0 +1,77 @@
+.horizontal-timeline .items {
+  border-top: 3px solid #e9ecef;
+}
+
+.horizontal-timeline .items .items-list {
+  display: block;
+  position: relative;
+  text-align: center;
+  padding-top: 70px;
+  margin-right: 0;
+}
+
+.horizontal-timeline .items .items-list:before {
+  content: "";
+  position: absolute;
+  height: 2.5rem;
+  border-right: 2px dashed #dee2e6;
+  top: 0;
+}
+
+.horizontal-timeline .items .items-list .event-date {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  width: 75px;
+  margin: 0 auto;
+  font-size: 0.9rem;
+  padding-top: 8px;
+}
+
+@media (min-width: 1140px) {
+  .horizontal-timeline .items .items-list {
+    display: inline-block;
+    width: 24%;
+    padding-top: 45px;
+  }
+
+  .horizontal-timeline .items .items-list .event-date {
+    top: -40px;
+  }
+}
+
+.timeline-container {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: scroll;
+}
+
+.timeline-badge {
+    background-color: purple;
+}
+
+.mdb-container {
+    width: 80vw;
+}
+
+.traseu-map-container {
+    width: 80vw;
+    height: 40vh;
+    border-radius: 15px;
+}
+
+.traseu-body{
+    width: 99vw;
+    height: min-content;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.traseu-marker {
+    width: 20px;
+    height: 25px;
+    background-color: purple;
+    border-radius: 5px;
+}
