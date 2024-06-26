@@ -8,7 +8,7 @@ import Spinner from 'react-bootstrap/Spinner';
 import Settings from './Settings';
 import React from 'react';
 import Undemibusu from "./Undemibusu.js";
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import UndemibusuToast from "./UndemibusuToast.js";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
@@ -38,9 +38,11 @@ function Map() {
     const { undemibusu } = useParams();
     const [showUndemibusuToast, setShowUndemibusuToast] = useState(false);
 
+    const [searchParams] = useSearchParams();
+
     const addMarker = (vehicle, reload = false) => {
         //popup
-        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orar/' + vehicle.line + '">Vezi orar</a>';
+        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orar/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiaza link de urmarire</a>';
 
         const divElement = document.createElement('div');
         const assignBtn = document.createElement('div');
@@ -82,7 +84,8 @@ function Map() {
         })
 
         //marker
-        el.className = linieFavorita ? 'marker-linie-favorita ' : 'marker ';
+        if (searchParams.get('id') === vehicle.label) el.className = 'marker-linie-urmarita ';
+        else el.className = linieFavorita ? 'marker-linie-favorita ' : 'marker ';
         el.className += unique.current.find(elem => elem[0] === vehicle.line)[1] ? 'marker-visible' : 'marker-invisible';
         el.innerHTML = vehicle.line;
 
@@ -223,6 +226,10 @@ function Map() {
                         })
                         if (undemibusu === 'undemibusu')
                             setShowUndemibusu(true)
+                        else if (searchParams.get('id')) {
+                            const elem = markers.current.find(elem => elem.vehicle.label === searchParams.get('id'));
+                            elem.marker.togglePopup();
+                        }
                     } else {
                         updateMarker()
                     }
@@ -492,6 +499,25 @@ function Map() {
         }
     }, []);
 
+    const setShownVehicles = () => {
+        let s = [];
+        if (localStorage.getItem('linii_selectate')) s = localStorage.getItem('linii_selectate').split(',');
+        let saved = [];
+        for (let i = 0; i < s.length; i += 2)
+            saved.push([s[i], s[i + 1] === 'true']);
+
+        for (let i = 0; i < saved.length; i++) {
+            let index = getIndex(saved[i][0], unique.current)
+            if (index != -1) {
+                unique.current[index][1] = saved[i][1];
+                if (saved[i][1] === false) {
+                    setCheckAllChecked(false)
+                    console.log(saved[i])
+                }
+            }
+        }
+    }
+
     useEffect(() => {
         if (map.current) return;
         generateMap()
@@ -532,7 +558,7 @@ function Map() {
                         if (elem[1]) oneMatch = true
                     });
                     if (!oneMatch)
-                        unique.current = unique.current.map(elem => [elem[0], true]);
+                        setShownVehicles();
                     else setShowUndemibusuToast(true);
 
                     setUniqueLines(unique.current)
@@ -542,8 +568,8 @@ function Map() {
             <UndemibusuToast
                 show={showUndemibusuToast}
                 onHide={() => {
+                    setShownVehicles();
                     setShowUndemibusuToast(false)
-                    unique.current = unique.current.map(elem => [elem[0], true]);
                     setUniqueLines(unique.current)
                     setCheckAllChecked(true)
                     resetMarkers();

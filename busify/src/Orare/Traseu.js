@@ -1,6 +1,5 @@
 import './Traseu.css'
 import { useParams } from 'react-router-dom'
-import MapNavbar from '../MapNavbar';
 import { useNavigate } from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import {
@@ -126,6 +125,18 @@ function Traseu() {
                     }
                 });
 
+                let bounds = new mapboxgl.LngLatBounds();
+                bounds.extend(polylineCoordinates[0]);
+                bounds.extend(polylineCoordinates[last]);
+                map.current.fitBounds(bounds, {
+                    padding: {
+                        top: 50,
+                        bottom: 50,
+                        left: 50,
+                        right: 50
+                    }, duration: 2000
+                })
+
                 // const size = 125;
                 // const pulsingDot = {
                 //     width: size,
@@ -248,13 +259,6 @@ function Traseu() {
 
     return (
         <div>
-            <MapNavbar />
-            <Button style={
-                {
-                    backgroundColor: "purple",
-                    borderColor: "purple",
-                    margin: 10
-                }} onClick={() => nav(-1)}> {'< Inapoi'} </Button>
             <br />
             <div className='traseu-body'>
                 <MDBContainer fluid className="py-4 mdb-container">

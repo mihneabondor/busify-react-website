@@ -7,6 +7,7 @@ import OrarTable from './OrarTable';
 import Button from 'react-bootstrap/Button';
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
+import Traseu from "./Traseu";
 
 function Orar(props) {
     const [page, setPage] = useState('lv');
@@ -48,7 +49,7 @@ function Orar(props) {
         fetchData()
     }, [])
     return (
-        <div>
+        <div className='orar-page-body'>
             <MapNavbar />
             <div className='orar-buttons'>
                 <Button style={
@@ -56,17 +57,11 @@ function Orar(props) {
                         backgroundColor: "purple",
                         borderColor: "purple",
                         margin: 10
-                    }} onClick={() => nav(-1)}> {'< Inapoi'} </Button>
-                <Button style={
-                    {
-                        backgroundColor: "purple",
-                        borderColor: "purple",
-                        margin: 10,
-                        float: 'right'
                     }} onClick={() => {
-                        let url = '/orar/' + linie + '/traseu'
-                        nav(url)
-                    }}> {'Traseu >'} </Button>
+                        if (!!nav.prevPage)
+                            nav('/map')
+                        else nav(-1)
+                    }}> {'< Inapoi'} </Button>
             </div>
             <div className='orar-body'>
                 <h3>Orarul liniei {linie}</h3>
@@ -95,6 +90,7 @@ function Orar(props) {
                         </Tab>
                     </Tabs>
                 </div>
+                <Traseu />
             </div>
         </div>
     )

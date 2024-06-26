@@ -24,3 +24,10 @@ td, th {
 .orar-buttons {
   width: 100vw;
 }
+
+.orar-tabs > a {
+  color: purple;
+}
+.nav-tabs .nav-link {
+  color: purple;
+}
