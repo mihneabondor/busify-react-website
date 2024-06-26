@@ -37,7 +37,7 @@ function OrarTable(props) {
             setFirstElem(getFirstElemInSchedule());
             setTimeout(() => {
                 if (scrollToRef.current) {
-                    scrollToRef.current.scrollIntoView({ behavior: 'smooth', block: "start", inline: "nearest" });
+                    scrollToRef.current.scrollIntoView({ behavior: 'smooth', block: "center", inline: "nearest" });
                 }
                 console.log(scrollToRef.current)
             }, 1000);

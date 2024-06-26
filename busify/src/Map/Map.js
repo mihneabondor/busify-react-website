@@ -305,7 +305,7 @@ function Map() {
                     zoom: lastZoom.current,
                     essential: true
                 })
-            else geo.trigger();
+            else if (!popupOpen.current) geo.trigger();
         });
         map.current.on('dragend', (e) => {
             lastCoords.current = map.current.getCenter().toArray();
