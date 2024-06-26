@@ -84,9 +84,11 @@ function Map() {
         })
 
         //marker
-        if (searchParams.get('id') === vehicle.label) el.className = 'marker-linie-urmarita ';
+        if (searchParams.get('id') === vehicle.label) {
+            el.className = 'marker-linie-urmarita ';
+        }
         else el.className = linieFavorita ? 'marker-linie-favorita ' : 'marker ';
-        el.className += unique.current.find(elem => elem[0] === vehicle.line)[1] ? 'marker-visible' : 'marker-invisible';
+        el.className += unique.current.find(elem => elem[0] === vehicle.line)[1] || searchParams.get('id') === vehicle.label ? 'marker-visible' : 'marker-invisible';
         el.innerHTML = vehicle.line;
 
         const marker = new mapboxgl.Marker(el)
