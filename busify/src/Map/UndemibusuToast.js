@@ -12,9 +12,11 @@ function UndemibusuToast(props) {
             <Toast show={props.show}>
                 <Toast.Header closeButton={false}>
                     <img
-                        src="holder.js/20x20?text=%20"
+                        src="../logo192.png"
+                        width='25px'
+                        height='25px'
+
                         className="rounded me-2"
-                        alt=""
                     />
                     <strong className="me-auto">Unde mi busu'?</strong>
                 </Toast.Header>
