@@ -10,6 +10,8 @@ import React from 'react';
 import Undemibusu from "./Undemibusu.js";
 import { useParams, useSearchParams } from 'react-router-dom';
 import UndemibusuToast from "./UndemibusuToast.js";
+import Destinatii from "./Destinatii.js";
+import DestinatiiToast from "./DestinatiiToast.js";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
@@ -30,7 +32,6 @@ function Map() {
     const [showSettings, setShowSettings] = useState(false);
     var loadedFirstTime = false;
 
-    var shapeExtremitiesRef = useRef();
     var popupOpen = useRef(false);
 
     const [showUndemibusu, setShowUndemibusu] = useState(false);
@@ -39,6 +40,13 @@ function Map() {
     const [showUndemibusuToast, setShowUndemibusuToast] = useState(false);
 
     const [searchParams] = useSearchParams();
+
+    const [showDestinatii, setShowDestinatii] = useState(false);
+    const [showDestinatiiToast, setShowDestinatiiToast] = useState(false);
+    let destinatiiSearchRef = useRef();
+    let originSearchRef = useRef();
+    const [instructions, setInstructions] = useState()
+
 
     const addMarker = (vehicle, reload = false) => {
         //popup
@@ -231,7 +239,8 @@ function Map() {
                         else if (searchParams.get('id')) {
                             const elem = markers.current.find(elem => elem.vehicle.label === searchParams.get('id'));
                             elem.marker.togglePopup();
-                        }
+                        } else if (undemibusu === 'destinatii')
+                            setShowDestinatii(true)
                     } else {
                         updateMarker()
                     }
@@ -307,7 +316,13 @@ function Map() {
                     zoom: lastZoom.current,
                     essential: true
                 })
-            else if (!popupOpen.current) geo.trigger();
+            else if (!popupOpen.current) {
+                geo.trigger();
+                if (undemibusu === 'destinatii')
+                    setTimeout(() => {
+                        getUserAddress()
+                    }, 1000);
+            }
         });
         map.current.on('dragend', (e) => {
             lastCoords.current = map.current.getCenter().toArray();
@@ -520,6 +535,40 @@ function Map() {
         }
     }
 
+    const getUserAddress = async () => {
+        try {
+            const lngLat = map.current._controls[2]._lastKnownPosition.coords.latitude + ',' + map.current._controls[2]._lastKnownPosition.coords.longitude;
+            const key = 'AIzaSyAW0rKcBmVtEZ12-9oUmjSHDyvdy-6fr3w'
+            const url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' + lngLat + '&sensor=true&key=' + key;
+            const data = await fetch(url);
+            const resp = await data.json();
+            originSearchRef.current.value = resp.results[0].formatted_address
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    const getRoutes = async () => {
+        const apiKey = 'AIzaSyAW0rKcBmVtEZ12-9oUmjSHDyvdy-6fr3w';
+        const origin = originSearchRef.current.value; // Replace with actual place_id or address
+        const destination = 'Cluj Napoca ' + destinatiiSearchRef.current.value // Replace with actual place_id or address
+        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}&mode=transit&language=RO`;
+
+        try {
+            const response = await fetch('https://cors-anywhere.herokuapp.com/' + url);
+            const data = await response.json();
+            if (data.status === 'OK') {
+                console.log(data)
+                setInstructions(data.routes[0].legs[0])
+                setShowDestinatiiToast(true)
+            } else {
+                console.error('Error fetching directions:', data.error_message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
     useEffect(() => {
         if (map.current) return;
         generateMap()
@@ -576,6 +625,23 @@ function Map() {
                     setCheckAllChecked(true)
                     resetMarkers();
                 }} />
+            <Destinatii
+                show={showDestinatii}
+                destination={destinatiiSearchRef}
+                origin={originSearchRef}
+                onHide={() => {
+                    setShowDestinatii(false)
+                    getRoutes();
+                }} />
+            <DestinatiiToast
+                show={showDestinatiiToast}
+                instructions={instructions}
+                map={map}
+                setuniquelines={setUniqueLines}
+                unique={unique}
+                resetmarkers={resetMarkers}
+                setshownvehicles={setShownVehicles}
+            />
         </div >
     );
 }
