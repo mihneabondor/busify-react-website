@@ -63,19 +63,18 @@ function Orare() {
             <MapNavbar />
             <div className='orare-body-container'>
                 <div className='orare-content-container'>
-                    <h4>Ultimele stiri</h4>
+                    <h4>Ultimele știri</h4>
                     <Stiri />
                     <br />
                     <h4>Orarele liniilor CTP Cluj</h4>
                     <Form onChange={(e) => change(e)} onSubmit={search}>
                         <InputGroup className="mb-3">
                             <Form.Control
-                                placeholder="Cauta o linie"
-                                aria-label="Cauta o linie"
+                                placeholder="Caută o linie"
                                 aria-describedby="basic-addon2"
                                 ref={searchValueRef}
                             />
-                            <Button type='submit' className='orare-search-button' id="button-addon2"> Cautare </Button>
+                            <Button type='submit' className='orare-search-button' id="button-addon2"> Căutare </Button>
                         </InputGroup>
                     </Form>
                     <ListGroup style={{ overflow: 'auto', height: '65vh' }}>
