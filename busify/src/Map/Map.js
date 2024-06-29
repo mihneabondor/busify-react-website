@@ -318,10 +318,6 @@ function Map() {
                 })
             else if (!popupOpen.current) {
                 geo.trigger();
-                if (undemibusu === 'destinatii')
-                    setTimeout(() => {
-                        getUserAddress()
-                    }, 1000);
             }
         });
         map.current.on('dragend', (e) => {
@@ -329,6 +325,13 @@ function Map() {
             lastZoom.current = map.current.getZoom();
         })
     }
+
+    useEffect(() => {
+        if (undemibusu === 'destinatii')
+            setTimeout(() => {
+                getUserAddress()
+            }, 200)
+    }, [map.current])
 
     const addPolyline = useCallback(async (vehicle) => {
         if (!map.current.getSource('route')) {
@@ -555,7 +558,7 @@ function Map() {
         const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}&mode=transit&language=RO`;
 
         try {
-            const response = await fetch('https://cors-anywhere.herokuapp.com/' + url);
+            const response = await fetch('https://cors-anywhere.herokuapp.com/' + url, { mode: 'cors' });
             const data = await response.json();
             if (data.status === 'OK') {
                 console.log(data)
@@ -641,6 +644,7 @@ function Map() {
                 unique={unique}
                 resetmarkers={resetMarkers}
                 setshownvehicles={setShownVehicles}
+                markers={markers}
             />
         </div >
     );

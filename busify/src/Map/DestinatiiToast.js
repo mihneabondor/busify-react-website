@@ -18,16 +18,87 @@ function DestinatiiToast(props) {
         }
     }, [props.instructions])
 
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        // Convert degrees to radians
+        function toRadians(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        const R = 6371; // Radius of the Earth in kilometers
+        const dLat = toRadians(lat2 - lat1);
+        const dLon = toRadians(lon2 - lon1);
+
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        const distance = R * c; // Distance in kilometers
+
+        // If you need a signed value, you can add a condition to determine the sign
+        // For example, let's say you want the distance to be negative if the second point is to the west or south of the first point
+        const signLat = (lat2 - lat1) < 0 ? -1 : 1;
+        const signLon = (lon2 - lon1) < 0 ? -1 : 1;
+
+        // Combine signs to return a negative value based on the quadrant (optional logic)
+        const signedDistance = distance * signLat * signLon;
+
+        return signedDistance;
+    }
+
     const drawPolyline = async (startCoords, endCoords, lineName, dotName, lineColor) => {
         try {
-            const key = '5b3ce3597851110001cf6248f864c0c225094fa28a808176ea37f43a'
-            const start = startCoords[0] + ',' + startCoords[1]
-            const end = endCoords[0] + ',' + endCoords[1]
-            const url = 'https://api.openrouteservice.org/v2/directions/driving-car?api_key=' + key + '&start=' + start + '&end=' + end
-            const resp = await fetch(url)
-            const data = await resp.json()
-            addPolyline(data.features[0].geometry.coordinates, lineName, dotName, lineColor)
-        } catch { }
+            if (currentStepRef.current && currentStepRef.current.transit_details) {
+                const tripId = props.markers.current.filter(elem => elem.vehicle.line === currentStepRef.current.transit_details.line.short_name)[0].vehicle.tripId
+                const url = 'https://api.tranzy.ai/v1/opendata/shapes?shape_id=' + tripId;
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'X-Agency-Id': '2',
+                        Accept: 'application/json',
+                        'X-API-KEY': 'ksRfq3mejazGhBobQYkPrgAUfnFaClVcgTa0eIlJ'
+                    }
+                };
+
+                try {
+                    const response = await fetch(url, options);
+                    const data = await response.json();
+                    const coords = data.map(elem => [elem.shape_pt_lon, elem.shape_pt_lat])
+                    const startCoords = currentStepRef.current.start_location
+                    let minimum = 100, index = -1
+                    for (let i = 0; i < coords.length; i++) {
+                        const dist = calculateDistance(coords[i][1], coords[i][0], startCoords.lat, startCoords.lng)
+                        if (dist < minimum && dist > 0) {
+                            minimum = dist
+                            index = i
+                        }
+                    }
+                    addPolyline(coords.slice(index - 1), lineName, dotName, lineColor)
+                } catch (error) {
+                    console.log(error)
+                    const key = '5b3ce3597851110001cf6248f864c0c225094fa28a808176ea37f43a'
+                    const start = startCoords[0] + ',' + startCoords[1]
+                    const end = endCoords[0] + ',' + endCoords[1]
+                    const url = 'https://api.openrouteservice.org/v2/directions/driving-car?api_key=' + key + '&start=' + start + '&end=' + end
+                    const resp = await fetch(url)
+                    const data = await resp.json()
+                    addPolyline(data.features[0].geometry.coordinates, lineName, dotName, lineColor)
+                }
+
+            } else {
+                const key = '5b3ce3597851110001cf6248f864c0c225094fa28a808176ea37f43a'
+                const start = startCoords[0] + ',' + startCoords[1]
+                const end = endCoords[0] + ',' + endCoords[1]
+                const url = 'https://api.openrouteservice.org/v2/directions/driving-car?api_key=' + key + '&start=' + start + '&end=' + end
+                const resp = await fetch(url)
+                const data = await resp.json()
+                addPolyline(data.features[0].geometry.coordinates, lineName, dotName, lineColor)
+            }
+        } catch (e) {
+            console.log(e)
+        }
     }
 
     const addPolyline = (polylineCoordinates, namePolyline, namePulsingDot, lineColor) => {
