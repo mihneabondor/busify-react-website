@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../ctpcj-scraper"
+		},
+		{
+			"path": "../busifyBackend"
 		}
 	],
 	"settings": {}

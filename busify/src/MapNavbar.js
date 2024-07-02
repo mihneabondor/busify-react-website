@@ -42,20 +42,21 @@ function MapNavbar() {
                         <Offcanvas.Body>
                             <Nav.Link href="/" style={{ paddingBottom: '10px' }}> Acasă </Nav.Link>
                             <Nav.Link href="/map" style={{ paddingBottom: '10px' }}> Hartă </Nav.Link>
-                            <Nav.Link href='/map/undemibusu' style={{ paddingBottom: '10px' }}> Unde mi busu'? </Nav.Link>
+                            <Nav.Link href='/map/undemibusu' style={{ paddingBottom: '10px' }}> Unde mi-i busu'? </Nav.Link>
                             <Nav.Link href="/map/destinatii" style={{ paddingBottom: '10px' }}> Destinații </Nav.Link>
+                            <Nav.Link href="/orare" style={{ paddingBottom: '10px' }}> Orare </Nav.Link>
                             <div style={{
                                 display: 'flex',
                                 flexDirection: 'row'
+                            }} onClick={() => {
+                                if (expandedLines.length > 0)
+                                    setExpandedLines([])
+                                else setExpandedLines(expandedLinesRef.current)
                             }}>
-                                <Nav.Link href="/orare" style={{ paddingBottom: '10px' }}> Orare </Nav.Link>
+                                <Nav.Link style={{ paddingBottom: '10px' }}> Linii </Nav.Link>
                                 <img width='15px' height='15px' style={{
                                     margin: '5px',
                                     rotate: expandedLines.length > 0 ? '-90deg' : '0deg'
-                                }} onClick={() => {
-                                    if (expandedLines.length > 0)
-                                        setExpandedLines([])
-                                    else setExpandedLines(expandedLinesRef.current)
                                 }} src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA5ElEQVR4nO3UPUpDQRTF8V8sHikCNoL2WYBVSq3cgqVttuAW3EPK9IJFymgTIRZZg42NgqUIIhoeTCHDy3ujmRTC/OE0wz3nMl+XQqFQyMQtVhjmCgxZK8zbir6DXnGWoekpXn7kdjau9YnLLZqO8RFlbmQZFdaaoJJOFTxxzrLNNMB1g+keRwlND3DX4J9hv8vcC0f8FZmfMGrxHeMx8tQZV9jzC87xFgW942LL2iS6dvHX00niEIuGe7sJitcXwZOFasNLjTVF3w4YN/zNHH8+iRM872DKJc/fh6Ccc71QKPwj1j8gazJLnl+5AAAAAElFTkSuQmCC"></img>
                             </div>
                             {expandedLines.map(elem => (

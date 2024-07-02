@@ -19,12 +19,11 @@ function DestinatiiToast(props) {
     }, [props.instructions])
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        // Convert degrees to radians
         function toRadians(degrees) {
             return degrees * (Math.PI / 180);
         }
 
-        const R = 6371; // Radius of the Earth in kilometers
+        const R = 6371;
         const dLat = toRadians(lat2 - lat1);
         const dLon = toRadians(lon2 - lon1);
 
@@ -37,12 +36,9 @@ function DestinatiiToast(props) {
 
         const distance = R * c; // Distance in kilometers
 
-        // If you need a signed value, you can add a condition to determine the sign
-        // For example, let's say you want the distance to be negative if the second point is to the west or south of the first point
         const signLat = (lat2 - lat1) < 0 ? -1 : 1;
         const signLon = (lon2 - lon1) < 0 ? -1 : 1;
 
-        // Combine signs to return a negative value based on the quadrant (optional logic)
         const signedDistance = distance * signLat * signLon;
 
         return signedDistance;

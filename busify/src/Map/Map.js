@@ -234,7 +234,7 @@ function Map() {
                             if (exista)
                                 addMarker(elem)
                         })
-                        if (undemibusu === 'undemibusu')
+                        if (undemibusu === 'undemiibusu')
                             setShowUndemibusu(true)
                         else if (searchParams.get('id')) {
                             const elem = markers.current.find(elem => elem.vehicle.label === searchParams.get('id'));
@@ -333,6 +333,32 @@ function Map() {
             }, 200)
     }, [map.current])
 
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        function toRadians(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        const R = 6371;
+        const dLat = toRadians(lat2 - lat1);
+        const dLon = toRadians(lon2 - lon1);
+
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        const distance = R * c; // Distance in kilometers
+
+        const signLat = (lat2 - lat1) < 0 ? -1 : 1;
+        const signLon = (lon2 - lon1) < 0 ? -1 : 1;
+
+        const signedDistance = distance * signLat * signLon;
+
+        return signedDistance;
+    }
+
     const addPolyline = useCallback(async (vehicle) => {
         if (!map.current.getSource('route')) {
             try {
@@ -351,11 +377,18 @@ function Map() {
 
                 const polylineCoordinates = shapeData.map((elem) => [elem.shape_pt_lon, elem.shape_pt_lat])
                 let last = polylineCoordinates.length - 1
-                // shapeExtremitiesRef.current = [(vehicle.lngLat[0] + polylineCoordinates[last][0]) / 2, (vehicle.lngLat[1] + polylineCoordinates[last][1]) / 2]
+                let endCoords = polylineCoordinates[last], distMin = 100
+                polylineCoordinates.forEach(elem => {
+                    const d = calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, elem[1], elem[0])
+                    if (d > 0)
+                        distMin = Math.min(distMin, d)
+                })
+                if (distMin < 0.03)
+                    endCoords = [map.current._controls[2]._lastKnownPosition.coords.longitude, map.current._controls[2]._lastKnownPosition.coords.latitude]
                 if (popupOpen.current) {
                     let bounds = new mapboxgl.LngLatBounds();
                     bounds.extend(vehicle.lngLat);
-                    bounds.extend(polylineCoordinates[last]);
+                    bounds.extend(endCoords);
                     map.current.fitBounds(bounds, {
                         padding: {
                             top: 50,
@@ -390,6 +423,34 @@ function Map() {
                             'line-width': 5
                         }
                     });
+
+                    let start;
+                    const duration = 3750;
+
+                    const animateLine = (timestamp) => {
+                        if (!start) start = timestamp;
+                        const elapsed = timestamp - start;
+
+                        const progress = Math.min(elapsed / duration, 1);
+
+                        const currentIndex = Math.floor(progress * (polylineCoordinates.length - 1));
+
+                        const newCoords = polylineCoordinates.slice(0, currentIndex + 1);
+                        map.current.getSource('route').setData({
+                            type: 'Feature',
+                            properties: {},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: newCoords,
+                            },
+                        });
+
+                        if (progress < 1) {
+                            requestAnimationFrame(animateLine);
+                        }
+                    };
+
+                    requestAnimationFrame(animateLine);
 
                     const size = 125;
                     const pulsingDot = {

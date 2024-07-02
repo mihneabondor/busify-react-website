@@ -12,7 +12,7 @@ function Undemibusu(props) {
         >
             <Modal.Header closeButton>
                 <Modal.Title id="contained-modal-title-vcenter">
-                    Unde mi busu?
+                    Unde mi-i busu?
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
