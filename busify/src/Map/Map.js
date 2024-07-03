@@ -146,31 +146,16 @@ function Map() {
     }
 
     const fetchData = async () => {
-
-        var url = 'https://api.tranzy.ai/v1/opendata/vehicles';
-        const options = {
-            method: 'GET',
-            headers: {
-                'X-Agency-Id': '2',
-                Accept: 'application/json',
-                'X-API-KEY': 'ksRfq3mejazGhBobQYkPrgAUfnFaClVcgTa0eIlJ'
-            }
-        };
-
         try {
-            var response = await fetch(url, options);
+            var response = await fetch('https://busifybackend-40a76006141a.herokuapp.com/vehicles');
             const vehicleData = await response.json();
 
-            url = 'https://api.tranzy.ai/v1/opendata/trips';
-
             try {
-                response = await fetch(url, options);
+                response = await fetch('https://busifybackend-40a76006141a.herokuapp.com/trips');
                 const tripData = await response.json();
 
-                url = 'https://api.tranzy.ai/v1/opendata/routes';
-
                 try {
-                    response = await fetch(url, options);
+                    response = await fetch('https://busifybackend-40a76006141a.herokuapp.com/routes');
                     const routeData = await response.json();
                     vehicles.current = [];
                     vehicleData.forEach(vehicle => {
@@ -330,7 +315,7 @@ function Map() {
         if (undemibusu === 'destinatii')
             setTimeout(() => {
                 getUserAddress()
-            }, 200)
+            }, 1000)
     }, [map.current])
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -383,7 +368,8 @@ function Map() {
                     if (d > 0)
                         distMin = Math.min(distMin, d)
                 })
-                if (distMin < 0.03)
+                console.log(distMin)
+                if (distMin < 0.05)
                     endCoords = [map.current._controls[2]._lastKnownPosition.coords.longitude, map.current._controls[2]._lastKnownPosition.coords.latitude]
                 if (popupOpen.current) {
                     let bounds = new mapboxgl.LngLatBounds();
@@ -602,8 +588,8 @@ function Map() {
     const getUserAddress = async () => {
         try {
             const lngLat = map.current._controls[2]._lastKnownPosition.coords.latitude + ',' + map.current._controls[2]._lastKnownPosition.coords.longitude;
-            const key = 'AIzaSyAW0rKcBmVtEZ12-9oUmjSHDyvdy-6fr3w'
-            const url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' + lngLat + '&sensor=true&key=' + key;
+            const url = 'https://busifybackend-40a76006141a.herokuapp.com/address?latlng=' + lngLat
+            console.log(url)
             const data = await fetch(url);
             const resp = await data.json();
             originSearchRef.current.value = resp.results[0].formatted_address
@@ -616,10 +602,10 @@ function Map() {
         const apiKey = 'AIzaSyAW0rKcBmVtEZ12-9oUmjSHDyvdy-6fr3w';
         const origin = originSearchRef.current.value; // Replace with actual place_id or address
         const destination = 'Cluj Napoca ' + destinatiiSearchRef.current.value // Replace with actual place_id or address
-        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}&key=${apiKey}&mode=transit&language=RO`;
+        const url = 'https://busifybackend-40a76006141a.herokuapp.com/destinatii?origin=' + origin + '&destination=' + destination
 
         try {
-            const response = await fetch('https://cors-anywhere.herokuapp.com/' + url, { mode: 'cors' });
+            const response = await fetch(url)
             const data = await response.json();
             if (data.status === 'OK') {
                 console.log(data)

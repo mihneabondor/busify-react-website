@@ -26,7 +26,7 @@ function Traseu() {
 
     const fetchData = async () => {
         try {
-            var url = 'https://api.tranzy.ai/v1/opendata/stops';
+            var url = 'https://busifybackend-40a76006141a.herokuapp.com/stops';
             const options = {
                 method: 'GET',
                 headers: {
@@ -38,11 +38,11 @@ function Traseu() {
             let data = await fetch(url, options);
             const stops = await data.json();
 
-            url = 'https://api.tranzy.ai/v1/opendata/stop_times';
+            url = 'https://busifybackend-40a76006141a.herokuapp.com/stoptimes';
             data = await fetch(url, options);
             let stopTimes = await data.json();
 
-            url = 'https://api.tranzy.ai/v1/opendata/routes';
+            url = 'https://busifybackend-40a76006141a.herokuapp.com/routes';
             data = await fetch(url, options);
             let routes = await data.json();
 

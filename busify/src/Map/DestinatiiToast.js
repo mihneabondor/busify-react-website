@@ -3,6 +3,7 @@ import ToastContainer from 'react-bootstrap/ToastContainer';
 import Button from 'react-bootstrap/esm/Button';
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+import polyline from '@mapbox/polyline';
 
 function DestinatiiToast(props) {
     const [loading, setLoading] = useState(true)
@@ -45,55 +46,20 @@ function DestinatiiToast(props) {
     }
 
     const drawPolyline = async (startCoords, endCoords, lineName, dotName, lineColor) => {
-        try {
-            if (currentStepRef.current && currentStepRef.current.transit_details) {
-                const tripId = props.markers.current.filter(elem => elem.vehicle.line === currentStepRef.current.transit_details.line.short_name)[0].vehicle.tripId
-                const url = 'https://api.tranzy.ai/v1/opendata/shapes?shape_id=' + tripId;
-                const options = {
-                    method: 'GET',
-                    headers: {
-                        'X-Agency-Id': '2',
-                        Accept: 'application/json',
-                        'X-API-KEY': 'ksRfq3mejazGhBobQYkPrgAUfnFaClVcgTa0eIlJ'
-                    }
-                };
-
-                try {
-                    const response = await fetch(url, options);
-                    const data = await response.json();
-                    const coords = data.map(elem => [elem.shape_pt_lon, elem.shape_pt_lat])
-                    const startCoords = currentStepRef.current.start_location
-                    let minimum = 100, index = -1
-                    for (let i = 0; i < coords.length; i++) {
-                        const dist = calculateDistance(coords[i][1], coords[i][0], startCoords.lat, startCoords.lng)
-                        if (dist < minimum && dist > 0) {
-                            minimum = dist
-                            index = i
-                        }
-                    }
-                    addPolyline(coords.slice(index - 1), lineName, dotName, lineColor)
-                } catch (error) {
-                    console.log(error)
-                    const key = '5b3ce3597851110001cf6248f864c0c225094fa28a808176ea37f43a'
-                    const start = startCoords[0] + ',' + startCoords[1]
-                    const end = endCoords[0] + ',' + endCoords[1]
-                    const url = 'https://api.openrouteservice.org/v2/directions/driving-car?api_key=' + key + '&start=' + start + '&end=' + end
-                    const resp = await fetch(url)
-                    const data = await resp.json()
-                    addPolyline(data.features[0].geometry.coordinates, lineName, dotName, lineColor)
-                }
-
-            } else {
-                const key = '5b3ce3597851110001cf6248f864c0c225094fa28a808176ea37f43a'
-                const start = startCoords[0] + ',' + startCoords[1]
-                const end = endCoords[0] + ',' + endCoords[1]
-                const url = 'https://api.openrouteservice.org/v2/directions/driving-car?api_key=' + key + '&start=' + start + '&end=' + end
-                const resp = await fetch(url)
-                const data = await resp.json()
-                addPolyline(data.features[0].geometry.coordinates, lineName, dotName, lineColor)
-            }
-        } catch (e) {
-            console.log(e)
+        if (currentStepRef.current) {
+            const decodedPolyline = polyline.decode(currentStepRef.current.polyline.points)
+            const polylineCoordinates = decodedPolyline.map(elem => [elem[1], elem[0]])
+            addPolyline(polylineCoordinates, lineName, dotName, lineColor)
+            console.log(currentStepRef.current.transit_details)
+        } else {
+            let polyLineAllRoute = []
+            props.instructions.steps.forEach(elem => {
+                const decodedPolyline = polyline.decode(elem.polyline.points)
+                const polylineCoordinates = decodedPolyline.map(elem => [elem[1], elem[0]])
+                polyLineAllRoute = polyLineAllRoute.concat(polylineCoordinates)
+            })
+            console.log(polyLineAllRoute)
+            addPolyline(polyLineAllRoute, lineName, dotName, lineColor)
         }
     }
 
@@ -345,14 +311,18 @@ function DestinatiiToast(props) {
                             <p id='instructionsDiv' />
                             {currentStepRef.current.transit_details ?
                                 <div>
-                                    <p><b>Linie: </b> {currentStepRef.current.transit_details.line.short_name} <br />
-                                        <b>Statii: </b> {currentStepRef.current.transit_details.num_stops}
+                                    <p>
+                                        <b>Linie: </b> {currentStepRef.current.transit_details.line.short_name} <br />
+                                        <b>De la: </b> {currentStepRef.current.transit_details.departure_stop.name} <br />
+                                        <b>Până la: </b> {currentStepRef.current.transit_details.arrival_stop.name} <br />
+                                        <b>Stații: </b> {currentStepRef.current.transit_details.num_stops} <br />
                                     </p>
                                 </div>
                                 : <p />}
                             <div style={{ width: '100%' }}>
                                 <Button
                                     onClick={() => {
+                                        removePolyline('stepLine', 'stepDot')
                                         if (currentIndexRef.current === 0) {
                                             currentStepRef.current = null;
                                             drawPolyline([props.instructions.start_location.lng, props.instructions.start_location.lat], [props.instructions.end_location.lng, props.instructions.end_location.lat], 'allRoute', 'destination', '#888')
@@ -363,10 +333,9 @@ function DestinatiiToast(props) {
                                             drawPolyline([currentStepRef.current.start_location.lng, currentStepRef.current.start_location.lat], [currentStepRef.current.end_location.lng, currentStepRef.current.end_location.lat], 'stepLine', 'stepDot', '#888')
                                         }
                                         setCurrentStep(currentStepRef.current)
-                                        removePolyline('stepLine', 'stepDot')
                                         filterLines()
                                     }}
-                                >Inapoi</Button>
+                                >Înapoi</Button>
                                 <Button style={{
                                     float: 'right',
                                     visibility: currentIndexRef.current + 1 === props.instructions.steps.length ? 'hidden' : 'visible'
@@ -378,12 +347,12 @@ function DestinatiiToast(props) {
                                         drawPolyline([currentStepRef.current.start_location.lng, currentStepRef.current.start_location.lat], [currentStepRef.current.end_location.lng, currentStepRef.current.end_location.lat], 'stepLine', 'stepDot', '#888')
                                         filterLines()
                                     }}
-                                >Inainte</Button>
+                                >Înainte</Button>
                             </div>
                         </Toast.Body>
                     </Toast>
                 </ToastContainer>
-            }</div>
+            }</div >
     )
 }
 

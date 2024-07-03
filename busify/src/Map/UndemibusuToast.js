@@ -18,7 +18,7 @@ function UndemibusuToast(props) {
 
                         className="rounded me-2"
                     />
-                    <strong className="me-auto">Unde mi busu'?</strong>
+                    <strong className="me-auto">Unde mi-i busu'?</strong>
                 </Toast.Header>
                 <Toast.Body>
                     <p>Apasa aici pentru a afisa toate autobusele</p>
