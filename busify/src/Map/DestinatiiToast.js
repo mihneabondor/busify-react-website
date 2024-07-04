@@ -288,6 +288,13 @@ function DestinatiiToast(props) {
                         <Toast.Body>
                             <p><b>Destinatie:</b> {props.instructions.end_address} </p>
                             <Button onClick={() => {
+                                removePolyline('allRoute', 'destination')
+                                props.setshowdestinatiitost(false)
+                                props.setshowdestinatii(true)
+                            }}>
+                                Schimbă
+                            </Button>
+                            <Button style={{ float: 'right' }} onClick={() => {
                                 setCurrentStep(props.instructions.steps[0])
                                 currentStepRef.current = props.instructions.steps[0]
                                 removePolyline('allRoute', 'destination')
@@ -338,16 +345,20 @@ function DestinatiiToast(props) {
                                 >Înapoi</Button>
                                 <Button style={{
                                     float: 'right',
-                                    visibility: currentIndexRef.current + 1 === props.instructions.steps.length ? 'hidden' : 'visible'
                                 }}
                                     onClick={() => {
-                                        currentStepRef.current = props.instructions.steps[++currentIndexRef.current]
-                                        setCurrentStep(currentStepRef.current)
                                         removePolyline('stepLine', 'stepDot')
-                                        drawPolyline([currentStepRef.current.start_location.lng, currentStepRef.current.start_location.lat], [currentStepRef.current.end_location.lng, currentStepRef.current.end_location.lat], 'stepLine', 'stepDot', '#888')
-                                        filterLines()
+                                        if (currentIndexRef.current + 1 === props.instructions.steps.length) {
+                                            removePolyline('allRoute', 'destination')
+                                            props.setshowdestinatiitost(false)
+                                        } else {
+                                            currentStepRef.current = props.instructions.steps[++currentIndexRef.current]
+                                            setCurrentStep(currentStepRef.current)
+                                            drawPolyline([currentStepRef.current.start_location.lng, currentStepRef.current.start_location.lat], [currentStepRef.current.end_location.lng, currentStepRef.current.end_location.lat], 'stepLine', 'stepDot', '#888')
+                                            filterLines()
+                                        }
                                     }}
-                                >Înainte</Button>
+                                >{currentIndexRef.current + 1 === props.instructions.steps.length ? 'Închide' : 'Înainte'}</Button>
                             </div>
                         </Toast.Body>
                     </Toast>

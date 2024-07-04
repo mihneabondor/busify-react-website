@@ -1,8 +1,10 @@
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
+import { useNavigate } from 'react-router-dom';
 
 function Destinatii(props) {
+    const nav = useNavigate();
     return (
         <Modal
             {...props}

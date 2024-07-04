@@ -303,6 +303,9 @@ function Map() {
                 })
             else if (!popupOpen.current) {
                 geo.trigger();
+                setTimeout(() => {
+                    getUserAddress()
+                }, 1000);
             }
         });
         map.current.on('dragend', (e) => {
@@ -310,13 +313,6 @@ function Map() {
             lastZoom.current = map.current.getZoom();
         })
     }
-
-    useEffect(() => {
-        if (undemibusu === 'destinatii')
-            setTimeout(() => {
-                getUserAddress()
-            }, 1000)
-    }, [map.current])
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
         function toRadians(degrees) {
@@ -599,9 +595,8 @@ function Map() {
     }
 
     const getRoutes = async () => {
-        const apiKey = 'AIzaSyAW0rKcBmVtEZ12-9oUmjSHDyvdy-6fr3w';
-        const origin = originSearchRef.current.value; // Replace with actual place_id or address
-        const destination = 'Cluj Napoca ' + destinatiiSearchRef.current.value // Replace with actual place_id or address
+        const origin = 'Cluj Napoca' + originSearchRef.current.value;
+        const destination = 'Cluj Napoca ' + destinatiiSearchRef.current.value
         const url = 'https://busifybackend-40a76006141a.herokuapp.com/destinatii?origin=' + origin + '&destination=' + destination
 
         try {
@@ -612,7 +607,9 @@ function Map() {
                 setInstructions(data.routes[0].legs[0])
                 setShowDestinatiiToast(true)
             } else {
-                console.error('Error fetching directions:', data.error_message);
+                alert('A aparut o eroare! Verifica datele pe care le-ai introdus si incearca din nou!')
+                getUserAddress()
+                setShowDestinatii(true)
             }
         } catch (error) {
             console.error('Error:', error);
@@ -681,7 +678,8 @@ function Map() {
                 origin={originSearchRef}
                 onHide={() => {
                     setShowDestinatii(false)
-                    getRoutes();
+                    if (destinatiiSearchRef.current.value)
+                        getRoutes();
                 }} />
             <DestinatiiToast
                 show={showDestinatiiToast}
@@ -692,6 +690,8 @@ function Map() {
                 resetmarkers={resetMarkers}
                 setshownvehicles={setShownVehicles}
                 markers={markers}
+                setshowdestinatii={setShowDestinatii}
+                setshowdestinatiitost={setShowDestinatiiToast}
             />
         </div >
     );
