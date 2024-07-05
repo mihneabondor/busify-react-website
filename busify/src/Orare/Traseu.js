@@ -1,7 +1,6 @@
 import './Traseu.css'
 import { useParams } from 'react-router-dom'
 import { useNavigate } from "react-router-dom";
-import Button from 'react-bootstrap/Button';
 import {
     MDBCol,
     MDBContainer,
@@ -12,12 +11,18 @@ import React from 'react';
 import Badge from 'react-bootstrap/Badge';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
+import Form from 'react-bootstrap/Form';
 
 function Traseu() {
     const { linie } = useParams();
     const nav = useNavigate();
     const [stops, setStops] = useState([]);
     const stopsRef = useRef([]);
+
+    const turRef = useRef('_0');
+    const [turLabel, setTurlabl] = useState('_0');
+
+    const markersRef = useRef([]);
 
     var map = useRef(null);
 
@@ -47,7 +52,7 @@ function Traseu() {
             let routes = await data.json();
 
             const routeId = routes.find(elem => elem.route_short_name === linie).route_id;
-            stopTimes = stopTimes.filter(elem => elem.trip_id === routeId + '_0');
+            stopTimes = stopTimes.filter(elem => elem.trip_id === routeId + turRef.current);
             stopsRef.current = []
             stopTimes.forEach(element => {
                 const stop = stops.find(e => e.stop_id === element.stop_id)
@@ -55,7 +60,9 @@ function Traseu() {
             });
             console.log(stopsRef.current)
             setStops(stopsRef.current)
-            addPolyline(routeId + '_0')
+            addPolyline(routeId + turRef.current)
+            markersRef.current.forEach(elem => elem.remove())
+            markersRef.current = []
             stopsRef.current.forEach(e => addMarker(e))
         } catch { }
     }
@@ -79,22 +86,15 @@ function Traseu() {
             .setLngLat([stop.stop_lon, stop.stop_lat])
             .setPopup(popup)
             .addTo(map.current);
+        markersRef.current.push(marker)
     };
 
     const addPolyline = useCallback(async (routeId) => {
         if (!map.current.getSource('route')) {
             try {
-                var url = 'https://api.tranzy.ai/v1/opendata/shapes?shape_id=' + routeId;
-                const options = {
-                    method: 'GET',
-                    headers: {
-                        'X-Agency-Id': '2',
-                        Accept: 'application/json',
-                        'X-API-KEY': 'ksRfq3mejazGhBobQYkPrgAUfnFaClVcgTa0eIlJ'
-                    }
-                };
+                var url = 'https://busifybackend-40a76006141a.herokuapp.com/shapes?shapeid=' + routeId;
 
-                var response = await fetch(url, options);
+                var response = await fetch(url);
                 const shapeData = await response.json();
 
                 const polylineCoordinates = shapeData.map((elem) => [elem.shape_pt_lon, elem.shape_pt_lat])
@@ -136,102 +136,6 @@ function Traseu() {
                         right: 50
                     }, duration: 2000
                 })
-
-                // const size = 125;
-                // const pulsingDot = {
-                //     width: size,
-                //     height: size,
-                //     data: new Uint8Array(size * size * 4),
-
-                //     // When the layer is added to the map,
-                //     // get the rendering context for the map canvas.
-                //     onAdd: function () {
-                //         const canvas = document.createElement('canvas');
-                //         canvas.width = this.width;
-                //         canvas.height = this.height;
-                //         this.context = canvas.getContext('2d');
-                //     },
-
-                //     // Call once before every frame where the icon will be used.
-                //     render: function () {
-                //         const duration = 1000;
-                //         const t = (performance.now() % duration) / duration;
-
-                //         const radius = (size / 2) * 0.3;
-                //         const outerRadius = (size / 2) * 0.7 * t + radius;
-                //         const context = this.context;
-
-                //         // Draw the outer circle.
-                //         context.clearRect(0, 0, this.width, this.height);
-                //         context.beginPath();
-                //         context.arc(
-                //             this.width / 2,
-                //             this.height / 2,
-                //             outerRadius,
-                //             0,
-                //             Math.PI * 2
-                //         );
-                //         context.fillStyle = `rgba(128, 0, 128, ${1 - t})`;
-                //         context.fill();
-
-                //         // Draw the inner circle.
-                //         context.beginPath();
-                //         context.arc(
-                //             this.width / 2,
-                //             this.height / 2,
-                //             radius,
-                //             0,
-                //             Math.PI * 2
-                //         );
-                //         context.fillStyle = 'rgba(128, 0, 128)'; // 
-                //         context.strokeStyle = 'white';
-                //         context.lineWidth = 2 + 4 * (1 - t);
-                //         context.fill();
-                //         context.stroke();
-
-                //         // Update this image's data with data from the canvas.
-                //         this.data = context.getImageData(
-                //             0,
-                //             0,
-                //             this.width,
-                //             this.height
-                //         ).data;
-
-                //         // Continuously repaint the map, resulting
-                //         // in the smooth animation of the dot.
-                //         map.current.triggerRepaint();
-
-                //         // Return `true` to let the map know that the image was updated.
-                //         return true;
-                //     }
-                // };
-
-                // map.current.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
-
-                // map.current.addSource('dot-point', {
-                //     'type': 'geojson',
-                //     'data': {
-                //         'type': 'FeatureCollection',
-                //         'features': [
-                //             {
-                //                 'type': 'Feature',
-                //                 'geometry': {
-                //                     'type': 'Point',
-                //                     'coordinates': polylineCoordinates[last]
-                //                 }
-                //             }
-                //         ]
-                //     }
-                // });
-
-                // map.current.addLayer({
-                //     'id': 'layer-with-pulsing-dot',
-                //     'type': 'symbol',
-                //     'source': 'dot-point',
-                //     'layout': {
-                //         'icon-image': 'pulsing-dot'
-                //     }
-                // });
             } catch { }
         }
     }, []);
@@ -260,6 +164,15 @@ function Traseu() {
     return (
         <div>
             <br />
+            <Form.Switch
+                id="custom-switch"
+                label={turRef.current === '_0' ? 'Tur' : 'Retur'}
+                onChange={() => {
+                    turRef.current = turRef.current === '_0' ? '_1' : '_0'
+                    setTurlabl(turRef.current)
+                    fetchData()
+                }}
+            />
             <div className='traseu-body'>
                 <MDBContainer fluid className="py-4 mdb-container">
                     <MDBRow>

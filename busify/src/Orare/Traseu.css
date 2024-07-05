@@ -74,3 +74,11 @@
     background-color: purple;
     border-radius: 5px;
 }
+
+
+#custom-switch{
+  background-color: white;
+}
+#custom-switch:checked{
+  background-color: purple;
+}

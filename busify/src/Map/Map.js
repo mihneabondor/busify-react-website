@@ -343,17 +343,9 @@ function Map() {
     const addPolyline = useCallback(async (vehicle) => {
         if (!map.current.getSource('route')) {
             try {
-                var url = 'https://api.tranzy.ai/v1/opendata/shapes?shape_id=' + vehicle.tripId;
-                const options = {
-                    method: 'GET',
-                    headers: {
-                        'X-Agency-Id': '2',
-                        Accept: 'application/json',
-                        'X-API-KEY': 'ksRfq3mejazGhBobQYkPrgAUfnFaClVcgTa0eIlJ'
-                    }
-                };
+                var url = 'https://busifybackend-40a76006141a.herokuapp.com/shapes?shapeid=' + vehicle.tripId;
 
-                var response = await fetch(url, options);
+                var response = await fetch(url);
                 const shapeData = await response.json();
 
                 const polylineCoordinates = shapeData.map((elem) => [elem.shape_pt_lon, elem.shape_pt_lat])
@@ -361,8 +353,7 @@ function Map() {
                 let endCoords = polylineCoordinates[last], distMin = 100
                 polylineCoordinates.forEach(elem => {
                     const d = calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, elem[1], elem[0])
-                    if (d > 0)
-                        distMin = Math.min(distMin, d)
+                    distMin = Math.min(distMin, Math.abs(d))
                 })
                 console.log(distMin)
                 if (distMin < 0.05)

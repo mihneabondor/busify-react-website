@@ -40,7 +40,7 @@ function MapNavbar() {
                             </Offcanvas.Title>
                         </Offcanvas.Header>
                         <Offcanvas.Body>
-                            <Nav.Link href="/" style={{ paddingBottom: '10px' }}> Acasă </Nav.Link>
+                            <Nav.Link href="https://busify.ro/" style={{ paddingBottom: '10px' }}> Acasă </Nav.Link>
                             <Nav.Link href="/map" style={{ paddingBottom: '10px' }}> Hartă </Nav.Link>
                             <Nav.Link href='/map/undemiibusu' style={{ paddingBottom: '10px' }}> Unde mi-i busu'? </Nav.Link>
                             <Nav.Link href="/map/destinatii" style={{ paddingBottom: '10px' }}> Destinații </Nav.Link>
