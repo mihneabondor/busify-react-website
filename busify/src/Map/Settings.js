@@ -50,15 +50,6 @@ function Settings(props) {
                         <Accordion.Header>Alege linii</Accordion.Header>
                         <Accordion.Body>
                             <Form>
-                                <InputGroup className="mb-3">
-                                    <Form.Control
-                                        placeholder="Caută o linie"
-                                        aria-describedby="basic-addon2"
-                                        ref={searchValueRef}
-                                        onChange={change}
-                                    />
-                                    <Button type='submit' className='orare-search-button' id="button-addon2"> Căutare </Button>
-                                </InputGroup>
                                 <div className="mb-3">
                                     <Form.Check
                                         inline

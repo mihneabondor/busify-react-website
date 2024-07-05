@@ -650,18 +650,26 @@ function Map() {
                 onHide={() => {
                     setShowUndemibusu(false)
 
-                    let oneMatch = false;
-                    unique.current = unique.current.map((elem) => [elem[0], elem[0] === undemibususearchref.current.value])
+                    let exista = false;
                     unique.current.forEach(elem => {
-                        if (elem[1]) oneMatch = true
-                    });
-                    if (!oneMatch)
-                        setShownVehicles();
-                    else setShowUndemibusuToast(true);
+                        if (elem[0].startsWith(undemibususearchref.current.value))
+                            exista = undemibususearchref.current.value !== ''
+                    })
 
-                    setUniqueLines(unique.current)
-                    setCheckAllChecked(!oneMatch)
-                    resetMarkers();
+                    if (exista) {
+                        let oneMatch = false;
+                        unique.current = unique.current.map((elem) => [elem[0], elem[0].startsWith(undemibususearchref.current.value)])
+                        unique.current.forEach(elem => {
+                            if (elem[1]) oneMatch = true
+                        });
+                        if (!oneMatch)
+                            setShownVehicles();
+                        else setShowUndemibusuToast(true);
+
+                        setUniqueLines(unique.current)
+                        setCheckAllChecked(!oneMatch)
+                        resetMarkers();
+                    }
                 }} />
             <UndemibusuToast
                 show={showUndemibusuToast}
