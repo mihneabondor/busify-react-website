@@ -50,7 +50,7 @@ function Map() {
 
     const addMarker = (vehicle, reload = false) => {
         //popup
-        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orar/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiaza link de urmarire</a>';
+        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orar/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://app.busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiaza link de urmarire</a>';
 
         const divElement = document.createElement('div');
         const assignBtn = document.createElement('div');
@@ -675,6 +675,7 @@ function Map() {
                 show={showDestinatii}
                 destination={destinatiiSearchRef}
                 origin={originSearchRef}
+                getuseraddress={getUserAddress}
                 onHide={() => {
                     setShowDestinatii(false)
                     if (destinatiiSearchRef.current.value)

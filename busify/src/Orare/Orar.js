@@ -61,7 +61,7 @@ function Orar(props) {
                         if (!!nav.prevPage)
                             nav('/map')
                         else nav(-1)
-                    }}> {'< Inapoi'} </Button>
+                    }}> {'< Înapoi'} </Button>
             </div>
             <div className='orar-body'>
                 <h3>Orarul liniei {linie}</h3>
@@ -82,10 +82,10 @@ function Orar(props) {
                         <Tab eventKey="lv" title="Luni-vineri">
                             <OrarTable orar={orar} />
                         </Tab>
-                        <Tab eventKey="s" title="Sambata">
+                        <Tab eventKey="s" title="Sâmbătă">
                             <OrarTable orar={orar} />
                         </Tab>
-                        <Tab eventKey="d" title="Duminica">
+                        <Tab eventKey="d" title="Duminică">
                             <OrarTable orar={orar} />
                         </Tab>
                     </Tabs>

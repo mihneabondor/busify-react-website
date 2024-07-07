@@ -19,32 +19,6 @@ function DestinatiiToast(props) {
         }
     }, [props.instructions])
 
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        function toRadians(degrees) {
-            return degrees * (Math.PI / 180);
-        }
-
-        const R = 6371;
-        const dLat = toRadians(lat2 - lat1);
-        const dLon = toRadians(lon2 - lon1);
-
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        const distance = R * c; // Distance in kilometers
-
-        const signLat = (lat2 - lat1) < 0 ? -1 : 1;
-        const signLon = (lon2 - lon1) < 0 ? -1 : 1;
-
-        const signedDistance = distance * signLat * signLon;
-
-        return signedDistance;
-    }
-
     const drawPolyline = async (startCoords, endCoords, lineName, dotName, lineColor) => {
         if (currentStepRef.current) {
             const decodedPolyline = polyline.decode(currentStepRef.current.polyline.points)
@@ -101,6 +75,34 @@ function DestinatiiToast(props) {
                 'line-width': 5
             }
         });
+
+        let start;
+        const duration = 3750;
+
+        const animateLine = (timestamp) => {
+            if (!start) start = timestamp;
+            const elapsed = timestamp - start;
+
+            const progress = Math.min(elapsed / duration, 1);
+
+            const currentIndex = Math.floor(progress * (polylineCoordinates.length - 1));
+
+            const newCoords = polylineCoordinates.slice(0, currentIndex + 1);
+            props.map.current.getSource(namePolyline).setData({
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                    type: 'LineString',
+                    coordinates: newCoords,
+                },
+            });
+
+            if (progress < 1) {
+                requestAnimationFrame(animateLine);
+            }
+        };
+
+        requestAnimationFrame(animateLine);
 
         const size = 90;
         const pulsingDot = {
@@ -287,14 +289,19 @@ function DestinatiiToast(props) {
                         </Toast.Header>
                         <Toast.Body>
                             <p><b>Destinatie:</b> {props.instructions.end_address} </p>
-                            <Button onClick={() => {
-                                removePolyline('allRoute', 'destination')
-                                props.setshowdestinatiitost(false)
-                                props.setshowdestinatii(true)
-                            }}>
+                            <Button
+                                variant='secondary'
+                                onClick={() => {
+                                    removePolyline('allRoute', 'destination')
+                                    props.setshowdestinatiitost(false)
+                                    props.setshowdestinatii(true)
+                                }}>
                                 Schimbă
                             </Button>
-                            <Button style={{ float: 'right' }} onClick={() => {
+                            <Button style={{
+                                float: 'right',
+                                background: 'purple'
+                            }} onClick={() => {
                                 setCurrentStep(props.instructions.steps[0])
                                 currentStepRef.current = props.instructions.steps[0]
                                 removePolyline('allRoute', 'destination')
@@ -328,6 +335,7 @@ function DestinatiiToast(props) {
                                 : <p />}
                             <div style={{ width: '100%' }}>
                                 <Button
+                                    variant='secondary'
                                     onClick={() => {
                                         removePolyline('stepLine', 'stepDot')
                                         if (currentIndexRef.current === 0) {
@@ -345,12 +353,14 @@ function DestinatiiToast(props) {
                                 >Înapoi</Button>
                                 <Button style={{
                                     float: 'right',
+                                    background: 'purple'
                                 }}
                                     onClick={() => {
                                         removePolyline('stepLine', 'stepDot')
                                         if (currentIndexRef.current + 1 === props.instructions.steps.length) {
                                             removePolyline('allRoute', 'destination')
                                             props.setshowdestinatiitost(false)
+                                            props.setshowdestinatii(true)
                                         } else {
                                             currentStepRef.current = props.instructions.steps[++currentIndexRef.current]
                                             setCurrentStep(currentStepRef.current)
