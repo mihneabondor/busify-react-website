@@ -3,13 +3,15 @@ import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import { useEffect, useRef, useState } from 'react';
 import Offcanvas from 'react-bootstrap/Offcanvas';
-import { Squash as Hamburger } from 'hamburger-react'
+import { Squash as Hamburger } from 'hamburger-react';
+import Badge from 'react-bootstrap/Badge';
 
 function MapNavbar() {
     const [show, setShow] = useState(false);
     const handleClose = () => setShow(false);
     const [expandedLines, setExpandedLines] = useState([])
     const expandedLinesRef = useRef([])
+    const vineriRef = useRef(false)
 
     const fetchData = async () => {
         try {
@@ -24,12 +26,21 @@ function MapNavbar() {
     useEffect(() => {
         if (expandedLinesRef.current.length === 0)
             fetchData()
+        const d = new Date();
+        if(d.getDay() === 5)
+            vineriRef.current = true
     }, [])
 
     return (
         <Navbar className="bg-body-tertiary">
-            <Container fluid>
-                <Navbar.Brand href="/" style={{ 'paddingLeft': 10 }}>Busify</Navbar.Brand>
+            <Container>
+                <Navbar.Brand href="/" style={{ 'paddingLeft': 10 }}>
+                Busify
+                <Badge style={{
+                    marginLeft: '10px',
+                    visibility: vineriRef.current ? 'visible' : 'hidden'
+                }} bg="success">Vinerea verde</Badge>
+                </Navbar.Brand>
                 <Navbar.Toggle />
                 <Nav className="justify-content-end">
                     <Hamburger toggle={setShow} />
