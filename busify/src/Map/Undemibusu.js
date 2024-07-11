@@ -17,24 +17,24 @@ function Undemibusu(props) {
             </Modal.Header>
             <Modal.Body>
                 <p>
-                    O initiativa <b>Busify.ro</b> pentru a-ti gasi cu usurinta autobusul pe care il astepti!
+                    O inițiativă <b>Busify.ro</b> pentru a-ți găsi cu ușurință autobusul pe care-l aștepți!
                 </p>
                 <Form onSubmit={(e) => {
                     e.preventDefault();
                     props.onHide();
                 }}>
-                    <Form.Label htmlFor="inputPassword5">Cauta o linie</Form.Label>
+                    <Form.Label htmlFor="inputPassword5">Caută o linie</Form.Label>
                     <Form.Control
                         placeholder="Exemplu: 25"
                         ref={props.undemibususearchref}
                     />
                     <Form.Text>
-                        Introdu linia pe care o cauti, sau apasa pe inchide pentru a le vizualiza pe toate. De asemenea, poti merge in setari apasand pe butonul din dreapta pentru a mai afisa sau ascunde alte linii.
+                        Introdu linia pe care o cauți, sau apasă pe închide pentru a le vizualiza pe toate. De asemenea, poți merge în setări apăsând pe butonul din dreapta pentru a mai afișa sau ascunde alte linii.
                     </Form.Text>
                 </Form>
             </Modal.Body>
             <Modal.Footer>
-                <Button onClick={props.onHide}>Inchide</Button>
+                <Button style={{background:'purple'}} onClick={props.onHide}>Închide</Button>
             </Modal.Footer>
         </Modal>
     )

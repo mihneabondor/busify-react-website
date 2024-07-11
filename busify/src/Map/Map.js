@@ -178,7 +178,6 @@ function Map() {
                     if (!loaded && !loadedFirstTime) {
                         let s = [];
                         if (localStorage.getItem('linii_selectate')) s = localStorage.getItem('linii_selectate').split(',');
-                        // unique.current = [...new Set(vehicles.current.map(item => item.line))].sort().map(elem => [elem, true])
 
                         try {
                             const resp = await fetch('https://orare.busify.ro/public/buses_basic.json');
@@ -208,6 +207,8 @@ function Map() {
                             }
                         }
                         setUniqueLines(unique.current)
+                        if (!localStorage.getItem('linii_selectate'))
+                            localStorage.setItem('linii_selectate', unique.current)
                         loadedFirstTime = true
                         setLoaded(true)
                         vehicles.current.forEach(elem => {
@@ -289,7 +290,6 @@ function Map() {
             },
             trackUserLocation: true,
             showUserHeading: true,
-            showAccuracyCircle: true
         })
         addSettingsButton();
         map.current.addControl(geo);
@@ -303,6 +303,7 @@ function Map() {
                 })
             else if (!popupOpen.current) {
                 geo.trigger();
+                if(undemibusu === 'destinatii')
                 setTimeout(() => {
                     getUserAddress()
                 }, 1000);
@@ -614,7 +615,7 @@ function Map() {
 
         setInterval(() => {
             fetchData()
-        }, 5000);
+        }, 3000);
     }, []);
 
     return (

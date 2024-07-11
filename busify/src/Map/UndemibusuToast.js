@@ -21,8 +21,8 @@ function UndemibusuToast(props) {
                     <strong className="me-auto">Unde mi-i busu'?</strong>
                 </Toast.Header>
                 <Toast.Body>
-                    <p>Apasa aici pentru a afisa toate autobusele</p>
-                    <Button onClick={props.onHide}>Revino</Button>
+                    <p>Apasă aici pentru a afișa toate autobusele</p>
+                    <Button style={{background: 'purple'}} onClick={props.onHide}>Revino</Button>
                 </Toast.Body>
             </Toast>
         </ToastContainer>
