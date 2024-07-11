@@ -20,3 +20,10 @@
     bottom: 0;
     margin: auto;
 }
+
+#custom-switch{
+    background-color: white;
+  }
+  #custom-switch:checked{
+    background-color: purple;
+  }

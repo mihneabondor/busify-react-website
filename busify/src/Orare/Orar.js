@@ -8,6 +8,7 @@ import Button from 'react-bootstrap/Button';
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import Traseu from "./Traseu";
+import Form from 'react-bootstrap/Form'
 
 function Orar(props) {
     const [page, setPage] = useState('lv');
@@ -15,6 +16,7 @@ function Orar(props) {
     const [orar, setOrar] = useState();
     const { linie } = useParams();
     const [route, setRoute] = useState();
+    const [linieFav, setLinieFav] = useState(false)
 
     const nav = useNavigate();
 
@@ -47,6 +49,11 @@ function Orar(props) {
     }
     useEffect(() => {
         fetchData()
+
+        if(localStorage.getItem('linii_favorite')){
+            setLinieFav(localStorage.getItem('linii_favorite').search(linie) !== -1)
+            console.log(localStorage.getItem('linii_favorite').search(linie))
+        }
     }, [])
     return (
         <div className='orar-page-body'>
@@ -66,6 +73,26 @@ function Orar(props) {
             <div className='orar-body'>
                 <h3>Orarul liniei {linie}</h3>
                 <h4>{route}</h4>
+                <a href={'/map/'+ linie}>Vezi pe hartă </a>
+                <Form.Switch
+                    checked={linieFav}
+                    id="custom-switch"
+                    label= 'Linie favorită'
+                    onChange={() => {
+                        setLinieFav(!linieFav)
+                        var linii = localStorage.getItem('linii_favorite');
+                        if (!linii)
+                            linii = '';
+            
+                        if (linii.search(linie) != -1) {
+                            linii = linii.replace(linie + ' ', '')
+                        } else {
+                            linii += linie + ' ';
+                        }
+            
+                        localStorage.setItem('linii_favorite', linii)
+                    }}
+                />
                 <br />
                 <div>
                     <Tabs

@@ -12,6 +12,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import UndemibusuToast from "./UndemibusuToast.js";
 import Destinatii from "./Destinatii.js";
 import DestinatiiToast from "./DestinatiiToast.js";
+import '../Orare/Traseu.css'
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
@@ -50,14 +51,14 @@ function Map() {
 
     const addMarker = (vehicle, reload = false) => {
         //popup
-        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orar/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://app.busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiaza link de urmarire</a>';
+        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orar/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://app.busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiază link de urmarire</a>';
 
         const divElement = document.createElement('div');
         const assignBtn = document.createElement('div');
         const linieFavorita = !(!localStorage.getItem('linii_favorite') || (' ' + localStorage.getItem('linii_favorite') + ' ').search(' ' + vehicle.line + ' ') == -1);
         const switchState = !linieFavorita ? 'flexSwitchCheckDefault">' : 'flexSwitchCheckChecked" checked>';
-        assignBtn.className = 'form-check form-switch';
-        assignBtn.innerHTML += '<input class="form-check-input" type="checkbox" role="switch" id="' + switchState + 'Linie favorita</input>';
+        assignBtn.className = 'custom-switch form-check form-switch';
+        assignBtn.innerHTML += '<input class="form-check-input" type="checkbox" role="switch" id="' + switchState + 'Linie favorită</input>';
         divElement.innerHTML = innerHtmlContent;
         divElement.appendChild(assignBtn);
 
@@ -227,6 +228,27 @@ function Map() {
                             elem.marker.togglePopup();
                         } else if (undemibusu === 'destinatii')
                             setShowDestinatii(true)
+                        else {
+                            let exista = false;
+                            unique.current.forEach(elem => {
+                                if (elem[0] === undemibusu)
+                                    exista = true
+                            })
+        
+                            if (exista) {
+                                let oneMatch = false;
+                                unique.current = unique.current.map((elem) => [elem[0], elem[0].startsWith(undemibusu)])
+                                unique.current.forEach(elem => {
+                                    if (elem[1]) oneMatch = true
+                                });
+                                if (!oneMatch)
+                                    setShownVehicles();
+        
+                                setUniqueLines(unique.current)
+                                setCheckAllChecked(!oneMatch)
+                                resetMarkers();
+                            }
+                        }
                     } else {
                         updateMarker()
                     }
@@ -369,7 +391,7 @@ function Map() {
                             bottom: 50,
                             left: 50,
                             right: 50
-                        }, duration: 2000
+                        }, duration: 1250
                     })
 
                     map.current.addSource('route', {
