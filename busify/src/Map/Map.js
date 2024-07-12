@@ -18,7 +18,6 @@ mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya
 
 function Map() {
     var map = useRef();
-
     var defLng = 23.591423;
     var defLat = 46.770439;
     var lastCoords = useRef([defLng, defLat]);
@@ -47,7 +46,6 @@ function Map() {
     let destinatiiSearchRef = useRef();
     let originSearchRef = useRef();
     const [instructions, setInstructions] = useState()
-
 
     const addMarker = (vehicle, reload = false) => {
         //popup
@@ -237,7 +235,7 @@ function Map() {
         
                             if (exista) {
                                 let oneMatch = false;
-                                unique.current = unique.current.map((elem) => [elem[0], elem[0].startsWith(undemibusu)])
+                                unique.current = unique.current.map((elem) => [elem[0], elem[0] === undemibusu ])
                                 unique.current.forEach(elem => {
                                     if (elem[1]) oneMatch = true
                                 });
@@ -672,7 +670,7 @@ function Map() {
 
                     if (exista) {
                         let oneMatch = false;
-                        unique.current = unique.current.map((elem) => [elem[0], elem[0].startsWith(undemibususearchref.current.value)])
+                        unique.current = unique.current.map((elem) => [elem[0], elem[0].startsWith(undemibususearchref.current.value) && (elem[0].replace(undemibususearchref.current.value, '').toLowerCase() != elem[0].replace(undemibususearchref.current.value, '').toUpperCase() || elem[0].replace(undemibususearchref.current.value, '').length === 0)])
                         unique.current.forEach(elem => {
                             if (elem[1]) oneMatch = true
                         });

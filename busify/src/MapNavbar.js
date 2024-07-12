@@ -104,14 +104,7 @@ function MapNavbar() {
                                 </p>
                             ))}
                             <Nav.Link href="/orare" style={{ paddingBottom: '10px' }}> Ultimele știri </Nav.Link>
-
-                            <div style={{ 
-                                    paddingBottom: '15px',
-                                    position: 'absolute',
-                                    bottom: '0',
-                                }}>
-                                <Nav.Link href="https://busify.ro/contact">Contact </Nav.Link>
-                            </div>
+                            <Nav.Link href="https://busify.ro/contact"> Contact </Nav.Link>
                         </Offcanvas.Body>
                     </Offcanvas>
                 </Nav>
