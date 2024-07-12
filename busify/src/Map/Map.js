@@ -13,6 +13,7 @@ import UndemibusuToast from "./UndemibusuToast.js";
 import Destinatii from "./Destinatii.js";
 import DestinatiiToast from "./DestinatiiToast.js";
 import '../Orare/Traseu.css'
+import {io} from 'socket.io-client'
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
@@ -46,6 +47,8 @@ function Map() {
     let destinatiiSearchRef = useRef();
     let originSearchRef = useRef();
     const [instructions, setInstructions] = useState()
+
+    let socket = useRef();
 
     const addMarker = (vehicle, reload = false) => {
         //popup
@@ -628,14 +631,113 @@ function Map() {
         }
     }
 
+    const socketData = useCallback(async (data) => { 
+        let vehicleData = data.vehicles
+            let tripData = data.trips
+            let routeData = data.routes
+
+            vehicles.current = [];
+            vehicleData.forEach(vehicle => {
+            if (vehicle.trip_id != null && vehicle.route_id != null) {
+
+                let tripDataVehicle = tripData.find((elem) => elem.trip_id === vehicle.trip_id);
+                let routeDataVehicle = routeData.find((elem) => elem.route_id === vehicle.route_id);
+
+                if (tripDataVehicle && routeDataVehicle) {
+                    let headsign = tripDataVehicle.trip_headsign;
+                    let line = routeDataVehicle.route_short_name;
+                    if (headsign && line) {
+                        let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude], tripDataVehicle.trip_id);
+                        vehicles.current.push(newVehicle);
+                    }
+                }
+            }
+        });
+
+        if (!loaded && !loadedFirstTime) {
+            let s = [];
+            if (localStorage.getItem('linii_selectate')) s = localStorage.getItem('linii_selectate').split(',');
+
+            try {
+                const resp = await fetch('https://orare.busify.ro/public/buses_basic.json');
+                const buses_basic = await resp.json();
+                const joinArray = (arr) => {
+                    arr.forEach(elem => {
+                        unique.current.push([elem.name, true])
+                    })
+                }
+                joinArray(buses_basic.urbane)
+                joinArray(buses_basic.metropolitane)
+                joinArray(buses_basic.market)
+            } catch (err) {
+                console.log(err)
+            }
+
+            let saved = [];
+            for (let i = 0; i < s.length; i += 2)
+                saved.push([s[i], s[i + 1] === 'true']);
+
+            for (let i = 0; i < saved.length; i++) {
+                let index = getIndex(saved[i][0], unique.current)
+                if (index != -1) {
+                    unique.current[index][1] = saved[i][1];
+                    if (saved[i][1] === false)
+                        setCheckAllChecked(false)
+                }
+            }
+            setUniqueLines(unique.current)
+            if (!localStorage.getItem('linii_selectate'))
+                localStorage.setItem('linii_selectate', unique.current)
+            loadedFirstTime = true
+            setLoaded(true)
+            vehicles.current.forEach(elem => {
+                let exista = false
+                unique.current.forEach((uniqueLine) => {
+                    if (uniqueLine[0] === elem.line)
+                        exista = true
+                })
+                if (exista)
+                    addMarker(elem)
+            })
+            if (undemibusu === 'undemiibusu')
+                setShowUndemibusu(true)
+            else if (searchParams.get('id')) {
+                const elem = markers.current.find(elem => elem.vehicle.label === searchParams.get('id'));
+                elem.marker.togglePopup();
+            } else if (undemibusu === 'destinatii')
+                setShowDestinatii(true)
+            else {
+                let exista = false;
+                unique.current.forEach(elem => {
+                    if (elem[0] === undemibusu)
+                        exista = true
+                })
+
+                if (exista) {
+                    let oneMatch = false;
+                    unique.current = unique.current.map((elem) => [elem[0], elem[0] === undemibusu ])
+                    unique.current.forEach(elem => {
+                        if (elem[1]) oneMatch = true
+                    });
+                    if (!oneMatch)
+                        setShownVehicles();
+
+                    setUniqueLines(unique.current)
+                    setCheckAllChecked(!oneMatch)
+                    resetMarkers();
+                }
+            }
+        } else {
+            updateMarker()
+        }
+    }, [])
+
     useEffect(() => {
         if (map.current) return;
         generateMap()
-        fetchData();
 
-        setInterval(() => {
-            fetchData()
-        }, 3000);
+        socket.current = io('https://busifybackend-40a76006141a.herokuapp.com')
+        socket.current.on('vehicles', data => {socketData(data)})
     }, []);
 
     return (
