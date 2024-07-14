@@ -27,7 +27,7 @@ function Search(props) {
     }
 
     return (
-        <Modal show={props.show} onHide={() => {
+        <Modal centered show={props.show} onHide={() => {
             props.onHide()
             setLiniiGasite([])
         }}>

@@ -333,8 +333,8 @@ function Map() {
             showUserHeading: true,
         })
         addSettingsButton();
-        addSearchButton();
         map.current.addControl(geo);
+        addSearchButton();
         map.current.on('load', () => {
             if (refresh)
                 map.current.flyTo({
@@ -394,12 +394,18 @@ function Map() {
                 const polylineCoordinates = shapeData.map((elem) => [elem.shape_pt_lon, elem.shape_pt_lat])
                 let last = polylineCoordinates.length - 1
                 let endCoords = polylineCoordinates[last], distMin = 100
-                polylineCoordinates.forEach(elem => {
-                    const d = calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, elem[1], elem[0])
-                    distMin = Math.min(distMin, Math.abs(d))
-                })
-                const distVehicleEnd = Math.abs(calculateDistance(vehicle.lngLat[1], vehicle.lngLat[0], endCoords[1], endCoords[0]))
-                const distUserEnd = Math.abs(calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, endCoords[1], endCoords[0]))
+                let distVehicleEnd = 1000, distUserEnd = 1000
+
+                try {
+                    polylineCoordinates.forEach(elem => {
+                        const d = calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, elem[1], elem[0])
+                        distMin = Math.min(distMin, Math.abs(d))
+                    })
+                    distVehicleEnd = Math.abs(calculateDistance(vehicle.lngLat[1], vehicle.lngLat[0], endCoords[1], endCoords[0]))
+                    distUserEnd = Math.abs(calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, endCoords[1], endCoords[0]))
+                } catch(e) {
+                    console.log(e)
+                }
                 console.log(distVehicleEnd, distUserEnd, distUserEnd < distVehicleEnd)
                 console.log(distMin)
                 if (distMin < 0.1 && distUserEnd < distVehicleEnd)
@@ -568,7 +574,9 @@ function Map() {
                         }
                     });
                 }
-            } catch { }
+            } catch (e) { 
+                console.log(e)
+            }
         }
     }, []);
 
@@ -757,10 +765,9 @@ function Map() {
 
     useEffect(() => {
         if (map.current) return;
-        generateMap()
-
         socket.current = io('https://busifybackend-40a76006141a.herokuapp.com')
         socket.current.on('vehicles', data => {socketData(data)})
+        generateMap()
     }, []);
 
     return (
