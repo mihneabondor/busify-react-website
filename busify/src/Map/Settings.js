@@ -41,7 +41,7 @@ function Settings(props) {
             centered >
             <Modal.Header closeButton>
                 <Modal.Title id="contained-modal-title-vcenter">
-                    Setari
+                    Setări
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
@@ -53,7 +53,7 @@ function Settings(props) {
                                 <div className="mb-3">
                                     <Form.Check
                                         inline
-                                        label='Selecteaza tot'
+                                        label='Selectează tot'
                                         type='checkbox'
                                         checked={props.selectAllCheck}
                                         onChange={(e) => {
@@ -109,7 +109,7 @@ function Settings(props) {
                 </Accordion>
             </Modal.Body>
             <Modal.Footer>
-                <Button onClick={props.onHide}>Inchide</Button>
+                <Button onClick={props.onHide} style={{background: 'purple'}} >Închide</Button>
             </Modal.Footer>
         </Modal>
     );

@@ -14,6 +14,7 @@ import Destinatii from "./Destinatii.js";
 import DestinatiiToast from "./DestinatiiToast.js";
 import '../Orare/Traseu.css'
 import {io} from 'socket.io-client'
+import Search from "./Search.js";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
@@ -32,6 +33,7 @@ function Map() {
     const [loaded, setLoaded] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     var loadedFirstTime = false;
+    const [showSearch, setShowSearch] = useState(false);
 
     var popupOpen = useRef(false);
 
@@ -52,7 +54,7 @@ function Map() {
 
     const addMarker = (vehicle, reload = false) => {
         //popup
-        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orar/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://app.busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiază link de urmarire</a>';
+        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orar/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://app.busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiază link de urmărire</a>';
 
         const divElement = document.createElement('div');
         const assignBtn = document.createElement('div');
@@ -298,6 +300,22 @@ function Map() {
         map.current.addControl(button, "top-right");
     }
 
+    function addSearchButton() {
+        class settingsButton {
+            onAdd(map) {
+                const div = document.createElement("div");
+                div.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+                div.innerHTML = `<button><svg width = '17' height = '17' fill ='#34B5E5' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/></svg></button>`;
+                div.addEventListener("contextmenu", (e) => e.preventDefault());
+                div.addEventListener("click", () => setShowSearch((prev) => !prev));
+
+                return div;
+            }
+        }
+        const button = new settingsButton();
+        map.current.addControl(button, "top-right");
+    }
+
     const generateMap = (refresh = false) => {
         map.current = new mapboxgl.Map({
             container: 'map',
@@ -315,6 +333,7 @@ function Map() {
             showUserHeading: true,
         })
         addSettingsButton();
+        addSearchButton();
         map.current.addControl(geo);
         map.current.on('load', () => {
             if (refresh)
@@ -379,9 +398,13 @@ function Map() {
                     const d = calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, elem[1], elem[0])
                     distMin = Math.min(distMin, Math.abs(d))
                 })
+                const distVehicleEnd = Math.abs(calculateDistance(vehicle.lngLat[1], vehicle.lngLat[0], endCoords[1], endCoords[0]))
+                const distUserEnd = Math.abs(calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, endCoords[1], endCoords[0]))
+                console.log(distVehicleEnd, distUserEnd, distUserEnd < distVehicleEnd)
                 console.log(distMin)
-                if (distMin < 0.05)
+                if (distMin < 0.1 && distUserEnd < distVehicleEnd)
                     endCoords = [map.current._controls[2]._lastKnownPosition.coords.longitude, map.current._controls[2]._lastKnownPosition.coords.latitude]
+
                 if (popupOpen.current) {
                     let bounds = new mapboxgl.LngLatBounds();
                     bounds.extend(vehicle.lngLat);
@@ -745,6 +768,18 @@ function Map() {
             <MapNavbar />
             <div id='map' className="map-container" style={{ visibility: loaded ? 'visible' : 'hidden' }} />
             <Spinner animation="grow" variant='dark' className='spinner-container' style={{ visibility: !loaded ? 'visible' : 'hidden' }} />
+            <Search 
+                show={showSearch}
+                unique={unique}
+                setUniqueLines={setUniqueLines}
+                setShownVehicles={setShownVehicles}
+                setCheckAllChecked={setCheckAllChecked}
+                resetMarkers={resetMarkers}
+                setShowUndemibusuToast={setShowUndemibusuToast}
+                onHide={() => {
+                    setShowSearch(false)
+                }}
+            />
             <Settings
                 show={showSettings}
                 onHide={() => {
@@ -786,6 +821,7 @@ function Map() {
                     }
                 }} />
             <UndemibusuToast
+                header={undemibusu === 'undemiibusu' ? 'Unde mi-i busu?' : 'Căutare'}
                 show={showUndemibusuToast}
                 onHide={() => {
                     setShownVehicles();

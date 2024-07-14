@@ -18,10 +18,10 @@ function UndemibusuToast(props) {
 
                         className="rounded me-2"
                     />
-                    <strong className="me-auto">Unde mi-i busu'?</strong>
+                    <strong className="me-auto">{props.header}</strong>
                 </Toast.Header>
                 <Toast.Body>
-                    <p>Apasă aici pentru a afișa toate autobusele</p>
+                    <p>Apasă aici pentru a vizualiza toate liniile</p>
                     <Button style={{background: 'purple'}} onClick={props.onHide}>Revino</Button>
                 </Toast.Body>
             </Toast>
