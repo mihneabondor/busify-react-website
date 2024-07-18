@@ -15,6 +15,8 @@ import DestinatiiToast from "./DestinatiiToast.js";
 import '../Orare/Traseu.css'
 import {io} from 'socket.io-client'
 import Search from "./Search.js";
+import VehicleToast from "./Marker/VehicleToast.js";
+import NotificationToast from "./NotificationToast.js";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
@@ -52,6 +54,9 @@ function Map() {
     let originSearchRef = useRef();
     const [instructions, setInstructions] = useState()
 
+    const [selectedVehicle, setSelectedVehicle] = useState(null)
+    const [showNotification, setShowNotification] = useState(false)
+
     let socket = useRef();
 
     const addStopMarker = (stop) => {
@@ -83,52 +88,52 @@ function Map() {
     };
 
     const addMarker = (vehicle, reload = false) => {
-        //popup
-        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orare/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://app.busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiază link de urmărire</a>';
+        // //popup
+        // var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orare/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://app.busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiază link de urmărire</a>';
 
-        const divElement = document.createElement('div');
-        const assignBtn = document.createElement('div');
+        // const divElement = document.createElement('div');
+        // const assignBtn = document.createElement('div');
         const linieFavorita = !(!localStorage.getItem('linii_favorite') || (' ' + localStorage.getItem('linii_favorite') + ' ').search(' ' + vehicle.line + ' ') == -1);
-        const switchState = !linieFavorita ? 'flexSwitchCheckDefault">' : 'flexSwitchCheckChecked" checked>';
-        assignBtn.className = 'custom-switch form-check form-switch';
-        assignBtn.innerHTML += '<input class="form-check-input" type="checkbox" role="switch" id="' + switchState + 'Linie favorită</input>';
-        divElement.innerHTML = innerHtmlContent;
-        divElement.appendChild(assignBtn);
+        // const switchState = !linieFavorita ? 'flexSwitchCheckDefault">' : 'flexSwitchCheckChecked" checked>';
+        // assignBtn.className = 'custom-switch form-check form-switch';
+        // assignBtn.innerHTML += '<input class="form-check-input" type="checkbox" role="switch" id="' + switchState + 'Linie favorită</input>';
+        // divElement.innerHTML = innerHtmlContent;
+        // divElement.appendChild(assignBtn);
 
         var el = document.createElement('div');
-        assignBtn.addEventListener('click', (e) => {
-            var linii = localStorage.getItem('linii_favorite');
-            if (!linii)
-                linii = '';
+        // assignBtn.addEventListener('click', (e) => {
+        //     var linii = localStorage.getItem('linii_favorite');
+        //     if (!linii)
+        //         linii = '';
 
-            if (linii.search(vehicle.line) != -1) {
-                linii = linii.replace(vehicle.line + ' ', '')
-            } else {
-                linii += vehicle.line + ' ';
-            }
+        //     if (linii.search(vehicle.line) != -1) {
+        //         linii = linii.replace(vehicle.line + ' ', '')
+        //     } else {
+        //         linii += vehicle.line + ' ';
+        //     }
 
-            localStorage.setItem('linii_favorite', linii)
-            resetMarkers()
-        });
+        //     localStorage.setItem('linii_favorite', linii)
+        //     resetMarkers()
+        // });
 
-        const popup = new mapboxgl.Popup({offset: 25})
-            .setDOMContent(divElement);
+        // const popup = new mapboxgl.Popup({offset: 25})
+        //     .setDOMContent(divElement);
         // popup.closeOnClick = false;
         
-        popup.on('close', () => {
-            stopMarkers.current.forEach(e => e.marker.remove())
-            stopMarkers.current = []
-            removePolyline()
-            popupOpen.current = false
-            popupIndex.current = 0
-        })
+        // popup.on('close', () => {
+        //     stopMarkers.current.forEach(e => e.marker.remove())
+        //     stopMarkers.current = []
+        //     removePolyline()
+        //     popupOpen.current = false
+        //     popupIndex.current = 0
+        // })
 
-        popup.on('open', () => {
-            getStops(vehicle.tripId)
-            addPolyline(vehicle)
-            popupOpen.current = true
-            popupIndex.current = vehicle.label
-        })
+        // popup.on('open', () => {
+        //     getStops(vehicle.tripId)
+        //     addPolyline(vehicle)
+        //     popupOpen.current = true
+        //     popupIndex.current = vehicle.label
+        // })
 
         //marker
         if (searchParams.get('id') === vehicle.label) {
@@ -140,8 +145,22 @@ function Map() {
 
         const marker = new mapboxgl.Marker(el)
             .setLngLat(vehicle.lngLat)
-            .setPopup(popup)
             .addTo(map.current);
+
+        marker.getElement().addEventListener('click', () => {
+            setSelectedVehicle(false)
+            stopMarkers.current.forEach(e => e.marker.remove())
+            stopMarkers.current = []
+            removePolyline()
+            popupOpen.current = false
+            popupIndex.current = 0
+            
+            getStops(vehicle.tripId)
+            addPolyline(vehicle)
+            popupOpen.current = true
+            popupIndex.current = vehicle.label
+            setSelectedVehicle({marker, vehicle})
+        });
 
         markers.current.push({ marker, vehicle });
     };
@@ -789,7 +808,13 @@ function Map() {
                 setShowUndemibusu(true)
             else if (searchParams.get('id')) {
                 const elem = markers.current.find(elem => elem.vehicle.label === searchParams.get('id'));
-                elem.marker.togglePopup();
+                const vehicle = elem.vehicle
+                getStops(vehicle.tripId)
+                addPolyline(vehicle)
+                popupOpen.current = true
+                popupIndex.current = vehicle.label
+                setSelectedVehicle(elem)
+
             } else if (undemibusu === 'destinatii')
                 setShowDestinatii(true)
             else {
@@ -892,6 +917,26 @@ function Map() {
                     setCheckAllChecked(true)
                     resetMarkers();
                 }} />
+            <VehicleToast
+                header={selectedVehicle ? selectedVehicle.vehicle.line : ''}
+                show={selectedVehicle}
+                vehicle={selectedVehicle ? selectedVehicle.vehicle : new Vehicle()}
+                setShowNotification={() => {setShowNotification(true)}}
+                onHide={() => {
+                    setSelectedVehicle(false)
+                    stopMarkers.current.forEach(e => e.marker.remove())
+                    stopMarkers.current = []
+                    removePolyline()
+                    popupOpen.current = false
+                    popupIndex.current = 0
+                    resetMarkers()
+                }} />
+            <NotificationToast
+                show={showNotification}
+                onHide={() => {
+                    setShowNotification(false)
+                }}
+            />
             <Destinatii
                 show={showDestinatii}
                 destination={destinatiiSearchRef}
