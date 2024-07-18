@@ -26,9 +26,13 @@ function Orar(props) {
             const resp = await fetch(url)
             const data = await resp.json();
             orarFullRef.current = data;
-            orarFullRef.current.station.d.lines = orarFullRef.current.station.d.lines.filter(elem => elem[0] || elem[1])
-            orarFullRef.current.station.lv.lines = orarFullRef.current.station.lv.lines.filter(elem => elem[0] || elem[1])
-            orarFullRef.current.station.s.lines = orarFullRef.current.station.s.lines.filter(elem => elem[0] || elem[1])
+            console.log(orarFullRef.current)
+            if(orarFullRef.current.station.d)
+                orarFullRef.current.station.d.lines = orarFullRef.current.station.d.lines.filter(elem => elem[0] || elem[1])
+            if(orarFullRef.current.station.lv)
+                orarFullRef.current.station.lv.lines = orarFullRef.current.station.lv.lines.filter(elem => elem[0] || elem[1])
+            if(orarFullRef.current.station.s)
+                orarFullRef.current.station.s.lines = orarFullRef.current.station.s.lines.filter(elem => elem[0] || elem[1])
             const weekday = (new Date()).getDay();
             if (weekday === 0) {
                 setPage('d')
@@ -49,7 +53,6 @@ function Orar(props) {
     }
     useEffect(() => {
         fetchData()
-
         if(localStorage.getItem('linii_favorite')){
             setLinieFav(localStorage.getItem('linii_favorite').search(linie) !== -1)
             console.log(localStorage.getItem('linii_favorite').search(linie))
@@ -59,16 +62,7 @@ function Orar(props) {
         <div className='orar-page-body'>
             <MapNavbar />
             <div className='orar-buttons'>
-                <Button style={
-                    {
-                        backgroundColor: "purple",
-                        borderColor: "purple",
-                        margin: 10
-                    }} onClick={() => {
-                        if (!!nav.prevPage)
-                            nav('/map')
-                        else nav(-1)
-                    }}> {'< Înapoi'} </Button>
+                <br/>
             </div>
             <div className='orar-body'>
                 <h3>Orarul liniei {linie}</h3>
@@ -106,18 +100,22 @@ function Orar(props) {
                             else setOrar(orarFullRef.current.station.d)
                             setPage(k)
                         }}>
+                        {orarFullRef.current && orarFullRef.current.station.lv ?
                         <Tab eventKey="lv" title="Luni-vineri">
                             <OrarTable orar={orar} />
-                        </Tab>
+                        </Tab> : <div></div>}
+                        {orarFullRef.current && orarFullRef.current.station.s ?
                         <Tab eventKey="s" title="Sâmbătă">
                             <OrarTable orar={orar} />
-                        </Tab>
+                        </Tab> : <div></div>}
+                        {orarFullRef.current && orarFullRef.current.station.d ?
                         <Tab eventKey="d" title="Duminică">
                             <OrarTable orar={orar} />
-                        </Tab>
+                        </Tab> : <div></div>}
                     </Tabs>
                 </div>
                 <Traseu />
+                <br/>
             </div>
         </div>
     )

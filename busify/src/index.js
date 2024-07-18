@@ -37,9 +37,10 @@ root.render(
         element={<Orare />}
       />
       <Route
-        path='/orar/:linie'
+        path='/orare/:linie'
         element={<Orar />}
       />
+      <Route path='*' element={<Map/>}/>
     </Routes>
   </BrowserRouter>
 );

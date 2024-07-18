@@ -35,9 +35,9 @@
 }
 
 .marker-invisible {
-  visibility: hidden;
+  display: none;
 }
 
 .marker-visible {
-  visibility: visible;
+  display: initial;
 }

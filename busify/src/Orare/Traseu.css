@@ -71,7 +71,10 @@
 .traseu-marker {
     width: 20px;
     height: 25px;
-    background-color: purple;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: indigo;
     border-radius: 5px;
 }
 

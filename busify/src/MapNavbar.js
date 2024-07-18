@@ -81,7 +81,7 @@ function MapNavbar() {
                             </div>
                             {expandedLinesFav.map(elem => (
                                 <p>
-                                    {elem} - <a href={'/orar/' + elem}>orar</a> / <a href={'/map/' + elem}>hartă</a>
+                                    {elem} - <a href={'/orare/' + elem}>orar</a> / <a href={'/map/' + elem}>hartă</a>
                                 </p>
                             ))}
                             <div style={{
@@ -100,7 +100,7 @@ function MapNavbar() {
                             </div>
                             {expandedLines.map(elem => (
                                 <p>
-                                    {elem} - <a href={'/orar/' + elem}>orar</a> / <a href={'/map/' + elem}>hartă</a>
+                                    {elem} - <a href={'/orare/' + elem}>orar</a> / <a href={'/map/' + elem}>hartă</a>
                                 </p>
                             ))}
                             <Nav.Link href="/orare" style={{ paddingBottom: '10px' }}> Ultimele știri </Nav.Link>

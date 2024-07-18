@@ -40,31 +40,28 @@ function OrarTable(props) {
                     scrollToRef.current.scrollIntoView({ behavior: 'smooth', block: "center", inline: "nearest" });
                 }
                 console.log(scrollToRef.current)
-            }, 1000);
+            }, 500);
         }
     }, [props.orar])
 
     return (
         <div className='orar-table'>
-            {typeof (props.orar) !== 'undefined' ?
-                <Table striped bordered>
-                    <thead>
-                        <tr>
-                            <th>{props.orar.in_stop_name}</th>
-                            <th>{props.orar.out_stop_name}</th>
+            <Table striped bordered>
+                <thead>
+                    <tr>
+                        <th>{props.orar.in_stop_name}</th>
+                        <th>{props.orar.out_stop_name}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {props.orar.lines.map((elem, index) => (
+                        <tr key={index} ref={index === firstElem ? scrollToRef : null} >
+                            <td style={{ color: minutesUntilCurrentTime(elem[0]) < 0 ? 'gray' : 'black', fontWeight: minutesUntilCurrentTime(elem[0]) <= 15 && minutesUntilCurrentTime(elem[0]) >= 0 ? 'bold' : 'initial' }}>{elem[0]}</td>
+                            <td style={{ color: minutesUntilCurrentTime(elem[1]) < 0 ? 'gray' : 'black', fontWeight: minutesUntilCurrentTime(elem[1]) <= 15 && minutesUntilCurrentTime(elem[1]) >= 0 ? 'bold' : 'initial' }}>{elem[1]}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {props.orar.lines.map((elem, index) => (
-                            <tr key={index} ref={index === firstElem ? scrollToRef : null} >
-                                <td style={{ color: minutesUntilCurrentTime(elem[0]) < 0 ? 'gray' : 'black', fontWeight: minutesUntilCurrentTime(elem[0]) <= 15 && minutesUntilCurrentTime(elem[0]) >= 0 ? 'bold' : 'initial' }}>{elem[0]}</td>
-                                <td style={{ color: minutesUntilCurrentTime(elem[1]) < 0 ? 'gray' : 'black', fontWeight: minutesUntilCurrentTime(elem[1]) <= 15 && minutesUntilCurrentTime(elem[1]) >= 0 ? 'bold' : 'initial' }}>{elem[1]}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </Table>
-                : <div>Se incarca...</div>
-            }
+                    ))}
+                </tbody>
+            </Table>
         </div>
     )
 }

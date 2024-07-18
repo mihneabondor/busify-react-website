@@ -25,6 +25,7 @@ function Map() {
     var lastCoords = useRef([defLng, defLat]);
     var lastZoom = useRef(12)
     var markers = useRef([]);
+    var stopMarkers = useRef([]);
     let vehicles = useRef([]);
     const [uniqueLines, setUniqueLines] = useState([]);
     const [allChecked, setCheckAllChecked] = useState(true);
@@ -36,6 +37,7 @@ function Map() {
     const [showSearch, setShowSearch] = useState(false);
 
     var popupOpen = useRef(false);
+    const popupIndex = useRef(0);
 
     const [showUndemibusu, setShowUndemibusu] = useState(false);
     var undemibususearchref = useRef();
@@ -52,9 +54,37 @@ function Map() {
 
     let socket = useRef();
 
+    const addStopMarker = (stop) => {
+        //popup
+        var innerHtmlContent = '<br/>' + stop.stop_name;
+        const divElement = document.createElement('div');
+        divElement.innerHTML = innerHtmlContent;
+
+        var el = document.createElement('div');
+        const popup = new mapboxgl.Popup({
+            offset: 5
+        })
+            .setDOMContent(divElement);
+
+        //marker
+        el.className = 'traseu-marker';
+        el.innerHTML = '<svg fill="#ffffff" height="15px" width="15px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g transform="translate(0 -1)"> <g> <g> <polygon points="328.533,86.333 328.533,137.533 354.133,137.533 354.133,94.867 354.133,86.333 "></polygon> <polygon points="285.867,94.867 285.867,137.533 311.467,137.533 311.467,86.333 285.867,86.333 "></polygon> </g> </g> </g> <g> <g> <path d="M405.333,25.6H234.667c-5.12,0-8.533,3.413-8.533,8.533v51.2H192V25.6C192,11.093,180.907,0,166.4,0 c-14.507,0-25.6,11.093-25.6,25.6v435.2c-23.893,0-42.667,18.773-42.667,42.667c0,5.12,3.413,8.533,8.533,8.533h119.467 c5.12,0,8.533-3.413,8.533-8.533c0-23.893-18.773-42.667-42.667-42.667V256h34.133v51.2c0,5.12,3.413,8.533,8.533,8.533h170.667 c5.12,0,8.533-3.413,8.533-8.533V34.133C413.867,29.013,410.453,25.6,405.333,25.6z M226.133,238.933H192V102.4h34.133V238.933z M268.8,145.067v-51.2V76.8c0-5.12,3.413-8.533,8.533-8.533h85.333c5.12,0,8.533,3.413,8.533,8.533v17.067v51.2V179.2 c0,5.12-3.413,8.533-8.533,8.533s-8.533-3.413-8.533-8.533v-25.6h-68.267v25.6c0,5.12-3.413,8.533-8.533,8.533 c-5.12,0-8.533-3.413-8.533-8.533V145.067z M362.667,213.333c0,5.12-3.413,8.533-8.533,8.533h-68.267 c-5.12,0-8.533-3.413-8.533-8.533c0-5.12,3.413-8.533,8.533-8.533h68.267C359.253,204.8,362.667,208.213,362.667,213.333z M371.2,264.533H268.8c-5.12,0-8.533-3.413-8.533-8.533s3.413-8.533,8.533-8.533h102.4c5.12,0,8.533,3.413,8.533,8.533 S376.32,264.533,371.2,264.533z"></path> </g> </g> </g></svg>'
+
+        const marker = new mapboxgl.Marker(el)
+            .setLngLat([stop.stop_lon, stop.stop_lat])
+            .setPopup(popup)
+            .addTo(map.current);
+        
+        popup.on('open', () => {
+            console.log(markers.current.find(elem => elem.vehicle.label === 816))
+        })
+
+        stopMarkers.current.push({marker, stop})
+    };
+
     const addMarker = (vehicle, reload = false) => {
         //popup
-        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orar/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://app.busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiază link de urmărire</a>';
+        var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orare/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://app.busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiază link de urmărire</a>';
 
         const divElement = document.createElement('div');
         const assignBtn = document.createElement('div');
@@ -81,18 +111,23 @@ function Map() {
             resetMarkers()
         });
 
-        const popup = new mapboxgl.Popup({
-            offset: 25
-        })
+        const popup = new mapboxgl.Popup({offset: 25})
             .setDOMContent(divElement);
-        popup.closeOnClick = false;
+        // popup.closeOnClick = false;
+        
         popup.on('close', () => {
+            stopMarkers.current.forEach(e => e.marker.remove())
+            stopMarkers.current = []
             removePolyline()
             popupOpen.current = false
+            popupIndex.current = 0
         })
+
         popup.on('open', () => {
+            getStops(vehicle.tripId)
             addPolyline(vehicle)
             popupOpen.current = true
+            popupIndex.current = vehicle.label
         })
 
         //marker
@@ -660,6 +695,26 @@ function Map() {
         } catch (error) {
             console.error('Error:', error);
         }
+    }
+
+    const getStops = async (tripId) => {
+        try {
+            var url = 'https://busifybackend-40a76006141a.herokuapp.com/stops';
+            let data = await fetch(url);
+            const stops = await data.json();
+
+            url = 'https://busifybackend-40a76006141a.herokuapp.com/stoptimes';
+            data = await fetch(url);
+            let stopTimes = await data.json();
+
+            stopTimes = stopTimes.filter(elem => elem.trip_id === tripId);
+            let newStops = []
+            stopTimes.forEach(element => {
+                const stop = stops.find(e => e.stop_id === element.stop_id)
+                newStops.push(stop)
+            });
+            newStops.forEach(e => addStopMarker(e))
+        } catch { }
     }
 
     const socketData = useCallback(async (data) => { 

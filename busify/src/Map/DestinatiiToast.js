@@ -10,6 +10,7 @@ function DestinatiiToast(props) {
     const [currentStep, setCurrentStep] = useState(null)
     let currentStepRef = useRef();
     let currentIndexRef = useRef(0);
+    const [expanded, setExpanded] = useState(true)
 
     useEffect(() => {
         if (loading) {
@@ -318,10 +319,24 @@ function DestinatiiToast(props) {
                     style={{ zIndex: 1 }}>
                     <Toast show={props.show}>
                         <Toast.Header closeButton={false}>
-                            <strong className="me-auto">{currentIndexRef.current + 1} din {props.instructions.steps.length} pasi</strong>
-                            <small className="text-muted">{currentStep.distance.text} in {currentStep.duration.text}</small>
+                            <strong className="me-auto">{currentIndexRef.current + 1} din {props.instructions.steps.length} pași</strong>
+                            <small className="text-muted">{currentStep.distance.text} în {currentStep.duration.text}</small>
+                            <img
+                            style={{
+                                marginLeft: '20px', 
+                                cursor: 'pointer',
+                                rotate: expanded ? '90deg' : '0deg'
+                            }}
+                            width='20px'
+                            height='20px'
+                            src= { expanded ? "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAABWElEQVR4nO3bwW7CMBAE0Em/soUPKuXMoYf+ZXuBy1SOjGRFIXFMJOSdGWkFlyD8cNDaGAAYABwBfOTncjkAYK5vRYRjASCJMORByyNcJgg/AN4gNhMuRoARBiPACCmeCTDCrn3CGcAfgC+IIlzzdelR8juBRUERgREAnkEIA9CKEAqgBSEcwFaEkABbEMIC1CKEBqhBCA+whiABsNQ2ywA8mglSAGsI3eYM4LbwydZWt/ndYfDdLodTTsW6vnXwn+MrOY7jOI6zc6N16/V3h3ue6THulZq1bsMdusyuGy3OlNRJFaojcGETReL0GouSPJ/AyZ6BHAJnNk2kEPhg10gGgQvbZhIIXNk3DI/AFYDwCKwACI3ASoCwCNwAEBLhWqzqJP/vcMqHKbcuaUMhtCbc7dASI8AIYzwTYIQxngkwwhj3CZhHOEAsU4T3V7+hVyQhpIGnGv4BDUeLkcktg7YAAAAASUVORK5CYII=" : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAzUlEQVR4nO3ZQQqDMBSE4bnEk16xPW5d9DgpKaU8iproauYxP2TvR4gmBnDOKdQuDMrKQEYFgKc6ZAGwfh9+VYVEmokXgJsiJDYQUIPEDkIKEgcIGUgMEBKQGQQ9ZBZBDTmDoIWcRVBCriDoMoKlEjPRe6RdbN/VSnevgHDO4bOQ+4KWbkk/CPqrVrKo8LELI0gK5plokwcXasQshB4xA5FAjCAyiCOIFGIPIofYgkgi/iGyiAyRRmRIvu6SPGO3NCRnotxVcasCcc7h1xuvJbgvN2HU5wAAAABJRU5ErkJggg=="} 
+                            onClick={() => {
+                                if(expanded)
+                                    setExpanded(false)
+                                else setExpanded(true)
+                            }}></img>
                         </Toast.Header>
-                        <Toast.Body>
+                        <Toast.Body style={{display: expanded ? 'grid' : 'none'}}>
                             <p id='instructionsDiv' />
                             {currentStepRef.current.transit_details ?
                                 <div>
