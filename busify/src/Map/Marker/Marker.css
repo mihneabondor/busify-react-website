@@ -29,7 +29,7 @@
   width: max-content;
   height: 30px;
   color: white;
-  background-color: red;
+  background-color: red !important;
   border-radius: 5px;
   padding: 5px;
 }

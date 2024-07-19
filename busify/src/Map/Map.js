@@ -88,54 +88,9 @@ function Map() {
     };
 
     const addMarker = (vehicle, reload = false) => {
-        // //popup
-        // var innerHtmlContent = '<br/><div> Spre: <b>' + vehicle.headsign + '</b></div> <a href="/orare/' + vehicle.line + '">Vezi orar</a>' + '<br/><a href="#" onClick="navigator.clipboard.writeText(`https://app.busify.ro/map?id=' + vehicle.label + '`); alert(`Link copiat!`);">Copiază link de urmărire</a>';
-
-        // const divElement = document.createElement('div');
-        // const assignBtn = document.createElement('div');
         const linieFavorita = !(!localStorage.getItem('linii_favorite') || (' ' + localStorage.getItem('linii_favorite') + ' ').search(' ' + vehicle.line + ' ') == -1);
-        // const switchState = !linieFavorita ? 'flexSwitchCheckDefault">' : 'flexSwitchCheckChecked" checked>';
-        // assignBtn.className = 'custom-switch form-check form-switch';
-        // assignBtn.innerHTML += '<input class="form-check-input" type="checkbox" role="switch" id="' + switchState + 'Linie favorită</input>';
-        // divElement.innerHTML = innerHtmlContent;
-        // divElement.appendChild(assignBtn);
-
         var el = document.createElement('div');
-        // assignBtn.addEventListener('click', (e) => {
-        //     var linii = localStorage.getItem('linii_favorite');
-        //     if (!linii)
-        //         linii = '';
 
-        //     if (linii.search(vehicle.line) != -1) {
-        //         linii = linii.replace(vehicle.line + ' ', '')
-        //     } else {
-        //         linii += vehicle.line + ' ';
-        //     }
-
-        //     localStorage.setItem('linii_favorite', linii)
-        //     resetMarkers()
-        // });
-
-        // const popup = new mapboxgl.Popup({offset: 25})
-        //     .setDOMContent(divElement);
-        // popup.closeOnClick = false;
-        
-        // popup.on('close', () => {
-        //     stopMarkers.current.forEach(e => e.marker.remove())
-        //     stopMarkers.current = []
-        //     removePolyline()
-        //     popupOpen.current = false
-        //     popupIndex.current = 0
-        // })
-
-        // popup.on('open', () => {
-        //     getStops(vehicle.tripId)
-        //     addPolyline(vehicle)
-        //     popupOpen.current = true
-        //     popupIndex.current = vehicle.label
-        // })
-
-        //marker
         if (searchParams.get('id') === vehicle.label) {
             el.className = 'marker-linie-urmarita ';
         }
@@ -154,7 +109,8 @@ function Map() {
             removePolyline()
             popupOpen.current = false
             popupIndex.current = 0
-            
+
+            marker._element.className = 'marker-linie-urmarita'
             getStops(vehicle.tripId)
             addPolyline(vehicle)
             popupOpen.current = true
@@ -177,6 +133,8 @@ function Map() {
 
                 const vehi = vehicles.current.find(elem => elem.label == marker.vehicle.label);
                 if (vehi != null) {
+                    if(selectedVehicle)
+                        selectedVehicle({marker, vehi})
                     const end = vehi.lngLat;
 
                     const lng = start[0] + (end[0] - start[0]) * progress;
@@ -922,8 +880,9 @@ function Map() {
                 show={selectedVehicle}
                 vehicle={selectedVehicle ? selectedVehicle.vehicle : new Vehicle()}
                 setShowNotification={() => {setShowNotification(true)}}
+                map={map}
                 onHide={() => {
-                    setSelectedVehicle(false)
+                    setSelectedVehicle(null)
                     stopMarkers.current.forEach(e => e.marker.remove())
                     stopMarkers.current = []
                     removePolyline()

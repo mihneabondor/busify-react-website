@@ -82,7 +82,7 @@ function Orare() {
                             <ListGroup.Item
                                 className="d-flex justify-content-between align-items-start orare-cell"
                                 onClick={() => {
-                                    let url = '/orar/' + line.name
+                                    let url = '/orare/' + line.name
                                     nav(url)
                                 }}
                             >

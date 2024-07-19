@@ -12,7 +12,9 @@ function VehicleToast(props) {
     useEffect(() => {
         if(props.vehicle) {
             const lines = localStorage.getItem('linii_favorite')
-            setLinieFav(lines.includes(props.vehicle.line +' '))
+            if(lines){
+                setLinieFav(lines.includes(props.vehicle.line +' '))
+            }
         }
     }, [props.vehicle])
 
@@ -70,6 +72,14 @@ function VehicleToast(props) {
                         }}
                     />
                     <a href={'/orare/' + props.vehicle.line}>Vezi orar</a>
+                    <a href='#' onClick={() => {
+                        props.map.current.flyTo({
+                            center: props.vehicle.lngLat,
+                            duration: 1000,
+                            zoom: 15,
+                            essential: true
+                        })
+                    }}>Recentrează pe vehicul</a>
                     <a href='#' onClick={() => {
                         navigator.clipboard.writeText(`https://app.busify.ro/map?id=${props.vehicle.label}`)
                         props.setShowNotification()
