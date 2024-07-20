@@ -10,7 +10,7 @@ function NotificationToast(props) {
         position={'top-end'}
         style={{ zIndex: 10 }}
     >
-    <Toast onClose={props.onHide} show={props.show} delay={3000} autohide>
+    <Toast onClose={props.onHide} show={props.show} delay={7000} autohide>
         <Toast.Header>
         <img
             src="../logo192.png"
@@ -21,7 +21,7 @@ function NotificationToast(props) {
         />
         <strong className="me-auto">Busify</strong>
         </Toast.Header>
-        <Toast.Body>Link copiat!</Toast.Body>
+        <Toast.Body>{props.title}</Toast.Body>
     </Toast>
     </ToastContainer>
   );

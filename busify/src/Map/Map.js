@@ -17,6 +17,7 @@ import {io} from 'socket.io-client'
 import Search from "./Search.js";
 import VehicleToast from "./Marker/VehicleToast.js";
 import NotificationToast from "./NotificationToast.js";
+import MessageSMS from "./MessageSMS.js";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
@@ -55,15 +56,29 @@ function Map() {
     const [instructions, setInstructions] = useState()
 
     const [selectedVehicle, setSelectedVehicle] = useState(null)
+    const selectedVehicleRef = useRef(null)
     const [showNotification, setShowNotification] = useState(false)
 
-    let socket = useRef();
+    const [showSms, setShowSms] = useState(false)
+    const smsDataRef = useRef()
+
+    const socket = useRef();
 
     const addStopMarker = (stop) => {
-        //popup
-        var innerHtmlContent = '<br/>' + stop.stop_name;
+        const innerHtmlContent = `<br/> <p>${stop.stop_name}</p>`
+
         const divElement = document.createElement('div');
+        const assignBtn = document.createElement('div');
+        assignBtn.innerHTML = `<button class="btn btn-sm btn-secondary btn-simple text-white"> Trimite SMS </button>`;
         divElement.innerHTML = innerHtmlContent;
+        divElement.appendChild(assignBtn);
+
+        assignBtn.addEventListener('click', (e) => {
+            // socket.current.emit('notifications', selectedVehicleRef.current.vehicle, stop);
+            const vehicle = selectedVehicleRef.current.vehicle
+            smsDataRef.current = {vehicle, stop}
+            setShowSms(true)
+        });
 
         var el = document.createElement('div');
         const popup = new mapboxgl.Popup({
@@ -79,10 +94,6 @@ function Map() {
             .setLngLat([stop.stop_lon, stop.stop_lat])
             .setPopup(popup)
             .addTo(map.current);
-        
-        popup.on('open', () => {
-            console.log(markers.current.find(elem => elem.vehicle.label === 816))
-        })
 
         stopMarkers.current.push({marker, stop})
     };
@@ -104,6 +115,7 @@ function Map() {
 
         marker.getElement().addEventListener('click', () => {
             setSelectedVehicle(null)
+            selectedVehicleRef.current = null
             stopMarkers.current.forEach(e => e.marker.remove())
             stopMarkers.current = []
             removePolyline()
@@ -116,6 +128,7 @@ function Map() {
             popupOpen.current = true
             popupIndex.current = vehicle.label
             setSelectedVehicle({marker, vehicle})
+            selectedVehicleRef.current = {marker, vehicle}
         });
 
         markers.current.push({ marker, vehicle });
@@ -159,127 +172,6 @@ function Map() {
             if (arr[i][0] === target)
                 return i
         return -1;
-    }
-
-    const fetchData = async () => {
-        try {
-            var response = await fetch('https://busifybackend-40a76006141a.herokuapp.com/vehicles');
-            const vehicleData = await response.json();
-
-            try {
-                response = await fetch('https://busifybackend-40a76006141a.herokuapp.com/trips');
-                const tripData = await response.json();
-
-                try {
-                    response = await fetch('https://busifybackend-40a76006141a.herokuapp.com/routes');
-                    const routeData = await response.json();
-                    vehicles.current = [];
-                    vehicleData.forEach(vehicle => {
-                        if (vehicle.trip_id != null && vehicle.route_id != null) {
-
-                            let tripDataVehicle = tripData.find((elem) => elem.trip_id === vehicle.trip_id);
-                            let routeDataVehicle = routeData.find((elem) => elem.route_id === vehicle.route_id);
-
-                            if (tripDataVehicle && routeDataVehicle) {
-                                let headsign = tripDataVehicle.trip_headsign;
-                                let line = routeDataVehicle.route_short_name;
-                                if (headsign && line) {
-                                    let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude], tripDataVehicle.trip_id);
-                                    vehicles.current.push(newVehicle);
-                                }
-                            }
-                        }
-                    });
-
-                    if (!loaded && !loadedFirstTime) {
-                        let s = [];
-                        if (localStorage.getItem('linii_selectate')) s = localStorage.getItem('linii_selectate').split(',');
-
-                        try {
-                            const resp = await fetch('https://orare.busify.ro/public/buses_basic.json');
-                            const buses_basic = await resp.json();
-                            const joinArray = (arr) => {
-                                arr.forEach(elem => {
-                                    unique.current.push([elem.name, true])
-                                })
-                            }
-                            joinArray(buses_basic.urbane)
-                            joinArray(buses_basic.metropolitane)
-                            joinArray(buses_basic.market)
-                        } catch (err) {
-                            console.log(err)
-                        }
-
-                        let saved = [];
-                        for (let i = 0; i < s.length; i += 2)
-                            saved.push([s[i], s[i + 1] === 'true']);
-
-                        for (let i = 0; i < saved.length; i++) {
-                            let index = getIndex(saved[i][0], unique.current)
-                            if (index != -1) {
-                                unique.current[index][1] = saved[i][1];
-                                if (saved[i][1] === false)
-                                    setCheckAllChecked(false)
-                            }
-                        }
-                        setUniqueLines(unique.current)
-                        if (!localStorage.getItem('linii_selectate'))
-                            localStorage.setItem('linii_selectate', unique.current)
-                        loadedFirstTime = true
-                        setLoaded(true)
-                        vehicles.current.forEach(elem => {
-                            let exista = false
-                            unique.current.forEach((uniqueLine) => {
-                                if (uniqueLine[0] === elem.line)
-                                    exista = true
-                            })
-                            if (exista)
-                                addMarker(elem)
-                        })
-                        if (undemibusu === 'undemiibusu')
-                            setShowUndemibusu(true)
-                        else if (searchParams.get('id')) {
-                            const elem = markers.current.find(elem => elem.vehicle.label === searchParams.get('id'));
-                            elem.marker.togglePopup();
-                        } else if (undemibusu === 'destinatii')
-                            setShowDestinatii(true)
-                        else {
-                            let exista = false;
-                            unique.current.forEach(elem => {
-                                if (elem[0] === undemibusu)
-                                    exista = true
-                            })
-        
-                            if (exista) {
-                                let oneMatch = false;
-                                unique.current = unique.current.map((elem) => [elem[0], elem[0] === undemibusu ])
-                                unique.current.forEach(elem => {
-                                    if (elem[1]) oneMatch = true
-                                });
-                                if (!oneMatch)
-                                    setShownVehicles();
-        
-                                setUniqueLines(unique.current)
-                                setCheckAllChecked(!oneMatch)
-                                resetMarkers();
-                            }
-                        }
-                    } else {
-                        updateMarker()
-                    }
-                } catch (error) {
-                    console.error(error);
-                }
-
-            } catch (error) {
-                console.error(error);
-                return;
-            }
-
-        } catch (error) {
-            console.error(error);
-            return;
-        }
     }
 
     const resetMarkers = () => {
@@ -772,6 +664,7 @@ function Map() {
                 popupOpen.current = true
                 popupIndex.current = vehicle.label
                 setSelectedVehicle(elem)
+                selectedVehicleRef.current = elem
 
             } else if (undemibusu === 'destinatii')
                 setShowDestinatii(true)
@@ -803,9 +696,14 @@ function Map() {
 
     useEffect(() => {
         if (map.current) return;
-        socket.current = io('https://busifybackend-40a76006141a.herokuapp.com')
+        socket.current = io('http://localhost:3000')
         socket.current.on('vehicles', data => {socketData(data)})
         generateMap()
+
+        if(!localStorage.getItem('sms')) {
+            setShowNotification(true)
+            // localStorage.setItem('sms', true)
+        }
     }, []);
 
     return (
@@ -883,6 +781,7 @@ function Map() {
                 map={map}
                 onHide={() => {
                     setSelectedVehicle(null)
+                    selectedVehicleRef.current = null
                     stopMarkers.current.forEach(e => e.marker.remove())
                     stopMarkers.current = []
                     removePolyline()
@@ -892,8 +791,10 @@ function Map() {
                 }} />
             <NotificationToast
                 show={showNotification}
+                title={!localStorage.getItem('sms') ? 'Nou: apasă pe o stație de pe ruta unui vehicul și vei fi anunțat prin SMS când autobuzul se apropie!' : 'Link copiat!' }
                 onHide={() => {
                     setShowNotification(false)
+                    localStorage.setItem('sms', true)
                 }}
             />
             <Destinatii
@@ -917,6 +818,12 @@ function Map() {
                 markers={markers}
                 setshowdestinatii={setShowDestinatii}
                 setshowdestinatiitost={setShowDestinatiiToast}
+            />
+            <MessageSMS
+                show={showSms}
+                setshow={() => {setShowSms(false)}}
+                socket={socket}
+                smsData={smsDataRef.current}
             />
         </div >
     );
