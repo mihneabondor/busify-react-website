@@ -22,7 +22,7 @@ function VehicleToast(props) {
         <ToastContainer
             className="p-3"
             position={'bottom-center'}
-            style={{ zIndex: 1 }}
+            style={{ zIndex: 10 }}
         >
             <Toast show={props.show}>
                 <Toast.Header closeButton={false}>

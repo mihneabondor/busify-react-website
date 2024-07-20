@@ -103,7 +103,7 @@ function Map() {
             .addTo(map.current);
 
         marker.getElement().addEventListener('click', () => {
-            setSelectedVehicle(false)
+            setSelectedVehicle(null)
             stopMarkers.current.forEach(e => e.marker.remove())
             stopMarkers.current = []
             removePolyline()
