@@ -82,6 +82,7 @@ function Map() {
                 getVehicleStop(stop.stop_id)
                 const vehicle = selectedVehicleRef.current.vehicle
                 smsDataRef.current = {vehicle, stop}
+                setShowStop(true)
             });
 
         stopMarkers.current.push({marker, stop})

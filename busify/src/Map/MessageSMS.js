@@ -28,7 +28,7 @@ function MessageSMS(props) {
               {dropdownState}
             </Dropdown.Toggle>
 
-            <Dropdown.Menu>
+            <Dropdown.Menu style={{height: '30vh', overflowY: 'scroll'}}>
               {props.uniqueLines.current.map((elem) => (
                 <Dropdown.Item href="#/action-1"> {elem}</Dropdown.Item>
               ))}
