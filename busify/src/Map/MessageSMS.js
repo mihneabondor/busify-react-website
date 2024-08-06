@@ -2,14 +2,18 @@ import Modal from 'react-bootstrap/Modal'
 import Form from 'react-bootstrap/Form'
 import InputGroup from 'react-bootstrap/InputGroup'
 import Button from 'react-bootstrap/esm/Button';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Dropdown from 'react-bootstrap/Dropdown';
 
 function MessageSMS(props) {
     const phoneNumberRef = useRef()
+    const [dropdownState, setDropdownState] = useState();
 
     useEffect(() => {
       if(localStorage.getItem('numar_telefon') && props.show)
           phoneNumberRef.current.value = localStorage.getItem('numar_telefon').slice(3)
+      if(props.smsData)
+        setDropdownState(props.smsData.vehicle.line)
     }, [props.show])
 
     return(
@@ -18,7 +22,23 @@ function MessageSMS(props) {
             <Modal.Title>Anunț prin SMS</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Vei primi un mesaj SMS când un vehicul din linia aleasă ajunge în stația selectată!</p>
+          <p>Vei primi un mesaj SMS când un vehicul din linia aleasă ajunge în stația {props.smsData ? props.smsData.stop.stop_name : ''}!</p>
+          <Dropdown>
+            <Dropdown.Toggle variant="secondary">
+              {dropdownState}
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu>
+              {props.uniqueLines.current.map((elem) => (
+                <Dropdown.Item href="#/action-1"> {elem}</Dropdown.Item>
+              ))}
+              {/* <Dropdown.Item href="#/action-2">Another action</Dropdown.Item> */}
+              {/* <Dropdown.Item href="#/action-3">Something else</Dropdown.Item> */}
+            </Dropdown.Menu>
+        </Dropdown>
+
+        <br/>
+
         <InputGroup className="mb-3">
         <InputGroup.Text id="basic-addon1">+40</InputGroup.Text>
         <Form.Control

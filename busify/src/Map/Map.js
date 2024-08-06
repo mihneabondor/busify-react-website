@@ -18,6 +18,7 @@ import Search from "./Search.js";
 import VehicleToast from "./Marker/VehicleToast.js";
 import NotificationToast from "./NotificationToast.js";
 import MessageSMS from "./MessageSMS.js";
+import StopToast from "./Marker/StopToast.js";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
@@ -60,31 +61,14 @@ function Map() {
     const [showNotification, setShowNotification] = useState(false)
 
     const [showSms, setShowSms] = useState(false)
-    const smsDataRef = useRef()
+    const smsDataRef = useRef(null)
+
+    const [showStop, setShowStop] = useState(false)
 
     const socket = useRef();
 
     const addStopMarker = (stop) => {
-        const innerHtmlContent = `<br/> <p>${stop.stop_name}</p>`
-
-        const divElement = document.createElement('div');
-        const assignBtn = document.createElement('div');
-        assignBtn.innerHTML = `<button class="btn btn-sm btn-secondary btn-simple text-white"> Trimite SMS </button>`;
-        divElement.innerHTML = innerHtmlContent;
-        divElement.appendChild(assignBtn);
-
-        assignBtn.addEventListener('click', (e) => {
-            // socket.current.emit('notifications', selectedVehicleRef.current.vehicle, stop);
-            const vehicle = selectedVehicleRef.current.vehicle
-            smsDataRef.current = {vehicle, stop}
-            setShowSms(true)
-        });
-
         var el = document.createElement('div');
-        const popup = new mapboxgl.Popup({
-            offset: 5
-        })
-            .setDOMContent(divElement);
 
         //marker
         el.className = 'traseu-marker';
@@ -92,21 +76,42 @@ function Map() {
 
         const marker = new mapboxgl.Marker(el)
             .setLngLat([stop.stop_lon, stop.stop_lat])
-            .setPopup(popup)
             .addTo(map.current);
+
+        marker.getElement().addEventListener('click', (e) => {
+                getVehicleStop(stop.stop_id)
+                const vehicle = selectedVehicleRef.current.vehicle
+                smsDataRef.current = {vehicle, stop}
+            });
 
         stopMarkers.current.push({marker, stop})
     };
 
-    const addMarker = (vehicle, reload = false) => {
+    const getVehicleStop = async (stopId) => {
+        try {
+            const url = `http://localhost:3000/stopvehicles?stopid=${stopId}`
+            const resp = await fetch(url)
+            const labels = await resp.json()
+            localStorage.setItem('labels', labels)
+            markers.current.forEach(elem => {
+                if(!labels.find(el => el == elem.vehicle.label))
+                    elem.marker._element.className = 'marker-invisible'
+            })
+            setShowStop(true)
+        } catch(e) {console.log(e)}
+    }
+
+    const addMarker = (vehicle) => {
         const linieFavorita = !(!localStorage.getItem('linii_favorite') || (' ' + localStorage.getItem('linii_favorite') + ' ').search(' ' + vehicle.line + ' ') == -1);
         var el = document.createElement('div');
 
-        if (searchParams.get('id') === vehicle.label) {
+        if (searchParams.get('id') === vehicle.label)
             el.className = 'marker-linie-urmarita ';
-        }
         else el.className = linieFavorita ? 'marker-linie-favorita ' : 'marker ';
-        el.className += unique.current.find(elem => elem[0] === vehicle.line)[1] || searchParams.get('id') === vehicle.label ? 'marker-visible' : 'marker-invisible';
+
+        if(localStorage.getItem('labels') && !localStorage.getItem('labels').includes(vehicle.label))
+            el.className = 'marker-invisible'
+        else el.className += unique.current.find(elem => elem[0] === vehicle.line)[1] || searchParams.get('id') === vehicle.label ? 'marker-visible' : 'marker-invisible';
         el.innerHTML = vehicle.line;
 
         const marker = new mapboxgl.Marker(el)
@@ -122,7 +127,6 @@ function Map() {
             popupOpen.current = false
             popupIndex.current = 0
 
-            marker._element.className = 'marker-linie-urmarita'
             getStops(vehicle.tripId)
             addPolyline(vehicle)
             popupOpen.current = true
@@ -696,14 +700,13 @@ function Map() {
 
     useEffect(() => {
         if (map.current) return;
-        socket.current = io('http://localhost:3000')
+        localStorage.setItem('labels', '')
+        socket.current = io('https://busifybackend-40a76006141a.herokuapp.com/')
         socket.current.on('vehicles', data => {socketData(data)})
         generateMap()
 
-        if(!localStorage.getItem('sms')) {
+        if(!localStorage.getItem('sms'))
             setShowNotification(true)
-            // localStorage.setItem('sms', true)
-        }
     }, []);
 
     return (
@@ -789,6 +792,18 @@ function Map() {
                     popupIndex.current = 0
                     resetMarkers()
                 }} />
+            <StopToast
+                header={smsDataRef.current && smsDataRef.current.stop ? smsDataRef.current.stop.stop_name : ''}
+                stopLat={smsDataRef.current && smsDataRef.current.stop ? smsDataRef.current.stop.stop_lat : 0}
+                stopLon={smsDataRef.current && smsDataRef.current.stop ? smsDataRef.current.stop.stop_lon : 0}
+                show={showStop}
+                showSms={()=>{setShowSms(true)}}
+                markers={markers}
+                onHide={() => {
+                    localStorage.setItem('labels', '')
+                    setShowStop(false)
+                    resetMarkers()
+                }} />
             <NotificationToast
                 show={showNotification}
                 title={!localStorage.getItem('sms') ? 'Nou: apasă pe o stație de pe ruta unui vehicul și vei fi anunțat prin SMS când autobuzul se apropie!' : 'Link copiat!' }
@@ -824,6 +839,7 @@ function Map() {
                 setshow={() => {setShowSms(false)}}
                 socket={socket}
                 smsData={smsDataRef.current}
+                uniqueLines={unique}
             />
         </div >
     );
