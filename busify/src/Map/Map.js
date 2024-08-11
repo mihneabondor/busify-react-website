@@ -106,13 +106,13 @@ function Map() {
         const linieFavorita = !(!localStorage.getItem('linii_favorite') || (' ' + localStorage.getItem('linii_favorite') + ' ').search(' ' + vehicle.line + ' ') == -1);
         var el = document.createElement('div');
 
-        if (searchParams.get('id') === vehicle.label)
+        if (searchParams.get('id') === vehicle.label || (selectedVehicleRef.current && selectedVehicleRef.current.vehicle.label === vehicle.label))
             el.className = 'marker-linie-urmarita ';
         else el.className = linieFavorita ? 'marker-linie-favorita ' : 'marker ';
 
         if(localStorage.getItem('labels') && !localStorage.getItem('labels').includes(vehicle.label))
-            el.className = 'marker-invisible'
-        else el.className += unique.current.find(elem => elem[0] === vehicle.line)[1] || searchParams.get('id') === vehicle.label ? 'marker-visible' : 'marker-invisible';
+            el.className = 'marker-invisible '
+        else el.className += unique.current.find(elem => elem[0] === vehicle.line)[1] || searchParams.get('id') === vehicle.label ? 'marker-visible ' : 'marker-invisible ';
         el.innerHTML = vehicle.line;
 
         const marker = new mapboxgl.Marker(el)
@@ -134,6 +134,9 @@ function Map() {
             popupIndex.current = vehicle.label
             setSelectedVehicle({marker, vehicle})
             selectedVehicleRef.current = {marker, vehicle}
+
+            resetMarkers()
+            // el.className += ' marker-linie-urmarita';
         });
 
         markers.current.push({ marker, vehicle });
@@ -593,25 +596,25 @@ function Map() {
 
     const socketData = useCallback(async (data) => { 
         let vehicleData = data.vehicles
-            let tripData = data.trips
-            let routeData = data.routes
+        let tripData = data.trips
+        let routeData = data.routes
 
-            vehicles.current = [];
-            vehicleData.forEach(vehicle => {
-            if (vehicle.trip_id != null && vehicle.route_id != null) {
+        vehicles.current = [];
+        vehicleData.forEach(vehicle => {
+        if (vehicle.trip_id != null && vehicle.route_id != null) {
 
-                let tripDataVehicle = tripData.find((elem) => elem.trip_id === vehicle.trip_id);
-                let routeDataVehicle = routeData.find((elem) => elem.route_id === vehicle.route_id);
+            let tripDataVehicle = tripData.find((elem) => elem.trip_id === vehicle.trip_id);
+            let routeDataVehicle = routeData.find((elem) => elem.route_id === vehicle.route_id);
 
-                if (tripDataVehicle && routeDataVehicle) {
-                    let headsign = tripDataVehicle.trip_headsign;
-                    let line = routeDataVehicle.route_short_name;
-                    if (headsign && line) {
-                        let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude], tripDataVehicle.trip_id);
-                        vehicles.current.push(newVehicle);
-                    }
+            if (tripDataVehicle && routeDataVehicle) {
+                let headsign = tripDataVehicle.trip_headsign;
+                let line = routeDataVehicle.route_short_name;
+                if (headsign && line) {
+                    let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude], tripDataVehicle.trip_id);
+                    vehicles.current.push(newVehicle);
                 }
             }
+        }
         });
 
         if (!loaded && !loadedFirstTime) {
@@ -694,8 +697,8 @@ function Map() {
                     resetMarkers();
                 }
             }
-        } else {
-            updateMarker()
+            } else {
+                updateMarker()
         }
     }, [])
 
@@ -705,9 +708,6 @@ function Map() {
         socket.current = io('https://busifybackend-40a76006141a.herokuapp.com/')
         socket.current.on('vehicles', data => {socketData(data)})
         generateMap()
-
-        if(!localStorage.getItem('sms'))
-            setShowNotification(true)
     }, []);
 
     return (

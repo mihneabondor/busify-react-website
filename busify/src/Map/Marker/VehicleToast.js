@@ -52,6 +52,7 @@ function VehicleToast(props) {
                 <Toast.Body style={{display: expanded ? 'grid' : 'none'}}>
                     <p><b>Spre:</b> {props.vehicle.headsign}</p>
                     <Form.Switch
+                        style={{marginTop: '-10px'}}
                         checked={linieFav}
                         id="custom-switch"
                         label= 'Linie favorită'
@@ -84,6 +85,8 @@ function VehicleToast(props) {
                         navigator.clipboard.writeText(`https://app.busify.ro/map?id=${props.vehicle.label}`)
                         props.setShowNotification()
                     }}>Copiază link de urmărire</a>
+
+                    <small style={{color: 'gray'}}>Tip: selectează o stație pentru a primi SMS când vehiculul se apropie!</small>
                 </Toast.Body>
             </Toast>
         </ToastContainer>
