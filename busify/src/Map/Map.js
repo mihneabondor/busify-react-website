@@ -163,7 +163,10 @@ function Map() {
 
                     marker.marker.setLngLat([lng, lat]);
                     marker.vehicle.lngLat = [lng, lat];
-                    marker.marker.innerHTML = marker.vehicle.line
+                    marker.marker.innerHTML = vehi.line
+
+                    marker.vehicle.tripId = vehi.tripId
+                    marker.vehicle.headsign = vehi.headsign
 
                     if (progress < 1) {
                         requestAnimationFrame(animateMarker);
