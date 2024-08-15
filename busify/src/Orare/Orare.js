@@ -8,6 +8,7 @@ import ListGroup from 'react-bootstrap/ListGroup'
 import { useNavigate } from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Stiri from './Stiri';
+import Alert from 'react-bootstrap/Alert';
 
 function Orare() {
     const searchValueRef = useRef();
@@ -15,6 +16,8 @@ function Orare() {
     const linesRef = useRef();
     const copie = useRef();
     const nav = useNavigate();
+
+    const [anuntState, setAnunt] = useState([]);
 
     const search = (e) => {
         e.preventDefault();
@@ -41,6 +44,13 @@ function Orare() {
             setLines(sol)
             linesRef.current = sol
             copie.current = sol
+
+            const anuntData = await fetch('https://busifybackend-40a76006141a.herokuapp.com/anunturi');
+            const anunt = await anuntData.json();
+            const date = Date.parse(anunt.end_date);
+            if(date > new Date())
+                setAnunt(anunt);
+
         } catch (err) {
             console.log(err)
         }
@@ -65,6 +75,8 @@ function Orare() {
                 <div className='orare-content-container'>
                     <h4>Ultimele știri</h4>
                     <Stiri />
+                    <br/>
+                    <Alert variant='danger' style={{display: anuntState.anunt ? 'initial' : 'none'}}>{anuntState.anunt}. <Alert.Link href={anuntState.link}>Mai multe detalii.</Alert.Link></Alert>
                     <br />
                     <h4>Orarele liniilor CTP Cluj</h4>
                     <Form onChange={(e) => change(e)} onSubmit={search}>

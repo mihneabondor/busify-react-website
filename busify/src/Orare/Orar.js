@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import Traseu from "./Traseu";
 import Form from 'react-bootstrap/Form'
+import Alert from 'react-bootstrap/Alert'
 
 function Orar(props) {
     const [page, setPage] = useState('lv');
@@ -19,6 +20,8 @@ function Orar(props) {
     const [linieFav, setLinieFav] = useState(false)
 
     const nav = useNavigate();
+
+    const [anuntState, setAnunt] = useState([]);
 
     const fetchData = async () => {
         try {
@@ -46,6 +49,12 @@ function Orar(props) {
                 setOrar(orarFullRef.current.station.lv);
             }
             setRoute(data.route);
+
+            const anuntData = await fetch('https://busifybackend-40a76006141a.herokuapp.com/anunturi');
+            const anunt = await anuntData.json();
+            const date = Date.parse(anunt.end_date);
+            if(date > new Date())
+            setAnunt(anunt);
 
         } catch (err) {
             console.log(err)
@@ -88,6 +97,8 @@ function Orar(props) {
                     }}
                 />
                 <br />
+                <Alert variant='danger' style={{display: anuntState.anunt ? 'initial' : 'none'}}>{anuntState.anunt}. <Alert.Link href={anuntState.link}>Mai multe detalii.</Alert.Link></Alert>
+                <br/>
                 <div>
                     <Tabs
                         id="controlled-tab-example"

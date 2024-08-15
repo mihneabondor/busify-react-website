@@ -3,7 +3,6 @@ import Card from 'react-bootstrap/Card';
 import { useEffect, useRef, useState } from 'react';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
-import Button from 'react-bootstrap/Button';
 
 function Stiri() {
     const [news, setNews] = useState([]);

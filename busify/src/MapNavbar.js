@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import { Squash as Hamburger } from 'hamburger-react';
 import Badge from 'react-bootstrap/Badge';
+import { useNavigate } from 'react-router';
 
 function MapNavbar() {
     const [show, setShow] = useState(false);
@@ -16,6 +17,10 @@ function MapNavbar() {
     const [expandedLinesFav, setExpandedLinesFav] = useState([])
     const expandedLinesFavRef = useRef([])
 
+    const [anuntState, setAnunt] = useState([]);
+
+    const nav = useNavigate();
+
     const fetchData = async () => {
         try {
             const data = await fetch('https://orare.busify.ro/public/buses_basic.json')
@@ -23,6 +28,12 @@ function MapNavbar() {
             resp.urbane.forEach(elem => expandedLinesRef.current.push(elem.name))
             resp.metropolitane.forEach(elem => expandedLinesRef.current.push(elem.name))
             resp.market.forEach(elem => expandedLinesRef.current.push(elem.name))
+
+            const anuntData = await fetch('https://busifybackend-40a76006141a.herokuapp.com/anunturi');
+            const anunt = await anuntData.json();
+            const date = Date.parse(anunt.end_date);
+            if(date > new Date())
+                setAnunt(anunt);
         } catch (e) { console.log(e) }
     }
     useEffect(() => {
@@ -36,12 +47,16 @@ function MapNavbar() {
     return (
         <Navbar className="bg-body-tertiary">
             <Container fluid>
-                <Navbar.Brand href="/" style={{ 'paddingLeft': 10 }}>
-                Busify
+                <Navbar.Brand style={{ 'paddingLeft': 10 }}>
+                <a href='/' style={{color: 'black', textDecoration: 'none'}}>Busify</a>
                 <Badge style={{
                     marginLeft: '10px',
-                    visibility: vineriRef.current ? 'visible' : 'hidden'
+                    display: vineriRef.current ? "initial" : "none"
                 }} bg="success">Vinerea verde</Badge>
+                <Badge style={{
+                    marginLeft: '10px',
+                    cursor: 'pointer',
+                    display: anuntState.anunt ? "initial" : "none"}} bg="danger" onClick={()=>{nav('/orare')}}>Program modificat</Badge>
                 </Navbar.Brand>
                 <Navbar.Toggle />
                 <Nav className="justify-content-end">
