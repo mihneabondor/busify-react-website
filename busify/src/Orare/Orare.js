@@ -76,7 +76,7 @@ function Orare() {
                     <h4>Ultimele știri</h4>
                     <Stiri />
                     <br/>
-                    <Alert variant='danger' style={{display: anuntState.anunt ? 'initial' : 'none'}}>{anuntState.anunt}. <Alert.Link href={anuntState.link}>Mai multe detalii.</Alert.Link></Alert>
+                    <Alert variant='danger' style={{display: anuntState.anunt ? 'initial' : 'none'}}>{anuntState.anunt} <Alert.Link href={anuntState.link}>Mai multe detalii</Alert.Link></Alert>
                     <br />
                     <h4>Orarele liniilor CTP Cluj</h4>
                     <Form onChange={(e) => change(e)} onSubmit={search}>

@@ -97,7 +97,7 @@ function Orar(props) {
                     }}
                 />
                 <br />
-                <Alert variant='danger' style={{display: anuntState.anunt ? 'initial' : 'none'}}>{anuntState.anunt}. <Alert.Link href={anuntState.link}>Mai multe detalii.</Alert.Link></Alert>
+                <Alert variant='danger' style={{maxWidth: '80vw', display: anuntState.anunt ? 'initial' : 'none'}}>{anuntState.anunt}. <Alert.Link href={anuntState.link}>Mai multe detalii.</Alert.Link></Alert>
                 <br/>
                 <div>
                     <Tabs

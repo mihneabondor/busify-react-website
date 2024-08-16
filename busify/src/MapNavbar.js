@@ -47,16 +47,16 @@ function MapNavbar() {
     return (
         <Navbar className="bg-body-tertiary">
             <Container fluid>
-                <Navbar.Brand style={{ 'paddingLeft': 10 }}>
+                <Navbar.Brand style={{ 'paddingLeft': 5 }}>
                 <a href='/' style={{color: 'black', textDecoration: 'none'}}>Busify</a>
                 <Badge style={{
-                    marginLeft: '10px',
+                    marginLeft: 5,
                     display: vineriRef.current ? "initial" : "none"
-                }} bg="success">Vinerea verde</Badge>
+                }} bg="success">Vinerea Verde</Badge>
                 <Badge style={{
-                    marginLeft: '10px',
+                    marginLeft: 5,
                     cursor: 'pointer',
-                    display: anuntState.anunt ? "initial" : "none"}} bg="danger" onClick={()=>{nav('/orare')}}>Program modificat</Badge>
+                    display: anuntState.anunt ? "initial" : "none"}} bg="danger" onClick={()=>{nav('/orare')}}>Orar modificat</Badge>
                 </Navbar.Brand>
                 <Navbar.Toggle />
                 <Nav className="justify-content-end">
