@@ -135,7 +135,7 @@ function Orar(props) {
                     }}
                 />
                 <br />
-                <Anunt/>
+                <Anunt style={{maxWidth: '80vw'}} />
                 <br/>
                 <div>
                     <Tabs

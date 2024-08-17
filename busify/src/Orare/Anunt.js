@@ -1,7 +1,7 @@
 import Alert from 'react-bootstrap/Alert';
 import { useState, useEffect } from 'react';
 
-function Anunt() {
+function Anunt(props) {
     const [anuntState, setAnunt] = useState([]);
     const [anuntOrarAziState,  setAnuntOrarAzi] = useState([]);
 
@@ -29,7 +29,7 @@ function Anunt() {
         fetchData();
     }, [])
     return (
-        <Alert variant='danger' style={{display: anuntState.anunt ? 'initial' : 'none', maxWidth: '80vw'}}>
+        <Alert variant='danger' style={{display: anuntState.anunt ? 'initial' : 'none', ...props.style}}>
             {anuntState.anunt}
             <br/> <br/>
             {anuntOrarAziState.orar ? <p>Azi se circula conform orarului de <b>{anuntOrarAziState.orar}</b>.</p> : <></>}
