@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import Traseu from "./Traseu";
 import Form from 'react-bootstrap/Form'
-import Alert from 'react-bootstrap/Alert'
+import Anunt from "./Anunt";
 
 function Orar(props) {
     const [page, setPage] = useState('lv');
@@ -20,8 +20,6 @@ function Orar(props) {
     const [linieFav, setLinieFav] = useState(false)
 
     const nav = useNavigate();
-
-    const [anuntState, setAnunt] = useState([]);
 
     const fetchData = async () => {
         try {
@@ -36,26 +34,66 @@ function Orar(props) {
                 orarFullRef.current.station.lv.lines = orarFullRef.current.station.lv.lines.filter(elem => elem[0] || elem[1])
             if(orarFullRef.current.station.s)
                 orarFullRef.current.station.s.lines = orarFullRef.current.station.s.lines.filter(elem => elem[0] || elem[1])
-            const weekday = (new Date()).getDay();
-            if (weekday === 0) {
-                setPage('d')
-                setOrar(orarFullRef.current.station.d)
-            } else if (weekday === 6) {
-                setPage('s')
-                setOrar(orarFullRef.current.station.s)
-            }
-            else {
-                setPage('lv')
-                setOrar(orarFullRef.current.station.lv);
-            }
-            setRoute(data.route);
 
             const anuntData = await fetch('https://busifybackend-40a76006141a.herokuapp.com/anunturi');
             const anunt = await anuntData.json();
-            const date = Date.parse(anunt.end_date);
-            if(date > new Date())
-            setAnunt(anunt);
+            const date = new Date(anunt.end_date);
 
+            let anuntOrar = '';
+            if(date > new Date()){
+                anunt.modificari.forEach(elem => {
+                    const date = new Date(elem.zi)
+                    const today = new Date();
+                    if(date.setHours(0, 0, 0, 0) === today.setHours(0, 0, 0, 0)){
+                        if(elem.orar === 'sambata'){
+                            if(orarFullRef.current.station.s){
+                            anuntOrar = 's';
+                            setOrar(orarFullRef.current.station.s)
+                            } else {
+                                anuntOrar = 'lv';
+                                setOrar(orarFullRef.current.station.lv)
+                            }
+                        }
+                        else if(elem.orar === 'duminica'){
+                            if(orarFullRef.current.station.d){
+                                anuntOrar = 'd';
+                                setOrar(orarFullRef.current.station.d)
+                            } else {
+                                anuntOrar = 'lv';
+                                setOrar(orarFullRef.current.station.lv)
+                            }
+                        }
+                    }
+                })
+            }
+
+            if(anuntOrar)
+                setPage(anuntOrar);
+            else {
+                const weekday = (new Date()).getDay();
+                if (weekday === 0) {
+                    if(orarFullRef.current.station.d){
+                        setPage('d')
+                        setOrar(orarFullRef.current.station.d)
+                    } else {
+                        setPage('lv')
+                        setOrar(orarFullRef.current.station.lv);
+                    }
+                } else if (weekday === 6) {
+                    if(orarFullRef.current.station.s) {
+                        setPage('s')
+                        setOrar(orarFullRef.current.station.s);
+                    } else {
+                        setPage('lv')
+                        setOrar(orarFullRef.current.station.lv);
+                    }
+                }
+                else {
+                    setPage('lv')
+                    setOrar(orarFullRef.current.station.lv);
+                }
+            }
+            setRoute(data.route);
         } catch (err) {
             console.log(err)
         }
@@ -97,7 +135,7 @@ function Orar(props) {
                     }}
                 />
                 <br />
-                <Alert variant='danger' style={{maxWidth: '80vw', display: anuntState.anunt ? 'initial' : 'none'}}>{anuntState.anunt}. <Alert.Link href={anuntState.link}>Mai multe detalii.</Alert.Link></Alert>
+                <Anunt/>
                 <br/>
                 <div>
                     <Tabs
