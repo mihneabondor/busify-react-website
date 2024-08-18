@@ -11,7 +11,7 @@ function Anunt(props) {
             const anunt = await anuntData.json();
             const date = new Date(anunt.end_date);
 
-            if(date > new Date()){
+            if(date.setHours(0, 0, 0, 0) >= new Date().setHours(0, 0, 0, 0)){
                 setAnunt(anunt);
                 anunt.modificari.forEach(elem => {
                     const date = new Date(elem.zi)
@@ -32,7 +32,7 @@ function Anunt(props) {
         <Alert variant='danger' style={{display: anuntState.anunt ? 'initial' : 'none', ...props.style}}>
             {anuntState.anunt}
             <br/> <br/>
-            {anuntOrarAziState.orar ? <p>Azi se circula conform orarului de <b>{anuntOrarAziState.orar}</b>.</p> : <></>}
+            {anuntOrarAziState.orar ? <p>Azi se circula conform orarului de <b>{anuntOrarAziState.orar === "duminica" ? "duminică" : anuntOrarAziState.orar === 'sambata' ? "sâmbătă" : '-'}</b>.</p> : <></>}
             <hr/>
             <small>
                 Conținut generat de AI, unele informații pot fi greșite. <a href={anuntState.link} target='_blank' style={{color: 'inherit'}}>Știre inițială</a>
