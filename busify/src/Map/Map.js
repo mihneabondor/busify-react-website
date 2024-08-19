@@ -332,10 +332,10 @@ function Map() {
                     bounds.extend(endCoords);
                     map.current.fitBounds(bounds, {
                         padding: {
-                            top: 50,
-                            bottom: 50,
-                            left: 50,
-                            right: 50
+                            top: 60,
+                            bottom: 60,
+                            left: 60,
+                            right: 60
                         }, duration: 1250
                     })
 
@@ -377,16 +377,17 @@ function Map() {
                         const currentIndex = Math.floor(progress * (polylineCoordinates.length - 1));
 
                         const newCoords = polylineCoordinates.slice(0, currentIndex + 1);
-                        map.current.getSource('route').setData({
-                            type: 'Feature',
-                            properties: {},
-                            geometry: {
-                                type: 'LineString',
-                                coordinates: newCoords,
-                            },
-                        });
+                        if(typeof(map.current.getSource('route')) !== 'undefined')
+                            map.current.getSource('route').setData({
+                                type: 'Feature',
+                                properties: {},
+                                geometry: {
+                                    type: 'LineString',
+                                    coordinates: newCoords,
+                                },
+                            });
 
-                        if (progress < 1) {
+                        if (progress < 1 && selectedVehicleRef.current) {
                             requestAnimationFrame(animateLine);
                         }
                     };

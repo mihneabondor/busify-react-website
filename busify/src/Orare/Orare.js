@@ -19,8 +19,8 @@ function Orare() {
 
     const search = (e) => {
         e.preventDefault();
-        if (linesRef.current.find(elem => elem.name === searchValueRef.current.value)) {
-            let url = '/orare/' + searchValueRef.current.value;
+        if (linesRef.current.find(elem => elem.name === searchValueRef.current.value.toUpperCase())) {
+            let url = '/orare/' + searchValueRef.current.value.toUpperCase();
             console.log(url)
             nav(url);
         } else alert('Linia pe care ai introdus-o nu exista!')
