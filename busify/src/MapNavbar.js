@@ -19,6 +19,9 @@ function MapNavbar() {
 
     const [anuntState, setAnunt] = useState([]);
 
+    const [expandedMap, setExpandedMap] = useState(false)
+    const [expandedOrare, setExpandedOrare] = useState(false)
+
     const nav = useNavigate();
 
     const fetchData = async () => {
@@ -79,10 +82,30 @@ function MapNavbar() {
                         </Offcanvas.Header>
                         <Offcanvas.Body>
                             <Nav.Link href="https://busify.ro/" style={{ paddingBottom: '10px' }}> Acasă </Nav.Link>
-                            <Nav.Link href="/map" style={{ paddingBottom: '10px' }}> Hartă </Nav.Link>
-                            <Nav.Link href='/map/undemiibusu' style={{ paddingBottom: '10px' }}> Unde mi-i busu'? </Nav.Link>
-                            <Nav.Link href="/map/destinatii" style={{ paddingBottom: '10px' }}> Destinații </Nav.Link>
-                            <Nav.Link href="/orare" style={{ paddingBottom: '10px' }}> Orare </Nav.Link>
+                            <div style={{
+                                flexDirection: 'row',
+                                display: 'flex'
+                            }}>
+                                <Nav.Link href='/' style={{ paddingBottom: '10px' }}>Hartă live</Nav.Link>
+                                <img width='15px' height='15px' style={{
+                                    margin: '5px',
+                                    rotate: expandedMap ? '0deg' : '-90deg'
+                                }} onClick={() => {setExpandedMap(prev => {return !prev})}} src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA5ElEQVR4nO3UPUpDQRTF8V8sHikCNoL2WYBVSq3cgqVttuAW3EPK9IJFymgTIRZZg42NgqUIIhoeTCHDy3ujmRTC/OE0wz3nMl+XQqFQyMQtVhjmCgxZK8zbir6DXnGWoekpXn7kdjau9YnLLZqO8RFlbmQZFdaaoJJOFTxxzrLNNMB1g+keRwlND3DX4J9hv8vcC0f8FZmfMGrxHeMx8tQZV9jzC87xFgW942LL2iS6dvHX00niEIuGe7sJitcXwZOFasNLjTVF3w4YN/zNHH8+iRM872DKJc/fh6Ccc71QKPwj1j8gazJLnl+5AAAAAElFTkSuQmCC"></img>
+                            </div>
+                            <Nav.Link href="/map" style={{ paddingBottom: '10px', display: expandedMap ? 'flex' : 'none', paddingLeft: '30px' }}> Hartă </Nav.Link>
+                            <Nav.Link href='/map/undemiibusu' style={{ paddingBottom: '10px', display: expandedMap ? 'flex' : 'none', paddingLeft: '30px' }}> Unde mi-i busu'? </Nav.Link>
+                            <Nav.Link href="/map/destinatii" style={{ paddingBottom: '10px', display: expandedMap ? 'flex' : 'none', paddingLeft: '30px' }}> Destinații </Nav.Link>
+                            <div style={{
+                                flexDirection: 'row',
+                                display: 'flex'
+                            }}>
+                                <Nav.Link href='/orare' style={{ paddingBottom: '10px' }}>Orare</Nav.Link>
+                                <img width='15px' height='15px' style={{
+                                    margin: '5px',
+                                    rotate: expandedOrare ? '0deg' : '-90deg'
+                                }} onClick={() => {setExpandedOrare(prev => {return !prev})}} src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA5ElEQVR4nO3UPUpDQRTF8V8sHikCNoL2WYBVSq3cgqVttuAW3EPK9IJFymgTIRZZg42NgqUIIhoeTCHDy3ujmRTC/OE0wz3nMl+XQqFQyMQtVhjmCgxZK8zbir6DXnGWoekpXn7kdjau9YnLLZqO8RFlbmQZFdaaoJJOFTxxzrLNNMB1g+keRwlND3DX4J9hv8vcC0f8FZmfMGrxHeMx8tQZV9jzC87xFgW942LL2iS6dvHX00niEIuGe7sJitcXwZOFasNLjTVF3w4YN/zNHH8+iRM872DKJc/fh6Ccc71QKPwj1j8gazJLnl+5AAAAAElFTkSuQmCC"></img>
+                            </div>
+                            <Nav.Link href="/orare" style={{ paddingBottom: '10px', display: expandedOrare ? 'flex' : 'none', paddingLeft: '30px'}}> Ultimele știri </Nav.Link>
                             <div style={{
                                 flexDirection: 'row',
                                 display: 'flex'
@@ -110,18 +133,17 @@ function MapNavbar() {
                                     setExpandedLines([])
                                 else setExpandedLines(expandedLinesRef.current)
                             }}>
-                                <Nav.Link style={{ paddingBottom: '10px' }}> Linii </Nav.Link>
+                                <Nav.Link style={{ paddingBottom: '10px' }}> Toate liniile </Nav.Link>
                                 <img width='15px' height='15px' style={{
                                     margin: '5px',
                                     rotate: expandedLines.length > 0 ? '0deg' : '-90deg'
                                 }} src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA5ElEQVR4nO3UPUpDQRTF8V8sHikCNoL2WYBVSq3cgqVttuAW3EPK9IJFymgTIRZZg42NgqUIIhoeTCHDy3ujmRTC/OE0wz3nMl+XQqFQyMQtVhjmCgxZK8zbir6DXnGWoekpXn7kdjau9YnLLZqO8RFlbmQZFdaaoJJOFTxxzrLNNMB1g+keRwlND3DX4J9hv8vcC0f8FZmfMGrxHeMx8tQZV9jzC87xFgW942LL2iS6dvHX00niEIuGe7sJitcXwZOFasNLjTVF3w4YN/zNHH8+iRM872DKJc/fh6Ccc71QKPwj1j8gazJLnl+5AAAAAElFTkSuQmCC"></img>
                             </div>
                             {expandedLines.map(elem => (
-                                <p>
+                                <p style={{paddingLeft: '30px'}}>
                                     {elem} - <a href={'/orare/' + elem}>orar</a> / <a href={'/map/' + elem}>hartă</a>
                                 </p>
                             ))}
-                            <Nav.Link href="/orare" style={{ paddingBottom: '10px' }}> Ultimele știri </Nav.Link>
                             <Nav.Link href="https://busify.ro/contact"> Contact </Nav.Link>
                         </Offcanvas.Body>
                     </Offcanvas>
