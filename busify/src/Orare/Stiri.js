@@ -36,7 +36,7 @@ function Stiri() {
                                 </Card.Body>
                                 <Card.Footer>
                                     <small>
-                                        <a href={elem.link} target="_blank">Citeste mai multe</a>
+                                        <a href={elem.link} target="_blank">Citește mai multe</a>
                                     </small>
                                 </Card.Footer>
                             </Card>

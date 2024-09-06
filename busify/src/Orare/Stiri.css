@@ -1,11 +1,16 @@
 .stiri-content {
-    padding-bottom: 10px;
     overflow-x: scroll;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.stiri-content::-webkit-scrollbar { 
+    display: none;
 }
 
 .stiri-card {
     width: 18rem;
-    height: 10rem;
+    height: 9rem;
 }
 
 a {

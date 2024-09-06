@@ -96,6 +96,28 @@ function Orar(props) {
             setRoute(data.route);
         } catch (err) {
             console.log(err)
+            const weekday = (new Date()).getDay();
+            if (weekday === 0) {
+                if(orarFullRef.current.station.d){
+                    setPage('d')
+                    setOrar(orarFullRef.current.station.d)
+                } else {
+                    setPage('lv')
+                    setOrar(orarFullRef.current.station.lv);
+                }
+            } else if (weekday === 6) {
+                if(orarFullRef.current.station.s) {
+                    setPage('s')
+                    setOrar(orarFullRef.current.station.s);
+                } else {
+                    setPage('lv')
+                    setOrar(orarFullRef.current.station.lv);
+                }
+            }
+            else {
+                setPage('lv')
+                setOrar(orarFullRef.current.station.lv);
+            }
         }
     }
     useEffect(() => {

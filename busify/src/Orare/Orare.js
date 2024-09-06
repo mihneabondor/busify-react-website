@@ -80,7 +80,7 @@ function Orare() {
                             <Button type='submit' className='orare-search-button' id="button-addon2"> Căutare </Button>
                         </InputGroup>
                     </Form>
-                    <ListGroup style={{ overflow: 'auto', height: '65vh' }}>
+                    <ListGroup>
                         {lines.map((line) => (
                             <ListGroup.Item
                                 className="d-flex justify-content-between align-items-start orare-cell"
