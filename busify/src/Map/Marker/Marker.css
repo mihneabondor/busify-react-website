@@ -20,6 +20,7 @@
   background-color: indigo;
   border-radius: 5px;
   padding: 5px;
+  z-index: 3;
 }
 
 .marker-linie-urmarita {
@@ -32,6 +33,7 @@
   background-color: #DC3545 !important;
   border-radius: 5px;
   padding: 5px;
+  z-index: 2;
 }
 
 .marker-invisible {

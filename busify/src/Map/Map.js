@@ -143,6 +143,10 @@ function Map() {
     };
 
     const updateMarker = () => {
+        if(selectedVehicleRef.current && selectedVehicleRef.current.vehicle) {
+            selectedVehicleRef.current.vehicle = markers.current.find(elem => elem.vehicle.label === selectedVehicleRef.current.vehicle.label).vehicle
+            addPolyline(selectedVehicleRef.current.vehicle, false)
+        }
         markers.current.forEach(marker => {
             let progress = 0;
             const step = 0.02;
@@ -298,7 +302,7 @@ function Map() {
         return signedDistance;
     }
 
-    const addPolyline = useCallback(async (vehicle) => {
+    const addPolyline = useCallback(async (vehicle, animated = true) => {
         if (!map.current.getSource('route')) {
             try {
                 var url = 'https://busifybackend-40a76006141a.herokuapp.com/shapes?shapeid=' + vehicle.tripId;
@@ -309,90 +313,181 @@ function Map() {
                 const polylineCoordinates = shapeData.map((elem) => [elem.shape_pt_lon, elem.shape_pt_lat])
                 let last = polylineCoordinates.length - 1
                 let endCoords = polylineCoordinates[last], distMin = 100
-                let distVehicleEnd = 1000, distUserEnd = 1000
+                let distVehicleEnd = 1000, distUserEnd = 1000, distMin2 = 1000, nearestCoordsToVehicleIndex = 0
 
                 try {
-                    polylineCoordinates.forEach(elem => {
+                    polylineCoordinates.forEach((elem, index) => {
                         const d = calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, elem[1], elem[0])
                         distMin = Math.min(distMin, Math.abs(d))
+
+                        const d2 = Math.abs(calculateDistance(vehicle.lngLat[1], vehicle.lngLat[0], elem[1], elem[0]))
+                        if(d2 < distMin2) {
+                            distMin2 = d2
+                            nearestCoordsToVehicleIndex = index;
+                        }
                     })
                     distVehicleEnd = Math.abs(calculateDistance(vehicle.lngLat[1], vehicle.lngLat[0], endCoords[1], endCoords[0]))
                     distUserEnd = Math.abs(calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, endCoords[1], endCoords[0]))
                 } catch(e) {
                     console.log(e)
                 }
-                console.log(distVehicleEnd, distUserEnd, distUserEnd < distVehicleEnd)
-                console.log(distMin)
                 if (distMin < 0.1 && distUserEnd < distVehicleEnd)
                     endCoords = [map.current._controls[2]._lastKnownPosition.coords.longitude, map.current._controls[2]._lastKnownPosition.coords.latitude]
 
                 if (popupOpen.current) {
-                    let bounds = new mapboxgl.LngLatBounds();
-                    bounds.extend(vehicle.lngLat);
-                    bounds.extend(endCoords);
-                    map.current.fitBounds(bounds, {
-                        padding: {
-                            top: 60,
-                            bottom: 60,
-                            left: 60,
-                            right: 60
-                        }, duration: 1250
-                    })
 
-                    map.current.addSource('route', {
-                        'type': 'geojson',
-                        'data': {
-                            'type': 'Feature',
-                            'properties': {},
-                            'geometry': {
-                                'type': 'LineString',
-                                'coordinates': polylineCoordinates
-                            }
-                        }
-                    });
+                    if(animated){
+                        let bounds = new mapboxgl.LngLatBounds();
+                        bounds.extend(vehicle.lngLat);
+                        bounds.extend(endCoords);
+                        map.current.fitBounds(bounds, {
+                            padding: {
+                                top: 60,
+                                bottom: 60,
+                                left: 60,
+                                right: 60
+                            }, duration: 1250
+                        })
+                    }
 
-                    map.current.addLayer({
-                        'id': 'route',
-                        'type': 'line',
-                        'source': 'route',
-                        'layout': {
-                            'line-join': 'round',
-                            'line-cap': 'round'
-                        },
-                        'paint': {
-                            'line-color': '#888',
-                            'line-width': 5
-                        }
-                    });
+                    const solidCoords = polylineCoordinates.slice(0, nearestCoordsToVehicleIndex)
+                    const dottedCoords = polylineCoordinates.slice(nearestCoordsToVehicleIndex, polylineCoordinates.length)
 
                     let start;
-                    const duration = 3750;
+                    const duration = 3750 / 2;
 
-                    const animateLine = (timestamp) => {
-                        if (!start) start = timestamp;
-                        const elapsed = timestamp - start;
+                    if(animated){
+                        map.current.addSource('solid route', {
+                            'type': 'geojson',
+                            'data': {
+                                'type': 'Feature',
+                                'properties': {},
+                                'geometry': {
+                                    'type': 'LineString',
+                                    'coordinates': solidCoords
+                                }
+                            }
+                        });
 
-                        const progress = Math.min(elapsed / duration, 1);
+                        map.current.addLayer({
+                            'id': 'solid route',
+                            'type': 'line',
+                            'source': 'solid route',
+                            'layout': {
+                                'line-join': 'round',
+                                'line-cap': 'round'
+                            },
+                            'paint': {
+                                'line-color': '#888',
+                                'line-width': 5,
+                            }
+                        });
+                    
+                        const animateLine = (timestamp) => {
+                            if (!start) start = timestamp;
+                            const elapsed = timestamp - start;
 
-                        const currentIndex = Math.floor(progress * (polylineCoordinates.length - 1));
+                            const progress = Math.min(elapsed / duration, 1);
 
-                        const newCoords = polylineCoordinates.slice(0, currentIndex + 1);
-                        if(typeof(map.current.getSource('route')) !== 'undefined')
-                            map.current.getSource('route').setData({
-                                type: 'Feature',
-                                properties: {},
-                                geometry: {
-                                    type: 'LineString',
-                                    coordinates: newCoords,
-                                },
+                            const currentIndex = Math.floor(progress * (solidCoords.length - 1));
+
+                            const newCoords = solidCoords.slice(0, currentIndex + 1);
+                            if(typeof(map.current.getSource('solid route')) !== 'undefined')
+                                map.current.getSource('solid route').setData({
+                                    type: 'Feature',
+                                    properties: {},
+                                    geometry: {
+                                        type: 'LineString',
+                                        coordinates: newCoords,
+                                    },
+                                });
+
+                            if (progress < 1 && selectedVehicleRef.current) {
+                                requestAnimationFrame(animateLine);
+                            }
+                        };
+
+                        requestAnimationFrame(animateLine);
+                    } else {
+                        if(typeof(map.current.getSource('dotted route')) !== 'undefined')
+                        map.current.getSource('solid route').setData({
+                            type: 'Feature',
+                            properties: {},
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: solidCoords,
+                            },
+                        });
+                    }
+
+                    setTimeout(() => {
+                        if(animated){
+                            map.current.addSource('dotted route', {
+                                'type': 'geojson',
+                                'data': {
+                                    'type': 'Feature',
+                                    'properties': {},
+                                    'geometry': {
+                                        'type': 'LineString',
+                                        'coordinates': dottedCoords
+                                    }
+                                }
                             });
 
-                        if (progress < 1 && selectedVehicleRef.current) {
-                            requestAnimationFrame(animateLine);
-                        }
-                    };
+                            map.current.addLayer({
+                                'id': 'dotted route',
+                                'type': 'line',
+                                'source': 'dotted route',
+                                'layout': {
+                                    'line-join': 'round',
+                                    'line-cap': 'round'
+                                },
+                                'paint': {
+                                    'line-color': '#888',
+                                    'line-width': 5,
+                                    'line-dasharray': [2, 2]
+                                }
+                            });
 
-                    requestAnimationFrame(animateLine);
+                            start = null;
+
+                            const animateDottedLine = (timestamp) => {
+                                if (!start) start = timestamp;
+                                const elapsed = timestamp - start;
+
+                                const progress = Math.min(elapsed / duration, 1);
+
+                                const currentIndex = Math.floor(progress * (dottedCoords.length - 1));
+
+                                const newCoords = dottedCoords.slice(0, currentIndex + 1);
+                                if(typeof(map.current.getSource('dotted route')) !== 'undefined')
+                                    map.current.getSource('dotted route').setData({
+                                        type: 'Feature',
+                                        properties: {},
+                                        geometry: {
+                                            type: 'LineString',
+                                            coordinates: newCoords,
+                                        },
+                                    });
+
+                                if (progress < 1 && selectedVehicleRef.current) {
+                                    requestAnimationFrame(animateDottedLine);
+                                }
+                            };
+
+                            requestAnimationFrame(animateDottedLine);
+                        } else {
+                            if(typeof(map.current.getSource('dotted route')) !== 'undefined')
+                                map.current.getSource('dotted route').setData({
+                                    type: 'Feature',
+                                    properties: {},
+                                    geometry: {
+                                        type: 'LineString',
+                                        coordinates: dottedCoords,
+                                    },
+                                });
+                        }
+                    }, animated ? duration + 500 : 0)
 
                     const size = 125;
                     const pulsingDot = {
@@ -496,14 +591,22 @@ function Map() {
         }
     }, []);
 
-    const removePolyline = useCallback(() => {
+    const removePolyline = useCallback((flyback = true) => {
         let hasSomething = false;
-        if (map.current.getLayer('route')) {
-            map.current.removeLayer('route');
+        if (map.current.getLayer('solid route')) {
+            map.current.removeLayer('solid route');
             hasSomething = true
         }
-        if (map.current.getSource('route')) {
-            map.current.removeSource('route');
+        if (map.current.getSource('solid route')) {
+            map.current.removeSource('solid route');
+            hasSomething = true
+        }
+        if (map.current.getLayer('dotted route')) {
+            map.current.removeLayer('dotted route');
+            hasSomething = true
+        }
+        if (map.current.getSource('dotted route')) {
+            map.current.removeSource('dotted route');
             hasSomething = true
         }
         if (map.current.getLayer('layer-with-pulsing-dot')) {
@@ -514,7 +617,7 @@ function Map() {
             map.current.removeSource('dot-point');
             hasSomething = true
         }
-        if (hasSomething && lastCoords.current[0] !== defLng && lastCoords.current[1] !== defLat) {
+        if (flyback && hasSomething && lastCoords.current[0] !== defLng && lastCoords.current[1] !== defLat) {
             map.current.flyTo({
                 center: lastCoords.current,
                 duration: 2000,
