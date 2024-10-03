@@ -321,6 +321,7 @@ function Map() {
                         distMin = Math.min(distMin, Math.abs(d))
 
                         const d2 = Math.abs(calculateDistance(vehicle.lngLat[1], vehicle.lngLat[0], elem[1], elem[0]))
+                        console.log(d2)
                         if(d2 < distMin2) {
                             distMin2 = d2
                             nearestCoordsToVehicleIndex = index;
@@ -329,7 +330,14 @@ function Map() {
                     distVehicleEnd = Math.abs(calculateDistance(vehicle.lngLat[1], vehicle.lngLat[0], endCoords[1], endCoords[0]))
                     distUserEnd = Math.abs(calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, endCoords[1], endCoords[0]))
                 } catch(e) {
-                    console.log(e)
+                    polylineCoordinates.forEach((elem, index) => {
+                        const d2 = Math.abs(calculateDistance(vehicle.lngLat[1], vehicle.lngLat[0], elem[1], elem[0]))
+                        console.log(d2)
+                        if(d2 < distMin2) {
+                            distMin2 = d2
+                            nearestCoordsToVehicleIndex = index;
+                        }
+                    })
                 }
                 if (distMin < 0.1 && distUserEnd < distVehicleEnd)
                     endCoords = [map.current._controls[2]._lastKnownPosition.coords.longitude, map.current._controls[2]._lastKnownPosition.coords.latitude]
