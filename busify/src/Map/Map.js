@@ -238,7 +238,7 @@ function Map() {
     const generateMap = (refresh = false) => {
         map.current = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/streets-v12',
+            style: 'mapbox://styles/mapbox/streets-v12?optimize=true',
             center: [defLng, defLat],
             zoom: 12,
             attributionControl: false
