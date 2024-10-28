@@ -4,6 +4,7 @@
   "homepage": "/",
   "private": true,
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@mapbox/polyline": "^1.2.1",
     "@react-google-maps/api": "^2.19.3",
     "@testing-library/jest-dom": "^5.17.0",
