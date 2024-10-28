@@ -9,7 +9,7 @@
 
 .map-container {
     width: 100%;
-    height: 97%;
+    height: 100dvh;
 }
 
 .spinner-container {
@@ -24,6 +24,7 @@
 #custom-switch{
     background-color: white;
   }
-  #custom-switch:checked{
+
+#custom-switch:checked{
     background-color: purple;
-  }
+}

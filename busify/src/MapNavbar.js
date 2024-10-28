@@ -87,12 +87,12 @@ function MapNavbar() {
                                 display: 'flex',
                                 padding: '5px',
                                 paddingBottom: '10px',
-                            }}>
-                                <Nav.Link href='/'>Hartă live</Nav.Link>
+                            }} onClick={() => {setExpandedMap(prev => {return !prev})}}>
+                                <Nav.Link>Hartă live</Nav.Link>
                                 <img width='15px' height='15px' style={{
                                     margin: '5px',
                                     rotate: expandedMap ? '0deg' : '-90deg'
-                                }} onClick={() => {setExpandedMap(prev => {return !prev})}} src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA5ElEQVR4nO3UPUpDQRTF8V8sHikCNoL2WYBVSq3cgqVttuAW3EPK9IJFymgTIRZZg42NgqUIIhoeTCHDy3ujmRTC/OE0wz3nMl+XQqFQyMQtVhjmCgxZK8zbir6DXnGWoekpXn7kdjau9YnLLZqO8RFlbmQZFdaaoJJOFTxxzrLNNMB1g+keRwlND3DX4J9hv8vcC0f8FZmfMGrxHeMx8tQZV9jzC87xFgW942LL2iS6dvHX00niEIuGe7sJitcXwZOFasNLjTVF3w4YN/zNHH8+iRM872DKJc/fh6Ccc71QKPwj1j8gazJLnl+5AAAAAElFTkSuQmCC"></img>
+                                }} src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA5ElEQVR4nO3UPUpDQRTF8V8sHikCNoL2WYBVSq3cgqVttuAW3EPK9IJFymgTIRZZg42NgqUIIhoeTCHDy3ujmRTC/OE0wz3nMl+XQqFQyMQtVhjmCgxZK8zbir6DXnGWoekpXn7kdjau9YnLLZqO8RFlbmQZFdaaoJJOFTxxzrLNNMB1g+keRwlND3DX4J9hv8vcC0f8FZmfMGrxHeMx8tQZV9jzC87xFgW942LL2iS6dvHX00niEIuGe7sJitcXwZOFasNLjTVF3w4YN/zNHH8+iRM872DKJc/fh6Ccc71QKPwj1j8gazJLnl+5AAAAAElFTkSuQmCC"></img>
                             </div>
                             <Nav.Link href="/map" style={{padding: '5px', paddingBottom: '10px', display: expandedMap ? 'flex' : 'none', paddingLeft: '30px' }}> Hartă </Nav.Link>
                             <Nav.Link href='/map/undemiibusu' style={{padding: '5px', paddingBottom: '10px', display: expandedMap ? 'flex' : 'none', paddingLeft: '30px' }}> Unde mi-i busu'? </Nav.Link>

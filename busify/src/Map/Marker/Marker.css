@@ -8,6 +8,7 @@
   background-color: purple;
   border-radius: 5px;
   padding: 5px;
+  z-index: 0;
 }
 
 .marker-linie-favorita {
@@ -20,7 +21,7 @@
   background-color: indigo;
   border-radius: 5px;
   padding: 5px;
-  z-index: 3;
+  z-index: 1;
 }
 
 .marker-linie-urmarita {
@@ -42,4 +43,8 @@
 
 .marker-visible {
   display: initial;
+}
+
+.zindex100{
+  z-index: 100 !important;
 }
