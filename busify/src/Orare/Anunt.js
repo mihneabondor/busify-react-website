@@ -9,9 +9,12 @@ function Anunt(props) {
         try {
             const anuntData = await fetch('https://busifybackend-40a76006141a.herokuapp.com/anunturi');
             const anunt = await anuntData.json();
-            const date = new Date(anunt.end_date);
+
+            const dateParts = anunt.end_date.split("/");
+            const date = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
 
             if(date.setHours(0, 0, 0, 0) >= new Date().setHours(0, 0, 0, 0)){
+                console.log(anunt)
                 setAnunt(anunt);
                 anunt.modificari.forEach(elem => {
                     const date = new Date(elem.zi)
@@ -28,11 +31,11 @@ function Anunt(props) {
     useEffect(() => {
         fetchData();
     }, [])
+
     return (
         <Alert variant='danger' style={{display: anuntState.anunt ? 'initial' : 'none', ...props.style}}>
             {anuntState.anunt}
-            <br/> <br/>
-            {anuntOrarAziState.orar ? <p>Azi se circula conform orarului de <b>{anuntOrarAziState.orar === "duminica" ? "duminică" : anuntOrarAziState.orar === 'sambata' ? "sâmbătă" : '-'}</b>.</p> : <></>}
+            {anuntOrarAziState.orar ? <div> <br/> <br/> <p>Azi se circulă conform orarului de <b>{anuntOrarAziState.orar === "duminica" ? "duminică" : anuntOrarAziState.orar === 'sambata' ? "sâmbătă" : '-'}</b>.</p> </div> : <></>}
             <hr/>
             <small>
                 Conținut generat de AI, unele informații pot fi greșite. <a href={anuntState.link} target='_blank' style={{color: 'inherit'}}>Știre inițială</a>

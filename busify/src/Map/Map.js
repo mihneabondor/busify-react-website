@@ -350,10 +350,10 @@ function Map() {
                         bounds.extend(endCoords);
                         map.current.fitBounds(bounds, {
                             padding: {
-                                top: 60,
-                                bottom: 60,
-                                left: 60,
-                                right: 60
+                                top: 120,
+                                bottom: 120,
+                                left: 120,
+                                right: 120
                             }, duration: 1250
                         })
                     }

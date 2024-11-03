@@ -34,7 +34,10 @@ function MapNavbar() {
 
             const anuntData = await fetch('https://busifybackend-40a76006141a.herokuapp.com/anunturi');
             const anunt = await anuntData.json();
-            const date = new Date(anunt.end_date);
+
+            const dateParts = anunt.end_date.split("/");
+            const date = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
+
             if(date.setHours(0, 0, 0, 0) >= new Date().setHours(0, 0, 0, 0))
                 setAnunt(anunt);
         } catch (e) { console.log(e) }
