@@ -238,7 +238,6 @@ function Map() {
     const generateMap = (refresh = false) => {
         map.current = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/streets-v12?optimize=true',
             center: [defLng, defLat],
             zoom: 12,
             attributionControl: false
@@ -348,12 +347,13 @@ function Map() {
                         let bounds = new mapboxgl.LngLatBounds();
                         bounds.extend(vehicle.lngLat);
                         bounds.extend(endCoords);
+                        const boundsPadding = distVehicleEnd * 10
                         map.current.fitBounds(bounds, {
                             padding: {
-                                top: 120,
-                                bottom: 120,
-                                left: 120,
-                                right: 120
+                                top: 80,
+                                bottom: 110,
+                                left: 80,
+                                right: 80
                             }, duration: 1250
                         })
                     }
