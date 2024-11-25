@@ -1,0 +1,12 @@
+[
+    {
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.mihnea.busifyandroid",
+            "sha256_cert_fingerprints": [
+                "76:07:43:6A:D6:40:3C:AB:6F:F6:5C:F9:49:59:3D:C6:B3:4A:06:3F:9E:C2:F2:CC:8E:B8:9B:2B:98:ED:F9:64"
+            ]
+        }
+    }
+]
