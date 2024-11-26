@@ -28,9 +28,8 @@ function Stiri() {
                     {news.map((elem, idx) => (
                         <Col key={idx}>
                             <Card className='stiri-card'>
-                                <Card.Body>
-                                    {/* <Card.Title>Card title</Card.Title> */}
-                                    <Card.Text>
+                                <Card.Body style={{overflow: "hidden", textOverflow: "ellipsis"}}>
+                                    <Card.Text style={{height: "0"}}>
                                         {elem.title}
                                     </Card.Text>
                                 </Card.Body>

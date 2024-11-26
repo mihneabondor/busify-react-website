@@ -10,10 +10,13 @@ function Anunt(props) {
             const anuntData = await fetch('https://busifybackend-40a76006141a.herokuapp.com/anunturi');
             const anunt = await anuntData.json();
 
-            const dateParts = anunt.end_date.split("/");
-            const date = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
+            const endDateParts = anunt.end_date.split("/");
+            const endDate = new Date(+endDateParts[2], endDateParts[1] - 1, +endDateParts[0]);
 
-            if(date.setHours(0, 0, 0, 0) >= new Date().setHours(0, 0, 0, 0)){
+            const startDateParts = anunt.start_date.split("/");
+            const startDate = new Date(+startDateParts[2], startDateParts[1] - 1, +startDateParts[0]);
+
+            if(endDate.setHours(0, 0, 0, 0) >= new Date().setHours(0, 0, 0, 0) && startDate.setHours(0, 0, 0, 0) <= new Date().setHours(0, 0, 0, 0)){
                 console.log(anunt)
                 setAnunt(anunt);
                 anunt.modificari.forEach(elem => {

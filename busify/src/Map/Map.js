@@ -239,6 +239,7 @@ function Map() {
         map.current = new mapboxgl.Map({
             container: 'map',
             center: [defLng, defLat],
+            style: 'mapbox://styles/mapbox/outdoors-v12?optimize=true',
             zoom: 12,
             attributionControl: false
         });
@@ -348,12 +349,13 @@ function Map() {
                         bounds.extend(vehicle.lngLat);
                         bounds.extend(endCoords);
                         const boundsPadding = distVehicleEnd * 10
+                        const normalPadding = 110
                         map.current.fitBounds(bounds, {
                             padding: {
-                                top: 80,
-                                bottom: 110,
-                                left: 80,
-                                right: 80
+                                top: normalPadding,
+                                bottom: normalPadding,
+                                left: normalPadding,
+                                right: normalPadding
                             }, duration: 1250
                         })
                     }
@@ -923,10 +925,9 @@ function Map() {
                 }} />
             <NotificationToast
                 show={showNotification}
-                title={!localStorage.getItem('sms') ? 'Nou: apasă pe o stație de pe ruta unui vehicul și vei fi anunțat prin SMS când autobuzul se apropie!' : 'Link copiat!' }
+                title={'Link copiat!'}
                 onHide={() => {
                     setShowNotification(false)
-                    localStorage.setItem('sms', true)
                 }}
             />
             <Destinatii
