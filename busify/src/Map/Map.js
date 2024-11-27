@@ -239,10 +239,16 @@ function Map() {
         map.current = new mapboxgl.Map({
             container: 'map',
             center: [defLng, defLat],
-            style: 'mapbox://styles/mapbox/outdoors-v12?optimize=true',
+            style: 'mapbox://styles/mapbox/streets-v11',
             zoom: 12,
             attributionControl: false
         });
+
+        map.current.setMaxBounds([
+            [23.0000, 46.2500], // Southwest corner
+            [24.0000, 47.0000]  // Northeast corner
+          ]);
+          
 
         const geo = new mapboxgl.GeolocateControl({
             positionOptions: {
@@ -820,11 +826,25 @@ function Map() {
         }
     }, [])
 
+    const handleVisibilityChange = () => {
+        console.log("visiblity changed to " + document.visibilityState)
+        if(document.visibilityState == "visible") {
+            socket.current = io('https://busifybackend-40a76006141a.herokuapp.com/')
+            socket.current.on('vehicles', data => {socketData(data)})
+        } else {
+            if(socket.current) {
+                socket.current.disconnect()
+                socket.current = null
+            }
+        }
+    }
+
     useEffect(() => {
         if (map.current) return;
         localStorage.setItem('labels', '')
         socket.current = io('https://busifybackend-40a76006141a.herokuapp.com/')
         socket.current.on('vehicles', data => {socketData(data)})
+        document.addEventListener("visibilitychange", handleVisibilityChange)
         generateMap()
     }, []);
 

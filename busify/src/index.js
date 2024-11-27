@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 import Orare from './Orare/Orare';
 import Orar from './Orare/Orar';
+import AppStoreRedirects from './AppStoreRedirects';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -39,6 +40,10 @@ root.render(
       <Route
         path='/orare/:linie'
         element={<Orar />}
+      />
+      <Route
+        path='/storeredirect'
+        element={<AppStoreRedirects />}
       />
       <Route path='*' element={<Map/>}/>
     </Routes>
