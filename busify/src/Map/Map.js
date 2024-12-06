@@ -327,7 +327,6 @@ function Map() {
                         distMin = Math.min(distMin, Math.abs(d))
 
                         const d2 = Math.abs(calculateDistance(vehicle.lngLat[1], vehicle.lngLat[0], elem[1], elem[0]))
-                        console.log(d2)
                         if(d2 < distMin2) {
                             distMin2 = d2
                             nearestCoordsToVehicleIndex = index;
@@ -338,7 +337,6 @@ function Map() {
                 } catch(e) {
                     polylineCoordinates.forEach((elem, index) => {
                         const d2 = Math.abs(calculateDistance(vehicle.lngLat[1], vehicle.lngLat[0], elem[1], elem[0]))
-                        console.log(d2)
                         if(d2 < distMin2) {
                             distMin2 = d2
                             nearestCoordsToVehicleIndex = index;
@@ -602,7 +600,7 @@ function Map() {
                     });
                 }
             } catch (e) { 
-                console.log(e)
+                // console.log(e)
             }
         }
     }, []);
@@ -785,6 +783,9 @@ function Map() {
                 if (exista)
                     addMarker(elem)
             })
+            if(searchParams.get("notificationUserId") && !localStorage.getItem('notificationUserId')) {
+                localStorage.setItem('notificationUserId', searchParams.get("notificationUserId"))
+            }
             if (undemibusu === 'undemiibusu')
                 setShowUndemibusu(true)
             else if (searchParams.get('id')) {
@@ -826,11 +827,32 @@ function Map() {
         }
     }, [])
 
+    const handleSocketOns = () => {
+        // socket.current = io('https://busifybackend-40a76006141a.herokuapp.com/')
+        socket.current = io('http://192.168.0.221:3001')
+        socket.current.on('vehicles', data => {socketData(data)})
+        socket.current.on('notifications', data => {
+            let notificariRamase = JSON.parse(data)
+            notificariRamase = notificariRamase.filter(elem => elem.userId === searchParams.get('notificationUserId'))
+
+            let scheduledNotifications = localStorage.getItem('scheduledNotifications') || '[]'
+            scheduledNotifications = JSON.parse(scheduledNotifications)
+
+            const notificariDeTrimis = []
+            scheduledNotifications.forEach(elem => {
+                const filtru = notificariRamase.filter(notifRamas => (notifRamas.vehicle.vehicle.line === elem[0].vehicle.line && notifRamas.stop.stop_name === elem[1].stop_name))
+                if(filtru === 0)
+                    notificariDeTrimis.push(elem)
+            })
+
+            localStorage.setItem('scheduledNotifications', JSON.stringify(notificariDeTrimis))
+        })
+    }
+
     const handleVisibilityChange = () => {
         console.log("visiblity changed to " + document.visibilityState)
         if(document.visibilityState == "visible") {
-            socket.current = io('https://busifybackend-40a76006141a.herokuapp.com/')
-            socket.current.on('vehicles', data => {socketData(data)})
+           handleSocketOns()
         } else {
             if(socket.current) {
                 socket.current.disconnect()
@@ -842,8 +864,7 @@ function Map() {
     useEffect(() => {
         if (map.current) return;
         localStorage.setItem('labels', '')
-        socket.current = io('https://busifybackend-40a76006141a.herokuapp.com/')
-        socket.current.on('vehicles', data => {socketData(data)})
+        handleSocketOns()
         document.addEventListener("visibilitychange", handleVisibilityChange)
         generateMap()
     }, []);
@@ -933,9 +954,10 @@ function Map() {
                 }} />
             <StopToast
                 header={smsDataRef.current && smsDataRef.current.stop ? smsDataRef.current.stop.stop_name : ''}
-                stopLat={smsDataRef.current && smsDataRef.current.stop ? smsDataRef.current.stop.stop_lat : 0}
-                stopLon={smsDataRef.current && smsDataRef.current.stop ? smsDataRef.current.stop.stop_lon : 0}
+                stop={smsDataRef.current && smsDataRef.current.stop ? smsDataRef.current.stop : undefined}
+                selectedVehicle = {selectedVehicle}
                 show={showStop}
+                socket={socket}
                 showSms={()=>{setShowSms(true)}}
                 markers={markers}
                 onHide={() => {

@@ -1,48 +1,23 @@
 import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
-import Button from 'react-bootstrap/esm/Button';
 import { useEffect, useState } from 'react';
 import CloseButton from 'react-bootstrap/esm/CloseButton';
 import Form from 'react-bootstrap/Form'
 
 function StopToast(props) {
     const [expanded, setExpanded] = useState(true)
-    const [vehicleEta, setVehicleEta] = useState([])
-
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        function toRadians(degrees) {
-            return degrees * (Math.PI / 180);
-        }
-
-        const R = 6371;
-        const dLat = toRadians(lat2 - lat1);
-        const dLon = toRadians(lon2 - lon1);
-
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        const distance = R * c; // Distance in kilometers
-
-        const signLat = (lat2 - lat1) < 0 ? -1 : 1;
-        const signLon = (lon2 - lon1) < 0 ? -1 : 1;
-
-        const signedDistance = distance * signLat * signLon;
-
-        return signedDistance;
-    }
+    const [notificationsScheduled, setNoficationsScheduled] = useState(false);
 
     useEffect(() => {
-        props.markers.current.forEach(elem => {
-            if(localStorage.getItem('labels') && localStorage.getItem('labels').includes(elem.vehicle.label)){
-                const dist = calculateDistance(elem.vehicle.lngLat[1], elem.vehicle.lngLat[0], props.stopLat, props.stopLon)
-                console.log(elem.vehicle.line, dist)
-            }
-        })
+        if(!props.show)
+            return;
+        let scheduledNotifications = localStorage.getItem('scheduledNotifications') || '[]'
+        scheduledNotifications = JSON.parse(scheduledNotifications);
+        console.log(scheduledNotifications);
+        scheduledNotifications = scheduledNotifications.filter(x => props.selectedVehicle.vehicle && x[0] && x[0].vehicle && props.selectedVehicle.vehicle.line === x[0].vehicle.line && x[1].stop_name === props.header)
+        setNoficationsScheduled(scheduledNotifications.length > 0);
     }, [props.show])
+
     return (
         <ToastContainer
             className="p-3"
@@ -75,7 +50,37 @@ function StopToast(props) {
                     <CloseButton onClick={props.onHide}/>
                 </Toast.Header>
                 <Toast.Body style={{display: expanded ? 'grid' : 'none'}}>
-                    <a href='#' onClick={() => {props.showSms()}}>Anunț prin SMS</a>
+                    <Form.Switch
+                        checked={notificationsScheduled}
+                        disabled={!localStorage.getItem('notificationUserId')}
+                        id="custom-switch"
+                        label= "Notifică când se aproapie"
+                        onChange={() => {
+                            setNoficationsScheduled(!notificationsScheduled);
+
+                            let notificationData = [props.selectedVehicle, props.stop]
+
+                            let scheduledNotifications = localStorage.getItem('scheduledNotifications') || '[]'
+                            scheduledNotifications = JSON.parse(scheduledNotifications)
+
+                            if(scheduledNotifications.some(elem => elem[0].vehicle.line === notificationData[0].vehicle.line && elem[1].stop_name === notificationData[1].stop_name)) {
+                                console.log("intra")
+                                scheduledNotifications = scheduledNotifications.filter(elem => elem[0] !== notificationData[0] && elem[1].stop_name !== notificationData[1].stop_name)
+                            } else {
+                                scheduledNotifications.push(notificationData)
+                            }
+
+                            console.log(notificationData)
+                            console.log(scheduledNotifications)
+
+                            localStorage.setItem('scheduledNotifications', JSON.stringify(scheduledNotifications))
+
+                            props.socket.current.emit('notifications', localStorage.getItem('notificationUserId'), notificationData[0], notificationData[1]);
+                        }}
+                    />
+                    <small style={{display: !localStorage.getItem('notificationUserId') ? "initial" : "none", color: 'gray'}}>
+                        * Notificările aplicației trebuie să fie pornite!
+                    </small>
                 </Toast.Body>
             </Toast>
         </ToastContainer>
