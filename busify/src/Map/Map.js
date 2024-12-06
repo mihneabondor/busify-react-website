@@ -828,8 +828,8 @@ function Map() {
     }, [])
 
     const handleSocketOns = () => {
-        // socket.current = io('https://busifybackend-40a76006141a.herokuapp.com/')
-        socket.current = io('http://192.168.0.221:3001')
+        socket.current = io('https://busifybackend-40a76006141a.herokuapp.com/')
+        // socket.current = io('http://192.168.0.221:3001')
         socket.current.on('vehicles', data => {socketData(data)})
         socket.current.on('notifications', data => {
             let notificariRamase = JSON.parse(data)
