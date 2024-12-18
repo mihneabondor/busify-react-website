@@ -1,12 +1,14 @@
 import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
-import { useEffect, useState } from 'react';
+import {useEffect, useRef, useState} from 'react';
 import CloseButton from 'react-bootstrap/esm/CloseButton';
 import Form from 'react-bootstrap/Form'
 
 function StopToast(props) {
     const [expanded, setExpanded] = useState(true)
     const [notificationsScheduled, setNoficationsScheduled] = useState(false);
+    const canSendNotification = useRef(false);
+    const [hasUserId, setHasUserId] = useState(false);
 
     useEffect(() => {
         if(!props.show)
@@ -16,6 +18,9 @@ function StopToast(props) {
         console.log(scheduledNotifications);
         scheduledNotifications = scheduledNotifications.filter(x => props.selectedVehicle.vehicle && x[0] && x[0].vehicle && props.selectedVehicle.vehicle.line === x[0].vehicle.line && x[1].stop_name === props.header)
         setNoficationsScheduled(scheduledNotifications.length > 0);
+        console.log(localStorage.hasOwnProperty('notificationUserId'))
+        canSendNotification.current = localStorage.hasOwnProperty('notificationUserId');
+        setHasUserId(localStorage.hasOwnProperty('notificationUserId'));
     }, [props.show])
 
     return (
@@ -52,9 +57,9 @@ function StopToast(props) {
                 <Toast.Body style={{display: expanded ? 'grid' : 'none'}}>
                     <Form.Switch
                         checked={notificationsScheduled}
-                        disabled={!localStorage.getItem('notificationUserId')}
+                        disabled={!hasUserId}
                         id="custom-switch"
-                        label= "Notifică când se aproapie"
+                        label= "Notifică când se apropie"
                         onChange={() => {
                             setNoficationsScheduled(!notificationsScheduled);
 
@@ -78,7 +83,7 @@ function StopToast(props) {
                             props.socket.current.emit('notifications', localStorage.getItem('notificationUserId'), notificationData[0], notificationData[1]);
                         }}
                     />
-                    <small style={{display: !localStorage.getItem('notificationUserId') ? "initial" : "none", color: 'gray'}}>
+                    <small style={{display: !hasUserId ? "initial" : "none", color: 'gray'}}>
                         * Notificările aplicației trebuie să fie pornite!
                     </small>
                 </Toast.Body>

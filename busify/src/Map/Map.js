@@ -783,8 +783,10 @@ function Map() {
                 if (exista)
                     addMarker(elem)
             })
-            if(searchParams.get("notificationUserId") && !localStorage.getItem('notificationUserId')) {
+            if(searchParams.get("notificationUserId")) {
                 localStorage.setItem('notificationUserId', searchParams.get("notificationUserId"))
+            } else {
+                localStorage.removeItem('notificationUserId')
             }
             if (undemibusu === 'undemiibusu')
                 setShowUndemibusu(true)
@@ -838,8 +840,6 @@ function Map() {
             let scheduledNotifications = localStorage.getItem('scheduledNotifications') || '[]'
             scheduledNotifications = JSON.parse(scheduledNotifications)
 
-            console.log(scheduledNotifications)
-            console.log(notificariRamase)
             const notificariDeTrimis = []
             scheduledNotifications.forEach(elem => {
                 const filtru = notificariRamase.filter(notifRamas => (notifRamas.vehicle.vehicle.line === elem[0].vehicle.line && notifRamas.stop.stop_name === elem[1].stop_name))
@@ -847,8 +847,6 @@ function Map() {
                 if(filtru.length === 0)
                     notificariDeTrimis.push(elem)
             })
-
-            console.log(notificariDeTrimis)
 
             localStorage.setItem('scheduledNotifications', JSON.stringify(notificariDeTrimis))
         })
