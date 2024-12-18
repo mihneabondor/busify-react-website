@@ -1,0 +1,21 @@
+[build]
+publish = "build"
+command = "npm run build"
+
+[[redirects]]
+# Redirect /assetlinks.json to /.well-known/assetlinks.json
+from = "/assetlinks.json"
+to = "/.well-known/assetlinks.json"
+status = 200
+
+[[redirects]]
+# Catch-all redirect for React Router
+from = "/*"
+to = "/index.html"
+status = 200
+
+[[headers]]
+# Set Content-Type for files in /.well-known/
+for = "/.well-known/*"
+[headers.values]
+Content-Type = "application/json"
