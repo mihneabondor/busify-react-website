@@ -1,8 +1,5 @@
 /assetlinks.json
     Content-Type: application/json
 
-/apple-app-site-association.json
-    Content-Type: application/json
-
 /.well-known/*
     Content-Type: application/json
