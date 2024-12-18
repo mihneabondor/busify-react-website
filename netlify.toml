@@ -3,9 +3,3 @@
 from = "/*"
 to = "/index.html"
 status = 200
-
-[[headers]]
-# Set Content-Type for files in /.well-known/
-for = "/.well-known/*"
-[headers.values]
-Content-Type = "application/json"
