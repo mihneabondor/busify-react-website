@@ -1,10 +1,4 @@
 [[redirects]]
-# Redirect /assetlinks.json to /.well-known/assetlinks.json
-from = "/assetlinks.json"
-to = "/.well-known/assetlinks.json"
-status = 200
-
-[[redirects]]
 # Catch-all redirect for React Router
 from = "/*"
 to = "/index.html"
