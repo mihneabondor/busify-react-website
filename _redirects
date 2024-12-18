@@ -3,3 +3,7 @@
 /apple-app-site-association  /.well-known/apple-app-site-association  200
 
 /*  /index.html  200
+
+/.well-known/*
+  Content-Type: application/json
+
