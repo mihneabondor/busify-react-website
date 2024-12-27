@@ -20,7 +20,7 @@ function Traseu() {
     const stopsRef = useRef([]);
 
     const turRef = useRef('_0');
-    const [turLabel, setTurlabl] = useState('_0');
+    const [turLabel, setTurLabel] = useState('_0');
 
     const markersRef = useRef([]);
 
@@ -55,7 +55,7 @@ function Traseu() {
             markersRef.current.forEach(elem => elem.remove())
             markersRef.current = []
             stopsRef.current.forEach(e => addMarker(e))
-        } catch { }
+        } catch (e){console.error(e); }
     }
 
     const addMarker = (stop) => {
@@ -82,7 +82,7 @@ function Traseu() {
     };
 
     const addPolyline = useCallback(async (routeId) => {
-        if (!map.current.getSource('route')) {
+        // if (!map.current.getSource('route')) {
             try {
                 var url = 'https://busifybackend-40a76006141a.herokuapp.com/shapes?shapeid=' + routeId;
 
@@ -91,6 +91,12 @@ function Traseu() {
 
                 const polylineCoordinates = shapeData.map((elem) => [elem.shape_pt_lon, elem.shape_pt_lat])
                 let last = polylineCoordinates.length - 1
+
+                if(map.current.getSource('route')) {
+                    map.current.removeLayer('route')
+                    map.current.removeSource('route')
+                }
+
                 map.current.addSource('route', {
                     'type': 'geojson',
                     'data': {
@@ -128,8 +134,8 @@ function Traseu() {
                         right: 50
                     }, duration: 2000
                 })
-            } catch { }
-        }
+            } catch (e) { console.log(e) }
+        // }
     }, []);
 
     useEffect(() => {
@@ -161,7 +167,7 @@ function Traseu() {
                 label={turRef.current === '_0' ? 'Tur' : 'Retur'}
                 onChange={() => {
                     turRef.current = turRef.current === '_0' ? '_1' : '_0'
-                    setTurlabl(turRef.current)
+                    setTurLabel(turRef.current)
                     fetchData()
                 }}
             />

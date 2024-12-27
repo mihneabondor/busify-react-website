@@ -7,7 +7,7 @@ function AppStoreRedirects() {
         } else if(navigator.userAgent.toLowerCase().indexOf("iphone") != -1) {
             window.location.href = "https://apps.apple.com/us/app/busify-cluj/id6736881022"
         } else {
-            window.location.href = "https://busify.ro"
+            window.location.href = "https://app.busify.ro"
         }
     }, [])
 

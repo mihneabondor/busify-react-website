@@ -3,7 +3,7 @@
         "apps": [],
         "details": [{
             "appID": "MTH43FS33M.com.mihnea.appbusify.busifyios",
-            "paths": ["NOT /storeredirect", "*"]
+            "paths": ["*"]
         }]
     }
 }

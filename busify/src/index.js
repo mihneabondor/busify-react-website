@@ -12,6 +12,7 @@ import {
 import Orare from './Orare/Orare';
 import Orar from './Orare/Orar';
 import AppStoreRedirects from './AppStoreRedirects';
+import FileViewer from "./FileViewer";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -44,6 +45,10 @@ root.render(
       <Route
         path='/storeredirect'
         element={<AppStoreRedirects />}
+      />
+      <Route
+          path='/.well-known/assetlinks.json'
+          element={<FileViewer filePath="../public/assetlinks.json" />}
       />
       <Route path='*' element={<Map/>}/>
     </Routes>

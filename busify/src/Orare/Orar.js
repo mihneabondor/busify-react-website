@@ -42,7 +42,8 @@ function Orar(props) {
             let anuntOrar = '';
             if(date > new Date()){
                 anunt.modificari.forEach(elem => {
-                    const date = new Date(elem.zi)
+                    const dateParts = elem.zi.split('/')
+                    const date = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
                     const today = new Date();
                     if(date.setHours(0, 0, 0, 0) === today.setHours(0, 0, 0, 0)){
                         if(elem.orar === 'sambata'){
@@ -137,6 +138,7 @@ function Orar(props) {
                 <h3>Orarul liniei {linie}</h3>
                 <h4>{route}</h4>
                 <a href={'/map/'+ linie}>Vezi pe hartă </a>
+                <a href={`sms:7479&body=${linie}`}> Bilet prin SMS </a>
                 <Form.Switch
                     checked={linieFav}
                     id="custom-switch"

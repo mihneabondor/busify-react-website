@@ -76,6 +76,7 @@
     justify-content: center;
     background-color: indigo;
     border-radius: 5px;
+    z-index: 1;
 }
 
 

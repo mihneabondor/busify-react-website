@@ -79,11 +79,18 @@ function Map() {
             .addTo(map.current);
 
         marker.getElement().addEventListener('click', (e) => {
-                getVehicleStop(stop.stop_id)
+            smsDataRef.current = null
+            setShowStop(false)
+
+            // getVehicleStop(stop.stop_id)
+
+            setTimeout(() => {
                 const vehicle = selectedVehicleRef.current.vehicle
                 smsDataRef.current = {vehicle, stop}
                 setShowStop(true)
-            });
+            }, 100)
+
+        });
 
         stopMarkers.current.push({marker, stop})
     };
@@ -98,7 +105,6 @@ function Map() {
                 if(!labels.find(el => el == elem.vehicle.label))
                     elem.marker._element.className = 'marker-invisible'
             })
-            setShowStop(true)
         } catch(e) {console.log(e)}
     }
 
@@ -785,8 +791,6 @@ function Map() {
             })
             if(searchParams.get("notificationUserId")) {
                 localStorage.setItem('notificationUserId', searchParams.get("notificationUserId"))
-            } else {
-                localStorage.removeItem('notificationUserId')
             }
             if (undemibusu === 'undemiibusu')
                 setShowUndemibusu(true)
@@ -843,7 +847,6 @@ function Map() {
             const notificariDeTrimis = []
             scheduledNotifications.forEach(elem => {
                 const filtru = notificariRamase.filter(notifRamas => (notifRamas.vehicle.vehicle.line === elem[0].vehicle.line && notifRamas.stop.stop_name === elem[1].stop_name))
-                console.log(filtru)
                 if(filtru.length === 0)
                     notificariDeTrimis.push(elem)
             })

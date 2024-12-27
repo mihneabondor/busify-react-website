@@ -133,7 +133,7 @@ function MapNavbar() {
                             </div>
                             {expandedLinesFav.map(elem => (
                                 <p style={{paddingLeft: '30px'}}>
-                                    {elem} - <a href={'/orare/' + elem}>orar</a> / <a href={'/map/' + elem}>hartă</a>
+                                    {elem} - <a href={'/orare/' + elem}>orar</a> / <a href={`sms:7479&body=${elem}`}>bilet prin SMS</a>
                                 </p>
                             ))}
                             <div style={{
@@ -154,7 +154,7 @@ function MapNavbar() {
                             </div>
                             {expandedLines.map(elem => (
                                 <p style={{paddingLeft: '30px'}}>
-                                    {elem} - <a href={'/orare/' + elem}>orar</a> / <a href={'/map/' + elem}>hartă</a>
+                                    {elem} - <a href={'/orare/' + elem}>orar</a> / <a href={`sms:7479&body=${elem}`}>bilet prin SMS</a>
                                 </p>
                             ))}
                             <Nav.Link style={{padding: '5px'}} href="https://busify.ro/contact"> Contact </Nav.Link>
