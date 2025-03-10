@@ -1,33 +1,22 @@
-import logo from './logo.svg';
-import { useEffect } from 'react';
-import React from 'react'
-import { useNavigate } from "react-router-dom";
-import './App.css';
+import React from "react";
+import BottomBar from "./BottomBar/BottomBar";
+import Map from "./Map/Map";
 
-function App() {
-  const nav = useNavigate();
+const App = () => {
+    return (
+        <div className="min-h-screen flex flex-col">
+            {/* Main content area */}
+            <main className="flex-grow flex overflow-hidden">
+                {/* Map container with constrained height */}
+                <div className="overflow-hidden" style={{height: "92vh"}}>
+                    <Map/>
+                </div>
+            </main>
 
-  useEffect(() => {
-    nav('/map');
-  }, []);
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+            {/* Bottom bar */}
+            <BottomBar />
+        </div>
+    );
+};
 
 export default App;
