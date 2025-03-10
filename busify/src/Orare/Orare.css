@@ -1,5 +1,5 @@
 .orare-body-container {
-    width: 98vw;
+    /*width: 98vw;*/
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -22,10 +22,110 @@
 }
 
 .orare-cell {
-    padding-top: -10px;
-    padding-bottom: -10px;
+    display: flex;
+    align-items: center;
+    width: 85%;
+    background-color: #F5F6F8;
+    border-radius: 5px;
+    height: 70px;
+    padding: 10px;
+    margin: 5px;
+    translate: 0 -15px;
+}
+
+.orare-cell-badge {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    color: white;
+    padding: 5px 10px 5px 10px;
+    background: #8A579E;
+    border-radius: 5px;
+    width: 75px;
+    margin-right: 15px;
+}
+
+.orare-cell-badge-icon {
+    filter: brightness(0) invert(1);
 }
 
 .orare-cell:hover {
     cursor: pointer;
+}
+
+.orare-content-header {
+    width: 100%;
+    color: white;
+    background-image: url("../Images/mapImage.png");
+    background-repeat: no-repeat;
+    position: relative;
+    background-size: cover; /* Ensure the background image covers the entire area */
+    background-position: center; /* Center the background image */
+    padding: 45px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.orare-content-header::before {
+    background-color: rgba(90, 38, 104, 0.8); /* Deep purple with 80% opacity */
+    content: '';
+    display: block;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+}
+
+.orare-content-header > * {
+    position: relative; /* Ensure content is above the pseudo-element */
+    z-index: 1; /* Bring content to the front */
+}
+
+.orare-filter {
+    width: 100%;
+    background-color: #F5F8F7;
+    border-radius: 10px 10px 0 0;
+    height: 10vh;
+    translate: 0 -20px;
+    display: flex;
+    align-items: center;
+    overflow: scroll;
+}
+
+.orare-filter-button {
+    margin: 5px 5px 5px 10px;
+    padding: 5px 10px 5px 10px;
+    display: flex;
+    align-items: center;
+}
+
+.orare-filter-button-icon {
+    margin-right: 5px;
+}
+
+.autobuz {
+    filter: brightness(0) saturate(100%) invert(44%) sepia(24%) saturate(1124%) hue-rotate(237deg) brightness(85%) contrast(87%);
+}
+
+.troleibuz{
+    filter: brightness(0) saturate(100%) invert(61%) sepia(11%) saturate(5402%) hue-rotate(187deg) brightness(93%) contrast(94%);
+}
+
+.tramvai {
+    filter: brightness(0) saturate(100%) invert(51%) sepia(95%) saturate(300%) hue-rotate(107deg) brightness(96%) contrast(89%);
+}
+
+::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+    display: none;
+}
+
+.active-selection {
+    border-radius: 5px;
+    background-color: white !important;
+    box-shadow: rgba(0, 0, 0, 0.35) 0 5px 10px;
 }
