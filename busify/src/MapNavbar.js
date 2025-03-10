@@ -45,6 +45,28 @@ function MapNavbar() {
                 setAnunt(anunt);
         } catch (e) { console.log(e) }
     }
+
+    function sortBusLines(busLines) {
+        return busLines.sort((a, b) => {
+            // Extract the numeric part and suffix using regex
+            const parseLine = (line) => {
+                const match = line.match(/^(\d+)([A-Z]*)$/);
+                return [parseInt(match[1], 10), match[2] || ''];
+            };
+
+            const [numA, suffixA] = parseLine(a);
+            const [numB, suffixB] = parseLine(b);
+
+            // Compare numeric parts
+            if (numA !== numB) {
+                return numA - numB;
+            }
+
+            // Compare suffixes lexicographically
+            return suffixA.localeCompare(suffixB);
+        });
+    }
+
     useEffect(() => {
         if (expandedLinesRef.current.length === 0)
             fetchData()
@@ -77,7 +99,7 @@ function MapNavbar() {
                             const liniiFavLocalStorage = localStorage.getItem('linii_favorite')
                             expandedLinesFavRef.current = liniiFavLocalStorage.split(/,| /)
                             expandedLinesFavRef.current.pop()
-                            console.log(expandedLinesFavRef.current)
+                            expandedLinesFavRef.current = sortBusLines(expandedLinesFavRef.current)
                         }
                     }} />
                     <Offcanvas show={show} onHide={handleClose} placement='start'>

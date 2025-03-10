@@ -10,6 +10,7 @@ import { useParams } from "react-router-dom";
 import Traseu from "./Traseu";
 import Form from 'react-bootstrap/Form'
 import Anunt from "./Anunt";
+import anunt from "./Anunt";
 
 function Orar(props) {
     const [page, setPage] = useState('lv');
