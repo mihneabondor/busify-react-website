@@ -17,6 +17,7 @@ function Orare() {
     const copie = useRef();
     const nav = useNavigate();
     const bottomRef = useRef()
+    const [searchValue, setSearchValue] = useState('');
 
     const [activeFilter, setActiveFilter] = useState('toate');
 
@@ -70,12 +71,12 @@ function Orare() {
 
     return (
         <div className="orare">
-            {/*<MapNavbar />*/}
             <div className="orare-content-header">
                 <h4><b>Orare</b></h4>
+                <br/>
                 <Form style={{width:'100%'}}>
                     <Form.Group>
-                        <Form.Control type="Text" placeholder="Caută o linie"/>
+                        <Form.Control type="Text" placeholder="Caută o linie" value={searchValue} onChange={(e) => {setSearchValue(e.target.value)}} />
                     </Form.Group>
                 </Form>
             </div>
@@ -100,7 +101,10 @@ function Orare() {
                     </div>
                 </div>
                 {lines.map((line) => (
-                    <div className='orare-cell'>
+                    <div className='orare-cell' style={{display: (activeFilter.toLowerCase() === line.type || activeFilter.toLowerCase() === "toate") && (searchValue === '' || line.name.includes(searchValue)) ? 'flex' : 'none'}} onClick={() => {
+                        let url = `/orare/${line.name}`
+                        nav(url)
+                    }}>
                         <div className="orare-cell-badge">
                             <div className='orare-cell-badge-icon'>
                                 {line.type === 'troleibuze' ?
