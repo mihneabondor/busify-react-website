@@ -13,6 +13,8 @@ import Anunt from "./Anunt";
 import anunt from "./Anunt";
 import { CiHeart } from "react-icons/ci";
 import { FaHeart } from "react-icons/fa";
+import BottomBar from "../OtherComponents/BottomBar";
+import {ReactComponent as BackButton} from "../Images/backButton.svg";
 
 function Orar(props) {
     const [page, setPage] = useState('lv');
@@ -135,8 +137,12 @@ function Orar(props) {
     }, [])
     return (
         <div className='orar-page-body'>
-            <MapNavbar />
             <div className="orare-content-header">
+                <BackButton style={{marginRight: 'auto'}} onClick={()=>{
+                    if(window.history.length > 1) {
+                        nav(-1)
+                    }
+                }}/>
                 <div className='orar-title-label'>
                     {type === 'troleibuze' ?
                         <img alt="" width='25px' height='25px'
@@ -162,7 +168,7 @@ function Orar(props) {
                         if (!linii)
                             linii = '';
 
-                        if (linii.search(linie) != -1) {
+                        if (linii.search(linie) !== -1) {
                             linii = linii.replace(linie + ' ', '')
                         } else {
                             linii += linie + ' ';
@@ -214,6 +220,7 @@ function Orar(props) {
                 <br/>
                 <Traseu/>
             </div> : <div></div>}
+            <BottomBar/>
         </div>
     )
 }

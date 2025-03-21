@@ -8,7 +8,7 @@ function NotificationToast(props) {
     <ToastContainer
         className="p-3"
         position={'top-end'}
-        style={{ zIndex: 10 }}
+        style={{ zIndex: 10, translate: '0px -8vh' }}
     >
     <Toast onClose={props.onHide} show={props.show} delay={7000} autohide>
         <Toast.Header>

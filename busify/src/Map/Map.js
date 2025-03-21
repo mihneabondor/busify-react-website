@@ -1,4 +1,3 @@
-import MapNavbar from "../MapNavbar";
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './Map.css';
@@ -19,6 +18,7 @@ import VehicleToast from "./Marker/VehicleToast.js";
 import NotificationToast from "./NotificationToast.js";
 import MessageSMS from "./MessageSMS.js";
 import StopToast from "./Marker/StopToast.js";
+import BottomBar from "../OtherComponents/BottomBar";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
@@ -877,7 +877,6 @@ function Map() {
 
     return (
         <div className='body'>
-            <MapNavbar />
             <div id='map' className="map-container" style={{ visibility: loaded ? 'visible' : 'hidden' }} />
             <Spinner animation="grow" variant='dark' className='spinner-container' style={{ visibility: !loaded ? 'visible' : 'hidden' }} />
             <Search 
@@ -1007,6 +1006,7 @@ function Map() {
                 smsData={smsDataRef.current}
                 uniqueLines={unique}
             />
+            <BottomBar/>
         </div >
     );
 }

@@ -27,7 +27,7 @@ function StopToast(props) {
         <ToastContainer
             className="p-3"
             position={'bottom-center'}
-            style={{ zIndex: 11 }}
+            style={{ zIndex: 11, translate: '0px -8vh' }}
         >
             <Toast show={props.show}>
                 <Toast.Header closeButton={false}>
