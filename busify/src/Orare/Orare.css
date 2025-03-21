@@ -6,7 +6,7 @@
 }
 
 .orare-content-container {
-    width: 80vw;
+    width: 90vw;
     min-width: 380px;
     padding: 20px;
     flex-direction: column;
@@ -24,7 +24,7 @@
 .orare-cell {
     display: flex;
     align-items: center;
-    width: 85%;
+    width: 90vw;
     background-color: #F5F6F8;
     border-radius: 5px;
     height: 6vh;
@@ -42,12 +42,13 @@
     padding: 5px 10px 5px 10px;
     background: #8A579E;
     border-radius: 5px;
-    width: 75px;
+    /*width: 65px;*/
     margin-right: 15px;
 }
 
 .orare-cell-badge-icon {
     filter: brightness(0) invert(1);
+    margin-right: 5px;
 }
 
 .orare-cell:hover {
@@ -96,7 +97,7 @@
 }
 
 .orare-filter-button {
-    margin: 5px 5px 5px 10px;
+    margin: 5px 5px 5px 5px;
     padding: 5px 10px 5px 10px;
     display: flex;
     align-items: center;

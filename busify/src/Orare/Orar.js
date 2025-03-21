@@ -135,6 +135,7 @@ function Orar(props) {
     }, [])
     return (
         <div className='orar-page-body'>
+            <MapNavbar />
             <div className="orare-content-header">
                 <div className='orar-title-label'>
                     {type === 'troleibuze' ?
@@ -146,7 +147,7 @@ function Orar(props) {
                                    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAChUlEQVR4nO2aPWsVQRSGH7ULCAaM6A0IimgXrURzFRX0J1hpQPEj4g/wRm2sQizSSaxV0MYPUBuxU7ARRYKNSCKmkKiYC0Iwt4grB05kWOYm+3FmJ4F9YJqZ2ffMuzOzX2ehPBuAQ8B14AHwBpgEpoA5oKNlTusmtc994BrQVI2oXABmgKRkEY1zsUxcdQbyFZhIGTsK9Dr9e7VuaeDS93bqRLRiGPmuwYeB9U79U60f8hwzpG3SZwk59pLWzxKB18ArT/2oDmrM0zambaM59KJxWgf7zNP2XNtOsQbYp4Od9rR90ba9rELWAQPARWAceKmD/Qu0nY3c1rpE+4zrhh9QjSjIBj0B3HU2fZkyq1rHUxeOYMiN66yzREKUaeBMSEN7gPcBDaTLO2C3tYkjwO8KTSRaJOZhKxM7U5u26tIGdlgYuZcx4GAB7WZG7TsWRrJelYqSRfuHhZGsS2C16v8n1t5IaiNd8J2dh8A27GkAj6uckc2Eo69KI6FJaiPLUM9ICZJ6aS1DvbTWwtLqIxxbqjTyCOjHnn7gSf2stQKxn3qT+jE+ReyZSOoZSeE7O5KBuqLvDw3Na3QKnOU8OqXxifoSMq0CRvLolMYn6ns73FrASB6d0vhEZRn4bmZ5jeTRKU0n45IYMVpaI132Ummmugi3jDZ7Fp3PFkYmCgzQutyyMCKf9hcimvgD7MKIyxGNDGPMeWC+QgPzmh0LglwabwKLAQ0sagzfpdmMjc6fDQuaU7fipDPjL4BNBEIyVx810Ddgf6Ac/YzG+KR5S1OaTsLnA7CdcDSAtxrrF3DMSnjQuUnJV/gewtOjsSSmxD5oISoiP4EbFf+hILEkpsQ+sFLvf6fcs2hxhnn4AAAAAElFTkSuQmCC"/>}
                     <h2><b>Linia {linie}</b></h2>
                 </div>
-                <h4>{route}</h4>
+                <h4 style={{textAlign: 'center'}}>{route}</h4>
                 <div className="hr-like-div"/>
                 <div className="orar-header-buttons" style={{paddingTop: linieFav ? "0" : "0px"}}>
                     <div className="orar-header-buttons-label">
@@ -178,13 +179,13 @@ function Orar(props) {
                 {/*<br/>*/}
 
             </div>
-            {/*<MapNavbar />*/}
             {/*<div className='orar-buttons'>*/}
             {/*    <br/>*/}
             {/*</div>*/}
             {orar ? <div className='orar-body'>
                 <div style = {{boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px", borderRadius: "0 0 10px 10px"}} className="mb-3 custom-tabs">
                     <Tabs
+                        fill justify
                         className="orar-body-inner"
                         id="controlled-tab-example"
                         activeKey={page}

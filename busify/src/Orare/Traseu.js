@@ -221,24 +221,6 @@ function Traseu() {
                         ))}
                     </div>
                 </Container>
-                {/*<MDBContainer fluid className="py-4 mdb-container">*/}
-                {/*    <MDBRow>*/}
-                {/*        <MDBCol lg="12">*/}
-                {/*            <div className="horizontal-timeline">*/}
-                {/*                <MDBTypography listInLine className="items timeline-container">*/}
-                {/*                    {stops.map((elem, ind) => (*/}
-                {/*                        <li className="items-list">*/}
-                {/*                            <div className="px-3">*/}
-                {/*                                <Badge pill className='timeline-badge' bg='secondary'>{ind + 1}</Badge>*/}
-                {/*                                <p className="pt-2">{elem.stop_name}</p>*/}
-                {/*                            </div>*/}
-                {/*                        </li>*/}
-                {/*                    ))}*/}
-                {/*                </MDBTypography>*/}
-                {/*            </div>*/}
-                {/*        </MDBCol>*/}
-                {/*    </MDBRow>*/}
-                {/*</MDBContainer>*/}
                 <div id='map' className='traseu-map-container' />
             </div>
         </div>

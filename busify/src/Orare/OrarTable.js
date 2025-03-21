@@ -45,24 +45,36 @@ function OrarTable(props) {
     }, [props.orar])
 
     return (
-        <div className='orar-table' style={{borderRadius: "0 0 10px 10px"}}>
-            <Table striped bordered>
-                <thead>
+        <div className='orar-table' style={{borderRadius: "0 0 15px 15px"}}>
+            {/* New wrapper for scrolling */}
+            <div className='table-wrapper'>
+                <Table striped bordered>
+                    <thead>
                     <tr>
-                        <th>{props.orar.in_stop_name}</th>
-                        <th>{props.orar.out_stop_name}</th>
+                        <th style={{color: "white", backgroundColor: "#915FA8", width: '50%'}}>{props.orar.in_stop_name}</th>
+                        <th style={{color: "white", backgroundColor: "#915FA8"}}>{props.orar.out_stop_name}</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     {props.orar.lines.map((elem, index) => (
-                        <tr key={index} ref={index === firstElem ? scrollToRef : null} >
-                            <td style={{ color: minutesUntilCurrentTime(elem[0]) < 0 ? 'gray' : 'black', fontWeight: minutesUntilCurrentTime(elem[0]) <= 15 && minutesUntilCurrentTime(elem[0]) >= 0 ? 'bold' : 'initial' }}>{elem[0]}</td>
-                            <td style={{ color: minutesUntilCurrentTime(elem[1]) < 0 ? 'gray' : 'black', fontWeight: minutesUntilCurrentTime(elem[1]) <= 15 && minutesUntilCurrentTime(elem[1]) >= 0 ? 'bold' : 'initial' }}>{elem[1]}</td>
+                        <tr key={index} ref={index === firstElem ? scrollToRef : null}>
+                            <td style={{
+                                color: minutesUntilCurrentTime(elem[0]) < 0 ? 'gray' : 'black',
+                                fontWeight: minutesUntilCurrentTime(elem[0]) <= 15 && minutesUntilCurrentTime(elem[0]) >= 0 ? 'bold' : 'initial'
+                            }}>{elem[0]}</td>
+                            <td style={{
+                                color: minutesUntilCurrentTime(elem[1]) < 0 ? 'gray' : 'black',
+                                fontWeight: minutesUntilCurrentTime(elem[1]) <= 15 && minutesUntilCurrentTime(elem[1]) >= 0 ? 'bold' : 'initial'
+                            }}>{elem[1]}</td>
                         </tr>
                     ))}
-                </tbody>
-            </Table>
+                    </tbody>
+                </Table>
+            </div>
+            {/* Fog Effect */}
+            <div className="fog-effect"></div>
         </div>
+
     )
 }
 

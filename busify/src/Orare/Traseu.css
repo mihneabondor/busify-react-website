@@ -56,9 +56,9 @@
 }
 
 .traseu-map-container {
-    width: 80vw;
+    width: 90vw;
     height: 40vh;
-    border-radius: 0 0 10px;
+    border-radius: 0 0 10px 10px;
 }
 
 .traseu-body{
@@ -88,9 +88,9 @@
 }
 
 .traseu {
-    width: 80vw;
+    width: 90vw;
     border-radius: 10px;
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+    box-shadow: rgba(0, 0, 0, 0.35) 0 5px 15px;
 }
 
 .traseu-header {

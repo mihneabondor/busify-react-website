@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Stiri from './Stiri';
 import Anunt from './Anunt';
+import Map from "../Map/Map";
 
 function Orare() {
     const searchValueRef = useRef();
@@ -71,9 +72,9 @@ function Orare() {
 
     return (
         <div className="orare">
+            <MapNavbar />
             <div className="orare-content-header">
-                <h4><b>Orare</b></h4>
-                <br/>
+                <h2><b>Orare</b></h2>
                 <Form style={{width:'100%'}}>
                     <Form.Group>
                         <Form.Control type="Text" placeholder="Caută o linie" value={searchValue} onChange={(e) => {setSearchValue(e.target.value)}} />
