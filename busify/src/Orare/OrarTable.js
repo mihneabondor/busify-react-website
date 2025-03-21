@@ -45,7 +45,7 @@ function OrarTable(props) {
     }, [props.orar])
 
     return (
-        <div className='orar-table'>
+        <div className='orar-table' style={{borderRadius: "0 0 10px 10px"}}>
             <Table striped bordered>
                 <thead>
                     <tr>

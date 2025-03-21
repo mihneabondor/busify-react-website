@@ -58,7 +58,7 @@
 .traseu-map-container {
     width: 80vw;
     height: 40vh;
-    border-radius: 15px;
+    border-radius: 0 0 10px;
 }
 
 .traseu-body{
@@ -85,4 +85,17 @@
 }
 #custom-switch:checked{
   background-color: purple;
+}
+
+.traseu {
+    width: 80vw;
+    border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.traseu-header {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    margin: 20px;
 }

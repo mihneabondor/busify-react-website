@@ -12,6 +12,9 @@ import Badge from 'react-bootstrap/Badge';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import Form from 'react-bootstrap/Form';
+import Col from "react-bootstrap/Col";
+import Row from "react-bootstrap/Row";
+import Container from "react-bootstrap/Container";
 
 function Traseu() {
     const { linie } = useParams();
@@ -160,36 +163,82 @@ function Traseu() {
     }, [])
 
     return (
-        <div>
-            <br />
-            <Form.Switch
-                id="custom-switch"
-                label={turRef.current === '_0' ? 'Tur' : 'Retur'}
-                onChange={() => {
-                    turRef.current = turRef.current === '_0' ? '_1' : '_0'
-                    setTurLabel(turRef.current)
-                    fetchData()
-                }}
-            />
+        <div className="traseu">
+            <div className="traseu-header">
+                <div><b>Harta liniei {linie}</b></div>
+                <Form.Switch
+                    id="custom-switch"
+                    label={turRef.current === '_0' ? 'Tur' : 'Retur'}
+                    onChange={() => {
+                        turRef.current = turRef.current === '_0' ? '_1' : '_0'
+                        setTurLabel(turRef.current)
+                        fetchData()
+                    }}
+                />
+            </div>
+            <hr/>
             <div className='traseu-body'>
-                <MDBContainer fluid className="py-4 mdb-container">
-                    <MDBRow>
-                        <MDBCol lg="12">
-                            <div className="horizontal-timeline">
-                                <MDBTypography listInLine className="items timeline-container">
-                                    {stops.map((elem, ind) => (
-                                        <li className="items-list">
-                                            <div className="px-3">
-                                                <Badge pill className='timeline-badge' bg='secondary'>{ind + 1}</Badge>
-                                                <p className="pt-2">{elem.stop_name}</p>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </MDBTypography>
+                <Container fluid className="d-flex overflow-auto py-2">
+                    <div className="d-flex align-items-start position-relative" style={{ minWidth: "max-content" }}>
+                        {stops.map((step, index) => (
+                            <div
+                                key={step.number}
+                                className="d-flex flex-column align-items-center text-center position-relative"
+                                style={{ width: "100px" }} // Fixed width for each circle container
+                            >
+                                {/* Connecting Line (Before the Circle) */}
+                                {index > 0 && (
+                                    <div
+                                        className="position-absolute bg-secondary"
+                                        style={{
+                                            width: "100%", // Span the full width of the container
+                                            height: "2px",
+                                            left: "-50%", // Start from the middle of the previous circle
+                                            top: "18px", // Align with the center of the circles
+                                            zIndex: 0, // Lines below circles
+                                        }}
+                                    ></div>
+                                )}
+
+                                {/* Step Number Circle */}
+                                <div
+                                    className="d-flex align-items-center justify-content-center rounded-circle bg-light text-dark fw-bold border position-relative"
+                                    style={{
+                                        width: "36px",
+                                        height: "36px",
+                                        border: "2px solid #ccc",
+                                        zIndex: 1, // Circles above lines
+                                    }}
+                                >
+                                    {index + 1}
+                                </div>
+
+                                {/* Step Label (Wraps without affecting alignment) */}
+                                <div className="mt-2 text-secondary" style={{ maxWidth: "80px", wordWrap: "break-word", whiteSpace: "normal" }}>
+                                    {step.stop_name}
+                                </div>
                             </div>
-                        </MDBCol>
-                    </MDBRow>
-                </MDBContainer>
+                        ))}
+                    </div>
+                </Container>
+                {/*<MDBContainer fluid className="py-4 mdb-container">*/}
+                {/*    <MDBRow>*/}
+                {/*        <MDBCol lg="12">*/}
+                {/*            <div className="horizontal-timeline">*/}
+                {/*                <MDBTypography listInLine className="items timeline-container">*/}
+                {/*                    {stops.map((elem, ind) => (*/}
+                {/*                        <li className="items-list">*/}
+                {/*                            <div className="px-3">*/}
+                {/*                                <Badge pill className='timeline-badge' bg='secondary'>{ind + 1}</Badge>*/}
+                {/*                                <p className="pt-2">{elem.stop_name}</p>*/}
+                {/*                            </div>*/}
+                {/*                        </li>*/}
+                {/*                    ))}*/}
+                {/*                </MDBTypography>*/}
+                {/*            </div>*/}
+                {/*        </MDBCol>*/}
+                {/*    </MDBRow>*/}
+                {/*</MDBContainer>*/}
                 <div id='map' className='traseu-map-container' />
             </div>
         </div>

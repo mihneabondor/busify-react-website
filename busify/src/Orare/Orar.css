@@ -3,22 +3,43 @@
     display: flex;
     align-items: center;
     flex-direction: column;
-    /* justify-content: center; */
+    translate: 0 -25px;
 }
 
 .orar-table {
-    max-height: 60vh;
+    max-height: 50vh;
     overflow: auto;
+    border-radius: 10px;
+    width: 100%;
 }
+
+/*.orar-body-inner::after {*/
+/*    border-bottom-left-radius: 10px;*/
+/*    border-bottom-right-radius: 10px;*/
+/*    outline: dashed;*/
+/*    content: "";*/
+/*    position: absolute;*/
+/*    z-index: 1;*/
+/*    bottom: 1%;*/
+/*    left: 10%;*/
+/*    width: 80%;*/
+/*    height: 50px; !* Adjust height of the fog *!*/
+/*    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));*/
+/*    pointer-events: none; !* Ensures it doesn't block interactions *!*/
+/*}*/
 
 thead th {
  position: sticky;
- top: 0px;
+ top: 0;
  z-index: 1;
 }
 
+thead {
+    background-color: #915FA7;
+}
+
 td, th {
-  text-align: center;
+    text-align: center;
 }
 
 .orar-buttons {
@@ -29,5 +50,80 @@ td, th {
   color: purple;
 }
 .nav-tabs .nav-link {
-  color: purple;
+    color: black;
+    background: #F5F5F9;
+    border-radius: 0;
+}
+
+.nav-tabs .nav-item:first-child .nav-link {
+    border-top-left-radius: 10px;  /* Adjust as needed */
+}
+
+.nav-tabs .nav-item:last-child .nav-link {
+    border-top-right-radius: 10px; /* Adjust as needed */
+}
+
+.orar-content-header {
+    width: 100%;
+    color: white;
+    background-image: url("../Images/mapImage.png");
+    background-repeat: no-repeat;
+    position: relative;
+    background-size: cover; /* Ensure the background image covers the entire area */
+    background-position: center; /* Center the background image */
+    padding: 45px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.orar-content-header::before {
+    background-color: rgba(90, 38, 104, 0.8); /* Deep purple with 80% opacity */
+    content: '';
+    display: block;
+    height: 100%;
+    position: absolute;
+    width: 100%;
+}
+
+.orar-title-label {
+    display: flex;
+    flex-direction: row;
+    filter: brightness(0) invert(1);
+}
+
+.orar-title-label > img {
+    margin-right: 5px
+}
+
+.hr-like-div {
+    width: 90vw; /* 3/4 of the viewport width */
+    height: 1px; /* Thin like an <hr> */
+    background-color: #F5F6F7; /* Change color as needed */
+    opacity: 0.4;
+    margin: 5px 0 10px 0; /* Centers the div */
+    border-radius: 1px; /* Slightly rounded edges */
+}
+
+.orar-header-buttons {
+    filter: brightness(0) invert(1);
+}
+
+.orar-header-buttons-label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.orar-header-buttons {
+    display: flex;
+    justify-content: space-between; /* Pushes the divs to opposite ends */
+    width: 85vw; /* Full width of the viewport */
+}
+
+.custom-tabs .nav-link {
+    flex: 1; /* Make each tab header fill the space */
+    text-align: center; /* Center-align text */
 }
