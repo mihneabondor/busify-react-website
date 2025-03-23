@@ -8,6 +8,7 @@ import {ReactComponent as OrareIconFill} from "../Images/orareIconFill.svg"
 import {ReactComponent as OrareIcon} from "../Images/orareIcon.svg"
 
 import {ReactComponent as FavoriteIcon} from "../Images/favoriteIcon.svg"
+import {ReactComponent as FavoriteIconFill} from "../Images/favoriteIconFill.svg"
 
 import {ReactComponent as StiriIcon} from "../Images/stiriIcon.svg"
 
@@ -34,6 +35,7 @@ function BottomBar() {
         {
             title: 'Favorite',
             icon: <FavoriteIcon/>,
+            activeIcon: <FavoriteIconFill/>,
             page: '/favorite'
         },
         {

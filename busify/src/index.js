@@ -13,6 +13,7 @@ import Orare from './Orare/Orare';
 import Orar from './Orare/Orar';
 import AppStoreRedirects from './AppStoreRedirects';
 import FileViewer from "./FileViewer";
+import Favorite from "./Orare/Favorite";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -41,6 +42,10 @@ root.render(
       <Route
         path='/orare/:linie'
         element={<Orar />}
+      />
+      <Route
+        path='/favorite'
+        element={<Favorite />}
       />
       <Route
         path='/storeredirect'
