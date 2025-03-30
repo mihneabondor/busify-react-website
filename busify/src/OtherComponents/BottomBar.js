@@ -11,6 +11,7 @@ import {ReactComponent as FavoriteIcon} from "../Images/favoriteIcon.svg"
 import {ReactComponent as FavoriteIconFill} from "../Images/favoriteIconFill.svg"
 
 import {ReactComponent as StiriIcon} from "../Images/stiriIcon.svg"
+import {ReactComponent as StiriIconFill} from "../Images/stiriIconFill.svg"
 
 import {ReactComponent as SetariIcon} from "../Images/setariIcon.svg"
 import {useNavigate} from "react-router-dom";
@@ -41,6 +42,7 @@ function BottomBar() {
         {
             title: 'Știri',
             icon: <StiriIcon/>,
+            activeIcon: <StiriIconFill/>,
             page: '/stiri'
         },
         {

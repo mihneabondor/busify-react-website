@@ -1,7 +1,6 @@
 import ReactDOM from 'react-dom/client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
-import App from './App';
 import Map from './Map/Map';
 import React from "react";
 import {
@@ -14,6 +13,7 @@ import Orar from './Orare/Orar';
 import AppStoreRedirects from './AppStoreRedirects';
 import FileViewer from "./FileViewer";
 import Favorite from "./Orare/Favorite";
+import Stiri from "./Stiri/Stiri";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -50,6 +50,10 @@ root.render(
       <Route
         path='/storeredirect'
         element={<AppStoreRedirects />}
+      />
+      <Route
+          path='/stiri'
+          element={<Stiri />}
       />
       <Route
           path='/.well-known/assetlinks.json'
