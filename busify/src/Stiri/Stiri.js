@@ -11,13 +11,14 @@ import {useNavigate} from "react-router-dom";
 function Stiri() {
     const [news, setNews] = useState([]);
     const [searchValue, setSearchValue] = useState('');
-    let navigate = useNavigate();
 
     const fetchData = async () => {
         try {
-            let resp = await fetch('http://www.server.busify.ro/stiri');
+            console.log("intra")
+            let resp = await fetch('https://busifyserver.onrender.com/stiri');
             let data = await resp.json();
             setNews(data)
+            console.log(data)
         } catch (e) { console.log(e) }
     }
 
@@ -34,7 +35,7 @@ function Stiri() {
         <div className="stiri-container">
             <div className="orare-content-header">
                 <h2><b>Știri</b></h2>
-                <Form style={{width: '100%'}}>
+                <Form style={{width: '90vw'}}>
                     <Form.Group>
                         <Form.Control type="Text" placeholder="Caută articole de știri" value={searchValue}
                                       onChange={(e) => {
@@ -51,8 +52,8 @@ function Stiri() {
                 </div>
 
                 {news.map(elem => (
-                    <Card className="text-white mt-3" style={{borderRadius: '10px', display: searchValue === '' || elem.title.toLowerCase().includes(searchValue.toLowerCase()) || elem.description.toLowerCase().includes(searchValue.toLowerCase()) ? 'flex' : 'none'}}>
-                        <Card.Img src={require(`../Images/ThumbnailsStiri/image${elem.thumbnail}.jpeg`)} alt="Card image" style={{maxHeight: '25vh', objectFit: "cover", borderRadius: "10px 10px 0 0"}} />
+                    <Card className="text-white mt-3" style={{borderRadius: '10px', display: searchValue === '' || elem.title.toLowerCase().includes(searchValue.toLowerCase()) || elem.description.toLowerCase().includes(searchValue.toLowerCase()) ? 'flex' : 'none'}} onClick={()=>{window.open(elem.link)}}>
+                        <Card.Img src={require(`../Images/ThumbnailsStiri/image${elem.thumbnail}.png`)} alt="Card image" style={{maxHeight: '25vh', objectFit: "cover", borderRadius: "10px 10px 0 0"}} />
                         <Card.ImgOverlay style={{background: "rgba(0, 0, 0, 0.5)",
                             backdropFilter: "blur(10px)",
                             height: "min-content",
@@ -68,6 +69,8 @@ function Stiri() {
                     </Card>
                 ))}
             </div>
+            <br/>
+            <small style={{color: 'gray'}}>📸 Barakat Maya</small>
             <br/><br/><br/>
             <BottomBar/>
         </div>

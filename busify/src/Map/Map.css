@@ -22,8 +22,12 @@
 
 #custom-switch{
     background-color: white;
+    /*border: none;*/
+    outline: none;
   }
 
 #custom-switch:checked{
     background-color: purple;
+    border: none;
+    /*outline: none;*/
 }

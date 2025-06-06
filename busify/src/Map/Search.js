@@ -37,7 +37,7 @@ function Search(props) {
             <Modal.Body>
                 <Form.Control placeholder="Ex: 25 43" aria-describedby="desc" onChange={change} ref={searchRef} />
                 <Form.Text id="desc" muted>
-                    Întrodu liniile căutate, separate prin câte un spațiu
+                    Întrodu liniile căutate sau numărele de parc, separate prin câte un spațiu
                 </Form.Text>
                 {liniiGasite.map((elem, ind) => (
                     <Badge pill bg="secondary" key={ind} style={{marginRight: '10px', cursor: 'pointer'}} onClick={() => removeLine(ind)}>
@@ -61,54 +61,95 @@ function Search(props) {
                     Închide
                 </Button>
                 <Button style={{background: 'purple'}} variant="primary" onClick={() => {
-                    const newLiniiGasite = [...liniiGasite, searchRef.current.value.toUpperCase()]
-                    setLiniiGasite(newLiniiGasite)
+                    // Get all search targets including the new input value
+                    const inputValue = searchRef.current?.value?.toUpperCase()?.trim() || '';
+                    const searchTargets = [...liniiGasite, inputValue].filter(target =>
+                        target && typeof target === 'string' && target.trim() !== ''
+                    );
 
-                    let exista = false
-                    if(newLiniiGasite.length) {
-                        props.unique.current.forEach(elem => {
-                            if(liniiAdiacente) {
-                                newLiniiGasite.forEach(el => {
-                                    if (elem[0].startsWith(el) && !exista)
-                                        exista = el !== ''
+// Process 3-digit targets first
+                    const processedTargets = searchTargets.map(target => {
+                        if (/^\d{3}$/.test(target)) {
+                            const matchingVehicle = props.vehicles?.find(v => v?.label === target);
+                            return matchingVehicle?.line || target;
+                        }
+                        return target;
+                    });
+
+                    setLiniiGasite(processedTargets);
+
+                    let exista = false;
+                    if (processedTargets.length) {
+                        if (liniiAdiacente) {
+                            // Create patterns for all targets
+                            const patterns = processedTargets
+                                .map(target => {
+                                    try {
+                                        const escapedStart = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                        return new RegExp(`^${escapedStart}(?:[a-zA-Z]*)$`);
+                                    } catch (e) {
+                                        console.error('Error creating regex for:', target);
+                                        return null;
+                                    }
                                 })
-                            } else {
-                                if (newLiniiGasite.includes(elem[0]))
-                                    exista = true
-                            }
-                        })
-        
+                                .filter(Boolean);
+
+                            // Check if any element matches any pattern
+                            exista = props.unique.current?.some(elem =>
+                                patterns.some(pattern => elem?.[0] && pattern.test(elem[0]))
+                            ) ?? false;
+                        } else {
+                            // Simple includes check for all targets
+                            exista = props.unique.current?.some(elem =>
+                                processedTargets.includes(elem?.[0])
+                            ) ?? false;
+                        }
+
                         if (exista) {
                             let oneMatch = false;
-                            props.unique.current = props.unique.current.map((elem) => [elem[0], newLiniiGasite.includes(elem[0])])
 
-                            if(liniiAdiacente) {
-                                const check = (elem) => {
-                                    let exista = false
-                                    newLiniiGasite.forEach(el => {
-                                        if (elem.startsWith(el) && !exista)
-                                            exista = el !== ''
-                                    })
-                                    return exista
-                                }
-                                props.unique.current = props.unique.current.map(elem => [elem[0], check(elem[0])])
+                            // First pass - exact matches against all targets
+                            props.unique.current = props.unique.current?.map((elem) =>
+                                [elem?.[0], processedTargets.includes(elem?.[0])]
+                            ) || [];
+
+                            if (liniiAdiacente) {
+                                // Second pass - adjacent matches against all targets
+                                const check = (line) => {
+                                    return processedTargets.some(target => {
+                                        if (!target || !line) return false;
+                                        try {
+                                            const pattern = new RegExp(`^${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:[a-zA-Z]*)$`);
+                                            return pattern.test(line);
+                                        } catch (e) {
+                                            console.error('Pattern matching error:', e);
+                                            return false;
+                                        }
+                                    });
+                                };
+
+                                props.unique.current = props.unique.current.map(elem =>
+                                    [elem?.[0], check(elem?.[0]) || elem?.[1]]
+                                );
                             }
-                            props.unique.current.forEach(elem => {
-                                if (elem[1]) oneMatch = true
-                            });
-                            console.log(oneMatch)
-                            if (!oneMatch)
-                                props.setShownVehicles();
-                            else props.setShowUndemibusuToast()
-        
-                            props.setUniqueLines(props.unique.current)
-                            props.setCheckAllChecked(!oneMatch)
-                            props.resetMarkers();
+
+                            // Check if we have at least one match
+                            oneMatch = props.unique.current.some(elem => elem?.[1]);
+
+                            if (!oneMatch) {
+                                props.setShownVehicles?.();
+                            } else {
+                                props.setShowUndemibusuToast?.();
+                            }
+
+                            props.setUniqueLines?.(props.unique.current || []);
+                            props.setCheckAllChecked?.(!oneMatch);
+                            props.resetMarkers?.();
                         }
                     }
-                    props.onHide()
-                    setLiniiGasite([])
 
+                    props.onHide?.();
+                    setLiniiGasite([]);
                 }}>
                     Caută
                 </Button>

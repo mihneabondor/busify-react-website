@@ -1,24 +1,22 @@
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './Map.css';
-import { useEffect, useRef, useState, useCallback } from "react";
+import {useEffect, useRef, useState, useCallback, createRef} from "react";
 import './Marker/Marker.css';
 import Spinner from 'react-bootstrap/Spinner';
-import Settings from './Settings';
 import React from 'react';
 import Undemibusu from "./Undemibusu.js";
-import { useParams, useSearchParams } from 'react-router-dom';
+import {useNavigate, useParams, useSearchParams} from 'react-router-dom';
 import UndemibusuToast from "./UndemibusuToast.js";
-import Destinatii from "./Destinatii.js";
-import DestinatiiToast from "./DestinatiiToast.js";
 import '../Orare/Traseu.css'
 import {io} from 'socket.io-client'
 import Search from "./Search.js";
-import VehicleToast from "./Marker/VehicleToast.js";
-import NotificationToast from "./NotificationToast.js";
-import MessageSMS from "./MessageSMS.js";
-import StopToast from "./Marker/StopToast.js";
 import BottomBar from "../OtherComponents/BottomBar";
+import VehicleHighlight from "../OtherComponents/VehicleHighlight";
+import ReactDOM from 'react-dom/client';
+import Badges from "../OtherComponents/Badges";
+import VehicleMarkerWrapper from "../OtherComponents/VehicleMarkerWrapper";
+import debounce from 'lodash.debounce';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
 
@@ -35,6 +33,8 @@ function Map() {
     const [allChecked, setCheckAllChecked] = useState(true);
     let unique = useRef([]);
 
+    const [stopMarkersState, setStopMarkersState] = useState([]);
+
     const [loaded, setLoaded] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     var loadedFirstTime = false;
@@ -50,6 +50,8 @@ function Map() {
 
     const [searchParams] = useSearchParams();
 
+    const [undemibusuBack, setUndemibusuBack] = useState(false);
+
     const [showDestinatii, setShowDestinatii] = useState(false);
     const [showDestinatiiToast, setShowDestinatiiToast] = useState(false);
     let destinatiiSearchRef = useRef();
@@ -64,128 +66,299 @@ function Map() {
     const smsDataRef = useRef(null)
 
     const [showStop, setShowStop] = useState(false)
+    const [selectedStop, setSelectedStop] = useState(null)
 
     const socket = useRef();
 
-    const addStopMarker = (stop) => {
+    const [nearestStop, setNearestStop] = useState(null)
+    const nearestStopRef = useRef(null);
+
+    const updateCancelToken = useRef({ cancelled: false });
+
+    const nav = useNavigate();
+
+    const addStopMarker = (stop, index, length, stops) => {
         var el = document.createElement('div');
 
-        //marker
-        el.className = 'traseu-marker';
-        el.innerHTML = '<svg fill="#ffffff" height="15px" width="15px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g transform="translate(0 -1)"> <g> <g> <polygon points="328.533,86.333 328.533,137.533 354.133,137.533 354.133,94.867 354.133,86.333 "></polygon> <polygon points="285.867,94.867 285.867,137.533 311.467,137.533 311.467,86.333 285.867,86.333 "></polygon> </g> </g> </g> <g> <g> <path d="M405.333,25.6H234.667c-5.12,0-8.533,3.413-8.533,8.533v51.2H192V25.6C192,11.093,180.907,0,166.4,0 c-14.507,0-25.6,11.093-25.6,25.6v435.2c-23.893,0-42.667,18.773-42.667,42.667c0,5.12,3.413,8.533,8.533,8.533h119.467 c5.12,0,8.533-3.413,8.533-8.533c0-23.893-18.773-42.667-42.667-42.667V256h34.133v51.2c0,5.12,3.413,8.533,8.533,8.533h170.667 c5.12,0,8.533-3.413,8.533-8.533V34.133C413.867,29.013,410.453,25.6,405.333,25.6z M226.133,238.933H192V102.4h34.133V238.933z M268.8,145.067v-51.2V76.8c0-5.12,3.413-8.533,8.533-8.533h85.333c5.12,0,8.533,3.413,8.533,8.533v17.067v51.2V179.2 c0,5.12-3.413,8.533-8.533,8.533s-8.533-3.413-8.533-8.533v-25.6h-68.267v25.6c0,5.12-3.413,8.533-8.533,8.533 c-5.12,0-8.533-3.413-8.533-8.533V145.067z M362.667,213.333c0,5.12-3.413,8.533-8.533,8.533h-68.267 c-5.12,0-8.533-3.413-8.533-8.533c0-5.12,3.413-8.533,8.533-8.533h68.267C359.253,204.8,362.667,208.213,362.667,213.333z M371.2,264.533H268.8c-5.12,0-8.533-3.413-8.533-8.533s3.413-8.533,8.533-8.533h102.4c5.12,0,8.533,3.413,8.533,8.533 S376.32,264.533,371.2,264.533z"></path> </g> </g> </g></svg>'
+        // determine if the current stop is before the nearest stop
+        const nearestStopIndex = stops.findIndex(s => s.stop_id === nearestStopRef.current?.stop_id);
+        const isPastStop = nearestStopIndex > -1 && index < nearestStopIndex;
+
+        // marker
+        el.className = 'traseu-marker traseu-marker-map';
+
+        if (isPastStop) {
+            el.className += ' traseu-marker-trecut';
+        }
+
+        el.innerHTML = index + 1;
 
         const marker = new mapboxgl.Marker(el)
-            .setLngLat([stop.stop_lon, stop.stop_lat])
-            .addTo(map.current);
+            .setLngLat([stop.stop_lon, stop.stop_lat]);
+
+        if (index !== 0 && index !== length - 1) {
+            marker.addTo(map.current);
+        }
 
         marker.getElement().addEventListener('click', (e) => {
-            smsDataRef.current = null
-            setShowStop(false)
-
-            // getVehicleStop(stop.stop_id)
+            smsDataRef.current = null;
+            setShowStop(false);
 
             setTimeout(() => {
-                const vehicle = selectedVehicleRef.current.vehicle
-                smsDataRef.current = {vehicle, stop}
-                setShowStop(true)
-            }, 100)
-
+                const vehicle = selectedVehicleRef.current.vehicle;
+                smsDataRef.current = { vehicle, stop };
+                setSelectedStop(stop);
+                setShowStop(true);
+            }, 100);
         });
 
-        stopMarkers.current.push({marker, stop})
+        stopMarkers.current.push({ marker, stop });
+        setStopMarkersState(stopMarkers.current);
     };
 
-    const getVehicleStop = async (stopId) => {
-        try {
-            const url = `http://localhost:3000/stopvehicles?stopid=${stopId}`
-            const resp = await fetch(url)
-            const labels = await resp.json()
-            localStorage.setItem('labels', labels)
-            markers.current.forEach(elem => {
-                if(!labels.find(el => el == elem.vehicle.label))
-                    elem.marker._element.className = 'marker-invisible'
-            })
-        } catch(e) {console.log(e)}
+
+    const hiddenMarkerCondition = (vehicle) => {
+        return ((selectedVehicleRef.current && selectedVehicleRef.current.vehicle.label !== vehicle.label) ||
+            (unique.current.find(elem => elem[0] === vehicle.line)[1] === false && selectedVehicleRef.current?.vehicle?.line !== vehicle.line))
     }
 
     const addMarker = (vehicle) => {
-        const linieFavorita = !(!localStorage.getItem('linii_favorite') || (' ' + localStorage.getItem('linii_favorite') + ' ').search(' ' + vehicle.line + ' ') == -1);
-        var el = document.createElement('div');
+        const el = document.createElement('div');
+        const root = ReactDOM.createRoot(el);
 
-        if (searchParams.get('id') === vehicle.label || (selectedVehicleRef.current && selectedVehicleRef.current.vehicle.label === vehicle.label))
-            el.className = 'marker-linie-urmarita ';
-        else el.className = linieFavorita ? 'marker-linie-favorita ' : 'marker ';
+        const markerComponentRef = createRef();
 
-        if(localStorage.getItem('labels') && !localStorage.getItem('labels').includes(vehicle.label))
-            el.className = 'marker-invisible '
-        else el.className += unique.current.find(elem => elem[0] === vehicle.line)[1] || searchParams.get('id') === vehicle.label ? 'marker-visible ' : 'marker-invisible ';
-        el.innerHTML = vehicle.line;
+        root.render(
+            <VehicleMarkerWrapper
+                ref={markerComponentRef}
+                initialVehicle={{
+                    ...vehicle,
+                    hidden:
+                        hiddenMarkerCondition(vehicle)
+                }}
+            />
+        );
 
-        const marker = new mapboxgl.Marker(el)
+        el.className = "marker";
+
+        const mapboxMarker = new mapboxgl.Marker(el)
             .setLngLat(vehicle.lngLat)
             .addTo(map.current);
 
-        marker.getElement().addEventListener('click', () => {
-            setSelectedVehicle(null)
-            selectedVehicleRef.current = null
-            stopMarkers.current.forEach(e => e.marker.remove())
-            stopMarkers.current = []
-            removePolyline()
-            popupOpen.current = false
-            popupIndex.current = 0
+        mapboxMarker.getElement().addEventListener('click', async () => {
+            selectedVehicleRef.current = null;
+            stopMarkers.current.forEach(e => e.marker.remove());
+            stopMarkers.current = [];
+            removePolyline();
+            popupOpen.current = false;
+            popupIndex.current = 0;
+            setShowUndemibusuToast(false);
 
-            getStops(vehicle.tripId)
-            addPolyline(vehicle)
-            popupOpen.current = true
-            popupIndex.current = vehicle.label
-            setSelectedVehicle({marker, vehicle})
-            selectedVehicleRef.current = {marker, vehicle}
+            await getStops(vehicle.tripId);
+            addPolyline(vehicle);
 
-            resetMarkers()
-            // el.className += ' marker-linie-urmarita';
+            popupOpen.current = true;
+            popupIndex.current = vehicle.label;
+
+            setSelectedVehicle({ marker: mapboxMarker, vehicle });
+            selectedVehicleRef.current = { marker: mapboxMarker, vehicle };
+
+            resetMarkers();
+
+            setTimeout(() => {
+                updateSelectedVehicleAndStops();
+            }, 1000)
         });
 
-        markers.current.push({ marker, vehicle });
+        // Save everything for later update
+        markers.current.push({
+            marker: mapboxMarker,
+            vehicle,
+            reactRef: markerComponentRef
+        });
     };
 
+
     const updateMarker = () => {
-        if(selectedVehicleRef.current && selectedVehicleRef.current.vehicle) {
-            selectedVehicleRef.current.vehicle = markers.current.find(elem => elem.vehicle.label === selectedVehicleRef.current.vehicle.label).vehicle
-            addPolyline(selectedVehicleRef.current.vehicle, false)
+        // Cancel any in-progress update
+        if (updateCancelToken.current) {
+            updateCancelToken.current.cancelled = true;
         }
-        markers.current.forEach(marker => {
-            let progress = 0;
-            const step = 0.02;
-            const animateMarker = () => {
-                progress += step;
-                if (progress > 1) progress = 1;
 
-                const start = marker.vehicle.lngLat;
+        // Create new token for this run
+        updateCancelToken.current = { cancelled: false };
+        const token = updateCancelToken.current;
 
-                const vehi = vehicles.current.find(elem => elem.label == marker.vehicle.label);
-                if (vehi != null) {
-                    if(selectedVehicle)
-                        selectedVehicle({marker, vehi})
+        const currentVehicleLabels = vehicles.current.map(v => v.label);
+        const existingLabels = markers.current.map(m => m.vehicle.label);
+
+        // Step 1: Remove obsolete markers
+        markers.current = markers.current.filter(entry => {
+            const stillExists = currentVehicleLabels.includes(entry.vehicle.label);
+            if (!stillExists) {
+                entry.marker.remove();
+            }
+            return stillExists;
+        });
+
+        // Step 2: Detect new vehicles
+        const newVehicles = vehicles.current.filter(v => !existingLabels.includes(v.label));
+        const BATCH_SIZE = 30;
+        let addIndex = 0;
+
+        const addNextBatch = () => {
+            if (token.cancelled) return;
+
+            const batch = newVehicles.slice(addIndex, addIndex + BATCH_SIZE);
+            batch.forEach(elem => {
+                let exists = false;
+                try {
+                    unique.current.forEach((uniqueLine) => {
+                        if (uniqueLine[0] === elem.line) exists = true;
+                    });
+                    if (exists) addMarker(elem);
+                } catch (e) {
+                    console.log(elem);
+                }
+            });
+
+            addIndex += BATCH_SIZE;
+            if (addIndex < newVehicles.length) {
+                setTimeout(addNextBatch, 50);
+            } else {
+                updateExistingMarkersInChunks(token);
+            }
+        };
+
+        const updateExistingMarkersInChunks = (token) => {
+            const selectedLabel = selectedVehicleRef.current?.vehicle?.label;
+
+            const entries = [...markers.current].sort((a, b) => {
+                if (a.vehicle.label === selectedLabel) return -1;
+                if (b.vehicle.label === selectedLabel) return 1;
+
+                // Then prioritize visible markers
+                const aVisible = a.marker.getElement().style.display !== "none";
+                const bVisible = b.marker.getElement().style.display !== "none";
+
+                if (aVisible && !bVisible) return -1;
+                if (!aVisible && bVisible) return 1;
+
+                return 0;
+            });
+
+            let index = 0;
+            const MAX_ANIMATED_MARKERS = 60;
+
+            const processNextBatch = () => {
+                if (token.cancelled) return;
+
+                const batch = entries.slice(index, index + BATCH_SIZE);
+                let animatedCount = 0;
+                let animationsRemaining = 0;
+                const maybeContinue = () => {
+                    animationsRemaining--;
+                    if (animationsRemaining <= 0) {
+                        index += BATCH_SIZE;
+                        if (index < entries.length) {
+                            setTimeout(processNextBatch, 50);
+                        } else {
+                            if (!token.cancelled) updateSelectedVehicleAndStops();
+                        }
+                    }
+                };
+
+                batch.forEach(entry => {
+                    const markerEl = entry.marker.getElement();
+                    const vehi = vehicles.current.find(v => v.label === entry.vehicle.label);
+                    if (!vehi) return;
+
+                    const start = entry.vehicle.lngLat;
                     const end = vehi.lngLat;
+                    const isVisible = markerEl.style.display !== "none";
 
-                    const lng = start[0] + (end[0] - start[0]) * progress;
-                    const lat = start[1] + (end[1] - start[1]) * progress;
+                    const distance = Math.hypot(end[0] - start[0], end[1] - start[1]);
+                    const shouldAnimate = isVisible && distance > 0.0001 && animatedCount < MAX_ANIMATED_MARKERS;
 
-                    marker.marker.setLngLat([lng, lat]);
-                    marker.vehicle.lngLat = [lng, lat];
-                    marker.marker.innerHTML = vehi.line
+                    if (shouldAnimate) {
+                        animatedCount++;
+                        animationsRemaining++;
 
-                    marker.vehicle.tripId = vehi.tripId
-                    marker.vehicle.headsign = vehi.headsign
+                        let progress = 0;
+                        const step = 0.05;
 
-                    if (progress < 1) {
-                        requestAnimationFrame(animateMarker);
+                        const animate = () => {
+                            if (token.cancelled) return;
+
+                            progress += step;
+                            if (progress > 1) progress = 1;
+
+                            const lng = start[0] + (end[0] - start[0]) * progress;
+                            const lat = start[1] + (end[1] - start[1]) * progress;
+
+                            entry.marker.setLngLat([lng, lat]);
+                            entry.vehicle.lngLat = [lng, lat];
+
+                            if (progress < 1) {
+                                requestAnimationFrame(animate);
+                            } else {
+                                maybeContinue();
+                            }
+                        };
+
+                        requestAnimationFrame(animate);
+                    } else {
+                        entry.marker.setLngLat(end);
+                        entry.vehicle.lngLat = end;
+                    }
+
+                    if (entry.reactRef?.current?.updateVehicle) {
+                        entry.reactRef.current.updateVehicle({
+                            ...vehi,
+                            hidden:
+                                hiddenMarkerCondition(vehi)
+                        });
+                    }
+
+                    entry.vehicle = { ...vehi };
+                });
+
+                if (animationsRemaining === 0) {
+                    index += BATCH_SIZE;
+                    if (index < entries.length) {
+                        setTimeout(processNextBatch, 50);
+                    } else {
+                        if (!token.cancelled) updateSelectedVehicleAndStops();
                     }
                 }
             };
 
-            requestAnimationFrame(animateMarker);
-        });
+            processNextBatch();
+        };
+
+        addNextBatch(); // Start the whole process
+    };
+
+    const updateSelectedVehicleAndStops = () => {
+        if (selectedVehicleRef.current) {
+            const updatedVehicle = markers.current.find(elem =>
+                elem.vehicle.label === selectedVehicleRef.current.vehicle.label)?.vehicle;
+
+            if (updatedVehicle) {
+                selectedVehicleRef.current.vehicle = updatedVehicle;
+                setSelectedVehicle(prev => ({
+                    ...prev,
+                    vehicle: { ...updatedVehicle }
+                }));
+                addPolyline(updatedVehicle, false);
+
+                const stops = stopMarkers.current.map(elem => elem.stop);
+                // stopMarkers.current.forEach(stopMarker => stopMarker.marker.remove());
+                // stopMarkers.current = [];
+                getStops(selectedVehicleRef.current.vehicle.tripId);
+                // stops.forEach((stop, index) => addStopMarker(stop, index, stops.length));
+            }
+        }
     };
 
     function getIndex(target, arr) {
@@ -196,18 +369,50 @@ function Map() {
     }
 
     const resetMarkers = () => {
-        markers.current.forEach(elem => { elem.marker.remove() })
-        markers.current = []
-        vehicles.current.forEach(elem => {
-            let exista = false
-            unique.current.forEach((uniqueLine) => {
-                if (uniqueLine[0] === elem.line)
-                    exista = true
-            })
-            if (exista)
-                addMarker(elem)
-        })
-    }
+        const BATCH_SIZE = 25;
+
+        // Step 1: Remove existing markers in chunks
+        const toRemove = [...markers.current]; // Clone to avoid mutation issues
+        markers.current = []; // Clear marker tracking immediately
+
+        let removeIndex = 0;
+
+        const removeNextBatch = () => {
+            const batch = toRemove.slice(removeIndex, removeIndex + BATCH_SIZE);
+            batch.forEach(elem => elem.marker.remove());
+
+            removeIndex += BATCH_SIZE;
+            if (removeIndex < toRemove.length) {
+                setTimeout(removeNextBatch, 50);
+            } else {
+                addMarkersInChunks(); // Start adding new markers after all are removed
+            }
+        };
+
+        // Step 2: Add new markers in chunks
+        const addMarkersInChunks = () => {
+            const eligibleVehicles = vehicles.current.filter(elem =>
+                unique.current.some(uniqueLine => uniqueLine[0] === elem.line)
+            );
+
+            let addIndex = 0;
+
+            const addNextBatch = () => {
+                const batch = eligibleVehicles.slice(addIndex, addIndex + BATCH_SIZE);
+                batch.forEach(elem => addMarker(elem));
+
+                addIndex += BATCH_SIZE;
+                if (addIndex < eligibleVehicles.length) {
+                    setTimeout(addNextBatch, 50);
+                }
+                checkMarkerVisibility()
+            };
+
+            addNextBatch();
+        };
+
+        removeNextBatch();
+    };
 
     function addSettingsButton() {
         class settingsButton {
@@ -245,8 +450,8 @@ function Map() {
         map.current = new mapboxgl.Map({
             container: 'map',
             center: [defLng, defLat],
-            style: 'mapbox://styles/mapbox/streets-v11',
-            zoom: 12,
+            style: 'mapbox://styles/mihnebondor1/cm989e83e00g801pg1e2udadb',
+            zoom: 14,
             attributionControl: false
         });
 
@@ -263,9 +468,8 @@ function Map() {
             trackUserLocation: true,
             showUserHeading: true,
         })
-        addSettingsButton();
-        map.current.addControl(geo);
         addSearchButton();
+        map.current.addControl(geo);
         map.current.on('load', () => {
             if (refresh)
                 map.current.flyTo({
@@ -286,7 +490,55 @@ function Map() {
             lastCoords.current = map.current.getCenter().toArray();
             lastZoom.current = map.current.getZoom();
         })
+        // Debounced version for smooth updates without over-triggering
+
+        // Attach the listener (usually inside useEffect)
+
+        const debouncedCheckMarkerVisibility = debounce(checkMarkerVisibility, 200);
+        map.current.on('moveend', debouncedCheckMarkerVisibility);
     }
+
+    const checkMarkerVisibility = () => {
+        if (!map.current) return;
+
+        const bounds = map.current.getBounds();
+
+        const paddingLng = (bounds.getEast() - bounds.getWest()) * 0.4;
+        const paddingLat = (bounds.getNorth() - bounds.getSouth()) * 0.4;
+
+        const paddedBounds = new mapboxgl.LngLatBounds(
+            [bounds.getWest() - paddingLng, bounds.getSouth() - paddingLat],
+            [bounds.getEast() + paddingLng, bounds.getNorth() + paddingLat]
+        );
+
+        const entries = [...markers.current];
+        const BATCH_SIZE = 25;
+        let index = 0;
+
+        const processNextBatch = () => {
+            const batch = entries.slice(index, index + BATCH_SIZE);
+
+            batch.forEach(({ vehicle, marker }) => {
+                const el = marker.getElement();
+                const inBounds = paddedBounds.contains(vehicle.lngLat);
+                const currentlyHidden = el.style.display === "none";
+
+                if (inBounds && currentlyHidden) {
+                    el.style.display = "block";
+                } else if (!inBounds && !currentlyHidden) {
+                    el.style.display = "none";
+                }
+            });
+
+            index += BATCH_SIZE;
+            if (index < entries.length) {
+                setTimeout(processNextBatch, 50); // non-blocking continuation
+            }
+        };
+
+        processNextBatch();
+    };
+
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
         function toRadians(degrees) {
@@ -317,7 +569,7 @@ function Map() {
     const addPolyline = useCallback(async (vehicle, animated = true) => {
         if (!map.current.getSource('route')) {
             try {
-                var url = 'https://busifybackend-40a76006141a.herokuapp.com/shapes?shapeid=' + vehicle.tripId;
+                var url = 'https://busifyserver.onrender.com/shapes?shapeid=' + vehicle.tripId;
 
                 var response = await fetch(url);
                 const shapeData = await response.json();
@@ -327,10 +579,17 @@ function Map() {
                 let endCoords = polylineCoordinates[last], distMin = 100
                 let distVehicleEnd = 1000, distUserEnd = 1000, distMin2 = 1000, nearestCoordsToVehicleIndex = 0
 
+                let closestCoordsBetweenUserPolyline = [], closestDistanceBetweenUserPolyline = 100;
+
                 try {
                     polylineCoordinates.forEach((elem, index) => {
                         const d = calculateDistance(map.current._controls[2]._lastKnownPosition.coords.latitude, map.current._controls[2]._lastKnownPosition.coords.longitude, elem[1], elem[0])
                         distMin = Math.min(distMin, Math.abs(d))
+
+                        if(Math.abs(d) < closestDistanceBetweenUserPolyline) {
+                            closestDistanceBetweenUserPolyline = Math.abs(d);
+                            closestCoordsBetweenUserPolyline = elem
+                        }
 
                         const d2 = Math.abs(calculateDistance(vehicle.lngLat[1], vehicle.lngLat[0], elem[1], elem[0]))
                         if(d2 < distMin2) {
@@ -349,29 +608,47 @@ function Map() {
                         }
                     })
                 }
-                if (distMin < 0.1 && distUserEnd < distVehicleEnd)
+
+                let centratingOnUser = false;
+                if (distMin < 0.15 && distUserEnd < distVehicleEnd) {
                     endCoords = [map.current._controls[2]._lastKnownPosition.coords.longitude, map.current._controls[2]._lastKnownPosition.coords.latitude]
+                    centratingOnUser = true;
+                }
 
                 if (popupOpen.current) {
 
                     if(animated){
                         let bounds = new mapboxgl.LngLatBounds();
                         bounds.extend(vehicle.lngLat);
-                        bounds.extend(endCoords);
-                        const boundsPadding = distVehicleEnd * 10
+
+                        if(centratingOnUser) {
+                            polylineCoordinates.filter(elem => (polylineCoordinates.indexOf(elem) <= polylineCoordinates.indexOf(closestCoordsBetweenUserPolyline) && polylineCoordinates.indexOf(elem) >= nearestCoordsToVehicleIndex)).forEach(elem => {
+                                bounds.extend(elem);
+                            })
+                            console.log("intram in centrating on user")
+                        } else {
+                            polylineCoordinates.filter(elem => (polylineCoordinates.indexOf(elem) >= nearestCoordsToVehicleIndex)).forEach(elem => {
+                                bounds.extend(elem);
+                            })
+                            console.log("nu intram in centrating on user")
+                        }
                         const normalPadding = 110
+                        const padding= {
+                            top: normalPadding,
+                            bottom: normalPadding + 50,
+                            left: normalPadding - 30,
+                            right: normalPadding - 30
+                        }
                         map.current.fitBounds(bounds, {
-                            padding: {
-                                top: normalPadding,
-                                bottom: normalPadding,
-                                left: normalPadding,
-                                right: normalPadding
-                            }, duration: 1250
+                            padding: padding,
+                            duration: 1250,
+                            maxZoom: 14
                         })
+
                     }
 
-                    const solidCoords = polylineCoordinates.slice(0, nearestCoordsToVehicleIndex)
-                    const dottedCoords = polylineCoordinates.slice(nearestCoordsToVehicleIndex, polylineCoordinates.length)
+                    const solidCoords = polylineCoordinates.slice(1, nearestCoordsToVehicleIndex)
+                    const dottedCoords = polylineCoordinates.slice(nearestCoordsToVehicleIndex, polylineCoordinates.length - 1)
 
                     let start;
                     const duration = 3750 / 2;
@@ -398,8 +675,8 @@ function Map() {
                                 'line-cap': 'round'
                             },
                             'paint': {
-                                'line-color': '#888',
-                                'line-width': 5,
+                                'line-color': '#62A7FB',
+                                'line-width': 3,
                             }
                         });
                     
@@ -463,8 +740,8 @@ function Map() {
                                     'line-cap': 'round'
                                 },
                                 'paint': {
-                                    'line-color': '#888',
-                                    'line-width': 5,
+                                    'line-color': '#62A7FB',
+                                    'line-width': 3,
                                     'line-dasharray': [2, 2]
                                 }
                             });
@@ -509,143 +786,169 @@ function Map() {
                         }
                     }, animated ? duration + 500 : 0)
 
-                    const size = 125;
-                    const pulsingDot = {
-                        width: size,
-                        height: size,
-                        data: new Uint8Array(size * size * 4),
+                    const createCircleImage = (color) => {
+                        const circleSize = 45; // Diameter of the colored part
+                        const borderWidth = 7; // Thickness of the white border
+                        const canvasSize = circleSize + borderWidth * 2; // Expand canvas to fit border
 
-                        // When the layer is added to the map,
-                        // get the rendering context for the map canvas.
-                        onAdd: function () {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = this.width;
-                            canvas.height = this.height;
-                            this.context = canvas.getContext('2d');
-                        },
+                        const canvas = document.createElement('canvas');
+                        canvas.width = canvasSize;
+                        canvas.height = canvasSize;
+                        const ctx = canvas.getContext('2d');
 
-                        // Call once before every frame where the icon will be used.
-                        render: function () {
-                            const duration = 1000;
-                            const t = (performance.now() % duration) / duration;
+                        // Drop shadow
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+                        ctx.shadowBlur = 6;
 
-                            const radius = (size / 2) * 0.3;
-                            const outerRadius = (size / 2) * 0.7 * t + radius;
-                            const context = this.context;
+                        // White outer circle (bigger background)
+                        ctx.beginPath();
+                        ctx.arc(canvasSize / 2, canvasSize / 2, canvasSize / 2, 0, Math.PI * 2);
+                        ctx.fillStyle = 'white';
+                        ctx.fill();
 
-                            // Draw the outer circle.
-                            context.clearRect(0, 0, this.width, this.height);
-                            context.beginPath();
-                            context.arc(
-                                this.width / 2,
-                                this.height / 2,
-                                outerRadius,
-                                0,
-                                Math.PI * 2
-                            );
-                            context.fillStyle = `rgba(128, 0, 128, ${1 - t})`;
-                            context.fill();
+                        // Outer colored ring (smaller than the white circle)
+                        ctx.beginPath();
+                        ctx.arc(canvasSize / 2, canvasSize / 2, circleSize / 2, 0, Math.PI * 2);
+                        ctx.fillStyle = color;
+                        ctx.fill();
 
-                            // Draw the inner circle.
-                            context.beginPath();
-                            context.arc(
-                                this.width / 2,
-                                this.height / 2,
-                                radius,
-                                0,
-                                Math.PI * 2
-                            );
-                            context.fillStyle = 'rgba(128, 0, 128)'; // 
-                            context.strokeStyle = 'white';
-                            context.lineWidth = 2 + 4 * (1 - t);
-                            context.fill();
-                            context.stroke();
+                        // Inner white circle
+                        ctx.beginPath();
+                        ctx.arc(canvasSize / 2, canvasSize / 2, circleSize / 4, 0, Math.PI * 2);
+                        ctx.fillStyle = 'white';
+                        ctx.fill();
 
-                            // Update this image's data with data from the canvas.
-                            this.data = context.getImageData(
-                                0,
-                                0,
-                                this.width,
-                                this.height
-                            ).data;
-
-                            // Continuously repaint the map, resulting
-                            // in the smooth animation of the dot.
-                            map.current.triggerRepaint();
-
-                            // Return `true` to let the map know that the image was updated.
-                            return true;
-                        }
+                        return {
+                            width: canvasSize,
+                            height: canvasSize,
+                            data: ctx.getImageData(0, 0, canvasSize, canvasSize).data
+                        };
                     };
 
-                    map.current.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
+                    if (!map.current.hasImage('circle-purple')) {
+                        map.current.addImage('circle-purple', createCircleImage('#8A56A3'), { pixelRatio: 2 }); // Purple
+                    }
+                    if (!map.current.hasImage('circle-blue')) {
+                        map.current.addImage('circle-blue', createCircleImage('#2D8CFE'), { pixelRatio: 2 }); // Blue
+                    }
 
-                    map.current.addSource('dot-point', {
-                        'type': 'geojson',
-                        'data': {
-                            'type': 'FeatureCollection',
-                            'features': [
-                                {
-                                    'type': 'Feature',
-                                    'geometry': {
-                                        'type': 'Point',
-                                        'coordinates': polylineCoordinates[last]
-                                    }
+                    const circleGeojson = {
+                        'type': 'FeatureCollection',
+                        'features': [
+                            {
+                                'type': 'Feature',
+                                'properties': { icon: 'circle-purple' },
+                                'geometry': {
+                                    'type': 'Point',
+                                    'coordinates': polylineCoordinates[0] // Start
                                 }
-                            ]
-                        }
-                    });
+                            },
+                            {
+                                'type': 'Feature',
+                                'properties': { icon: 'circle-blue' },
+                                'geometry': {
+                                    'type': 'Point',
+                                    'coordinates': polylineCoordinates[last] // End
+                                }
+                            }
+                        ]
+                    };
 
-                    map.current.addLayer({
-                        'id': 'layer-with-pulsing-dot',
-                        'type': 'symbol',
-                        'source': 'dot-point',
-                        'layout': {
-                            'icon-image': 'pulsing-dot'
-                        }
-                    });
+                    if (map.current.getSource('dot-point')) {
+                        // Just update the data
+                        map.current.getSource('dot-point').setData(circleGeojson);
+                    } else {
+                        // First time setup
+                        map.current.addSource('dot-point', {
+                            'type': 'geojson',
+                            'data': circleGeojson
+                        });
+
+                        map.current.addLayer({
+                            'id': 'layer-with-colored-circles',
+                            'type': 'symbol',
+                            'source': 'dot-point',
+                            'layout': {
+                                'icon-image': ['get', 'icon'],
+                                'icon-size': 1,
+                                'icon-allow-overlap': true
+                            }
+                        });
+                    }
                 }
-            } catch (e) { 
-                // console.log(e)
-            }
+            } catch (e) {}
         }
     }, []);
 
     const removePolyline = useCallback((flyback = true) => {
         let hasSomething = false;
-        if (map.current.getLayer('solid route')) {
-            map.current.removeLayer('solid route');
-            hasSomething = true
-        }
-        if (map.current.getSource('solid route')) {
-            map.current.removeSource('solid route');
-            hasSomething = true
-        }
-        if (map.current.getLayer('dotted route')) {
-            map.current.removeLayer('dotted route');
-            hasSomething = true
-        }
-        if (map.current.getSource('dotted route')) {
-            map.current.removeSource('dotted route');
-            hasSomething = true
-        }
+
+        // Remove solid and dotted route layers/sources
+        ['solid route', 'dotted route'].forEach((id) => {
+            if (map.current.getLayer(id)) {
+                map.current.removeLayer(id);
+                hasSomething = true;
+            }
+            if (map.current.getSource(id)) {
+                map.current.removeSource(id);
+                hasSomething = true;
+            }
+        });
+
+        // Remove pulsing dot layer (older setup, safe to keep)
         if (map.current.getLayer('layer-with-pulsing-dot')) {
             map.current.removeLayer('layer-with-pulsing-dot');
-            hasSomething = true
+            hasSomething = true;
+        }
+
+        // Remove colored circles layer and source
+        if (map.current.getLayer('layer-with-colored-circles')) {
+            map.current.removeLayer('layer-with-colored-circles');
+            hasSomething = true;
         }
         if (map.current.getSource('dot-point')) {
             map.current.removeSource('dot-point');
-            hasSomething = true
+            hasSomething = true;
         }
-        if (flyback && hasSomething && lastCoords.current[0] !== defLng && lastCoords.current[1] !== defLat) {
+
+        // Optional: remove images (Mapbox doesn't allow re-adding with the same name unless removed)
+        ['circle-purple', 'circle-blue'].forEach((img) => {
+            if (map.current.hasImage(img)) {
+                map.current.removeImage(img);
+            }
+        });
+
+        // Fly back to original location if needed
+        if (
+            flyback &&
+            hasSomething &&
+            lastCoords.current[0] !== defLng &&
+            lastCoords.current[1] !== defLat
+        ) {
             map.current.flyTo({
                 center: lastCoords.current,
                 duration: 2000,
                 zoom: lastZoom.current,
                 essential: true
-            })
+            });
         }
     }, []);
+
+    const removeCircles = () => {
+        if (map.current.getLayer('layer-with-colored-circles')) {
+            map.current.removeLayer('layer-with-colored-circles');
+        }
+        if (map.current.getSource('dot-point')) {
+            map.current.removeSource('dot-point');
+        }
+
+        // Optional: remove images (Mapbox doesn't allow re-adding with the same name unless removed)
+        ['circle-purple', 'circle-blue'].forEach((img) => {
+            if (map.current.hasImage(img)) {
+                map.current.removeImage(img);
+            }
+        });
+    }
 
     const setShownVehicles = () => {
         let s = [];
@@ -656,7 +959,7 @@ function Map() {
 
         for (let i = 0; i < saved.length; i++) {
             let index = getIndex(saved[i][0], unique.current)
-            if (index != -1) {
+            if (index !== -1) {
                 unique.current[index][1] = saved[i][1];
                 if (saved[i][1] === false) {
                     setCheckAllChecked(false)
@@ -669,7 +972,7 @@ function Map() {
     const getUserAddress = async () => {
         try {
             const lngLat = map.current._controls[2]._lastKnownPosition.coords.latitude + ',' + map.current._controls[2]._lastKnownPosition.coords.longitude;
-            const url = 'https://busifybackend-40a76006141a.herokuapp.com/address?latlng=' + lngLat
+            const url = 'https://busifyserver.onrender.com/address?latlng=' + lngLat
             console.log(url)
             const data = await fetch(url);
             const resp = await data.json();
@@ -682,7 +985,7 @@ function Map() {
     const getRoutes = async () => {
         const origin = 'Cluj Napoca' + originSearchRef.current.value;
         const destination = 'Cluj Napoca ' + destinatiiSearchRef.current.value
-        const url = 'https://busifybackend-40a76006141a.herokuapp.com/destinatii?origin=' + origin + '&destination=' + destination
+        const url = 'https://busifyserver.onrender.com/destinatii?origin=' + origin + '&destination=' + destination
 
         try {
             const response = await fetch(url)
@@ -703,11 +1006,11 @@ function Map() {
 
     const getStops = async (tripId) => {
         try {
-            var url = 'https://busifybackend-40a76006141a.herokuapp.com/stops';
+            var url = 'https://busifyserver.onrender.com/stops';
             let data = await fetch(url);
             const stops = await data.json();
 
-            url = 'https://busifybackend-40a76006141a.herokuapp.com/stoptimes';
+            url = 'https://busifyserver.onrender.com/stoptimes';
             data = await fetch(url);
             let stopTimes = await data.json();
 
@@ -717,32 +1020,18 @@ function Map() {
                 const stop = stops.find(e => e.stop_id === element.stop_id)
                 newStops.push(stop)
             });
-            newStops.forEach(e => addStopMarker(e))
+            stopMarkers.current.forEach(stopMarker => stopMarker.marker.remove());
+            stopMarkers.current = [];
+            newStops.forEach((e,index) => addStopMarker(e, index, newStops.length, newStops))
         } catch { }
     }
 
-    const socketData = useCallback(async (data) => { 
-        let vehicleData = data.vehicles
-        let tripData = data.trips
-        let routeData = data.routes
-
+    const socketData = useCallback(async (data) => {
         vehicles.current = [];
-        vehicleData.forEach(vehicle => {
-        if (vehicle.trip_id != null && vehicle.route_id != null) {
-
-            let tripDataVehicle = tripData.find((elem) => elem.trip_id === vehicle.trip_id);
-            let routeDataVehicle = routeData.find((elem) => elem.route_id === vehicle.route_id);
-
-            if (tripDataVehicle && routeDataVehicle) {
-                let headsign = tripDataVehicle.trip_headsign;
-                let line = routeDataVehicle.route_short_name;
-                if (headsign && line) {
-                    let newVehicle = new Vehicle(vehicle.label, line, headsign, [vehicle.longitude, vehicle.latitude], tripDataVehicle.trip_id);
-                    vehicles.current.push(newVehicle);
-                }
-            }
-        }
-        });
+        data.forEach((item) => {
+            const vehicle = new Vehicle(item.id, item.label, item.latitude, item.longitude, item.speed, item.tripId, item.routeId, item.bike, item.wheelchair, item.headsign, item.route, item.line, item.vehicleType, item.currentLatitude, item.currentLongitude, item.nextLatitude, item.nextLongitude);
+            vehicles.current.push(vehicle);
+        })
 
         if (!loaded && !loadedFirstTime) {
             let s = [];
@@ -759,6 +1048,7 @@ function Map() {
                 joinArray(buses_basic.urbane)
                 joinArray(buses_basic.metropolitane)
                 joinArray(buses_basic.market)
+                joinArray(buses_basic.noapte)
             } catch (err) {
                 console.log(err)
             }
@@ -769,7 +1059,7 @@ function Map() {
 
             for (let i = 0; i < saved.length; i++) {
                 let index = getIndex(saved[i][0], unique.current)
-                if (index != -1) {
+                if (index !== -1) {
                     unique.current[index][1] = saved[i][1];
                     if (saved[i][1] === false)
                         setCheckAllChecked(false)
@@ -778,6 +1068,10 @@ function Map() {
             setUniqueLines(unique.current)
             if (!localStorage.getItem('linii_selectate'))
                 localStorage.setItem('linii_selectate', unique.current)
+            if (!localStorage.getItem('iconite'))
+                localStorage.setItem('iconite', true)
+            if (!localStorage.getItem('sageti'))
+                localStorage.setItem('sageti', true)
             loadedFirstTime = true
             setLoaded(true)
             vehicles.current.forEach(elem => {
@@ -797,16 +1091,29 @@ function Map() {
             else if (searchParams.get('id')) {
                 const elem = markers.current.find(elem => elem.vehicle.label === searchParams.get('id'));
                 const vehicle = elem.vehicle
-                getStops(vehicle.tripId)
-                addPolyline(vehicle)
-                popupOpen.current = true
-                popupIndex.current = vehicle.label
-                setSelectedVehicle(elem)
-                selectedVehicleRef.current = elem
+                selectedVehicleRef.current = null;
+                stopMarkers.current.forEach(e => e.marker.remove());
+                stopMarkers.current = [];
+                removePolyline();
+                popupOpen.current = false;
+                popupIndex.current = 0;
+                setShowUndemibusuToast(false);
 
+                await getStops(vehicle.tripId);
+                addPolyline(vehicle);
+
+                popupOpen.current = true;
+                popupIndex.current = vehicle.label;
+
+                setSelectedVehicle({ marker: elem.marker, vehicle });
+                selectedVehicleRef.current = { marker: elem.marker, vehicle };
+
+                resetMarkers();
             } else if (undemibusu === 'destinatii')
                 setShowDestinatii(true)
-            else {
+            else if(!localStorage.hasOwnProperty("onboarding_done")){
+                nav('/onboarding')
+            } else {
                 let exista = false;
                 unique.current.forEach(elem => {
                     if (elem[0] === undemibusu)
@@ -831,40 +1138,80 @@ function Map() {
             } else {
                 updateMarker()
         }
+
     }, [])
 
-    const handleSocketOns = () => {
-        socket.current = io('https://busifybackend-40a76006141a.herokuapp.com/')
+    const handleSocketOns = (visChange = false) => {
+        socket.current = io('https://busifyserver.onrender.com')
         // socket.current = io('http://192.168.0.221:3001')
-        socket.current.on('vehicles', data => {socketData(data)})
+        socket.current.on('allVehicleData', data => {
+            socketData(data)
+            setTimeout(() => {
+                checkMarkerVisibility()
+                if(selectedVehicleRef.current && visChange) {
+                    map.current.flyTo({
+                        center: selectedVehicleRef.current.vehicle.lngLat,
+                        duration: 1000,
+                        zoom: 14,
+                        essential: true
+                    });
+                    lastCoords.current = selectedVehicleRef.current.vehicle.lngLat;
+                    lastZoom.current = 14
+                }
+                visChange = false
+            }, 1500)
+        })
         socket.current.on('notifications', data => {
             let notificariRamase = JSON.parse(data)
             notificariRamase = notificariRamase.filter(elem => elem.userId === searchParams.get('notificationUserId'))
-
-            let scheduledNotifications = localStorage.getItem('scheduledNotifications') || '[]'
-            scheduledNotifications = JSON.parse(scheduledNotifications)
-
-            const notificariDeTrimis = []
-            scheduledNotifications.forEach(elem => {
-                const filtru = notificariRamase.filter(notifRamas => (notifRamas.vehicle.vehicle.line === elem[0].vehicle.line && notifRamas.stop.stop_name === elem[1].stop_name))
-                if(filtru.length === 0)
-                    notificariDeTrimis.push(elem)
-            })
-
-            localStorage.setItem('scheduledNotifications', JSON.stringify(notificariDeTrimis))
+            localStorage.setItem('scheduledNotifications', JSON.stringify(notificariRamase))
         })
     }
 
     const handleVisibilityChange = () => {
         console.log("visiblity changed to " + document.visibilityState)
-        if(document.visibilityState == "visible") {
-           handleSocketOns()
+        if(document.visibilityState === "visible") {
+            handleSocketOns(true)
         } else {
             if(socket.current) {
                 socket.current.disconnect()
                 socket.current = null
             }
         }
+    }
+
+    const revertFitBoundsPadding = () => {
+        const normalPadding = 110
+        const padding= {
+            top: -normalPadding,
+            bottom: -(normalPadding + 50),
+            left: -(normalPadding - 30),
+            right: -(normalPadding - 30)
+        }
+        const bounds = map.current.getBounds(); // original map bounds
+        const ne = bounds.getNorthEast();
+        const sw = bounds.getSouthWest();
+        const nePoint = map.current.project(ne);
+        const swPoint = map.current.project(sw);
+        const paddedNE = {
+            x: nePoint.x + padding.right,
+            y: nePoint.y + padding.top
+        };
+        const paddedSW = {
+            x: swPoint.x + padding.left,
+            y: swPoint.y + padding.bottom
+        };
+
+        const newNE = map.current.unproject(paddedNE);
+        const newSW = map.current.unproject(paddedSW);
+
+        const paddedBounds = new mapboxgl.LngLatBounds(newSW, newNE);
+
+        map.current.fitBounds(map.current.getBounds(), {
+            padding: paddedBounds,
+            duration: 100,
+            maxZoom: map.current.getZoom()
+        })
     }
 
     useEffect(() => {
@@ -877,11 +1224,13 @@ function Map() {
 
     return (
         <div className='body'>
+            <Badges/>
             <div id='map' className="map-container" style={{ visibility: loaded ? 'visible' : 'hidden' }} />
             <Spinner animation="grow" variant='dark' className='spinner-container' style={{ visibility: !loaded ? 'visible' : 'hidden' }} />
             <Search 
                 show={showSearch}
                 unique={unique}
+                vehicles={markers.current.map(elem=> elem.vehicle)}
                 setUniqueLines={setUniqueLines}
                 setShownVehicles={setShownVehicles}
                 setCheckAllChecked={setCheckAllChecked}
@@ -889,20 +1238,8 @@ function Map() {
                 setShowUndemibusuToast={setShowUndemibusuToast}
                 onHide={() => {
                     setShowSearch(false)
+                    setShowUndemibusuToast(true)
                 }}
-            />
-            <Settings
-                show={showSettings}
-                onHide={() => {
-                    setShowSettings(false)
-                    unique.current = uniqueLines
-                    resetMarkers()
-                    localStorage.setItem('linii_selectate', uniqueLines)
-                }}
-                vehicles={uniqueLines}
-                setVehicles={setUniqueLines}
-                selectAllCheck={allChecked}
-                setChecked={setCheckAllChecked}
             />
             <Undemibusu
                 show={showUndemibusu}
@@ -918,7 +1255,7 @@ function Map() {
 
                     if (exista) {
                         let oneMatch = false;
-                        unique.current = unique.current.map((elem) => [elem[0], elem[0].startsWith(undemibususearchref.current.value) && (elem[0].replace(undemibususearchref.current.value, '').toLowerCase() != elem[0].replace(undemibususearchref.current.value, '').toUpperCase() || elem[0].replace(undemibususearchref.current.value, '').length === 0)])
+                        unique.current = unique.current.map((elem) => [elem[0], elem[0].startsWith(undemibususearchref.current.value) && (elem[0].replace(undemibususearchref.current.value, '').toLowerCase() !== elem[0].replace(undemibususearchref.current.value, '').toUpperCase() || elem[0].replace(undemibususearchref.current.value, '').length === 0)])
                         unique.current.forEach(elem => {
                             if (elem[1]) oneMatch = true
                         });
@@ -938,16 +1275,14 @@ function Map() {
                     setShownVehicles();
                     setShowUndemibusuToast(false)
                     setUniqueLines(unique.current)
-                    setCheckAllChecked(true)
+                    // setCheckAllChecked(true)
                     resetMarkers();
+                    setUndemibusuBack(true)
                 }} />
-            <VehicleToast
-                header={selectedVehicle ? selectedVehicle.vehicle.line : ''}
+            <VehicleHighlight
                 show={selectedVehicle}
-                vehicle={selectedVehicle ? selectedVehicle.vehicle : new Vehicle()}
-                setShowNotification={() => {setShowNotification(true)}}
-                map={map}
                 onHide={() => {
+                    setShownVehicles()
                     setSelectedVehicle(null)
                     selectedVehicleRef.current = null
                     stopMarkers.current.forEach(e => e.marker.remove())
@@ -956,55 +1291,43 @@ function Map() {
                     popupOpen.current = false
                     popupIndex.current = 0
                     resetMarkers()
-                }} />
-            <StopToast
-                header={smsDataRef.current && smsDataRef.current.stop ? smsDataRef.current.stop.stop_name : ''}
-                stop={smsDataRef.current && smsDataRef.current.stop ? smsDataRef.current.stop : undefined}
-                selectedVehicle = {selectedVehicle}
-                show={showStop}
-                socket={socket}
-                showSms={()=>{setShowSms(true)}}
-                markers={markers}
-                onHide={() => {
-                    localStorage.setItem('labels', '')
-                    setShowStop(false)
-                    resetMarkers()
-                }} />
-            <NotificationToast
-                show={showNotification}
-                title={'Link copiat!'}
-                onHide={() => {
-                    setShowNotification(false)
+
+                    if(!undemibusuBack) {
+                        let exista = false;
+                        unique.current.forEach(elem => {
+                            if (elem[0] === undemibusu)
+                                exista = true
+                        })
+
+                        if (exista) {
+                            setShowUndemibusuToast(true)
+                            let oneMatch = false;
+                            unique.current = unique.current.map((elem) => [elem[0], elem[0] === undemibusu ])
+                            unique.current.forEach(elem => {
+                                if (elem[1]) oneMatch = true
+                            });
+                            if (!oneMatch)
+                                setShownVehicles();
+
+                            setUniqueLines(unique.current)
+                            setCheckAllChecked(!oneMatch)
+                            resetMarkers();
+                        }
+                    }
+
+                    setTimeout(() => {
+                        revertFitBoundsPadding()
+                    }, 1400)
                 }}
-            />
-            <Destinatii
-                show={showDestinatii}
-                destination={destinatiiSearchRef}
-                origin={originSearchRef}
-                getuseraddress={getUserAddress}
-                onHide={() => {
-                    setShowDestinatii(false)
-                    if (destinatiiSearchRef.current.value)
-                        getRoutes();
-                }} />
-            <DestinatiiToast
-                show={showDestinatiiToast}
-                instructions={instructions}
+                vehicle={selectedVehicle?.vehicle}
+                vehicleRef={selectedVehicleRef && selectedVehicleRef.current ? selectedVehicleRef.current.vehicle : null}
+                stops={stopMarkersState.map(elem => elem.stop)}
                 map={map}
-                setuniquelines={setUniqueLines}
-                unique={unique}
-                resetmarkers={resetMarkers}
-                setshownvehicles={setShownVehicles}
-                markers={markers}
-                setshowdestinatii={setShowDestinatii}
-                setshowdestinatiitost={setShowDestinatiiToast}
-            />
-            <MessageSMS
-                show={showSms}
-                setshow={() => {setShowSms(false)}}
+                neareastStop={nearestStop}
+                setNearestStop={setNearestStop}
                 socket={socket}
-                smsData={smsDataRef.current}
-                uniqueLines={unique}
+                selectedStop={selectedStop}
+                nearestStopRef={nearestStopRef}
             />
             <BottomBar/>
         </div >
@@ -1014,11 +1337,20 @@ function Map() {
 export default Map;
 
 class Vehicle {
-    constructor(label, line, headsign, lngLat, tripId) {
+    constructor(id, label, latitude, longitude, speed, tripId, routeId, bike, wheelchair, headsign, route, line, vehicleType, currentLat, currentLng, nextLat, nextLng) {
+        this.id = id;
         this.label = label;
-        this.line = line;
+        this.lngLat = [longitude, latitude];
+        this.speed = speed;
+        this.tripId = tripId;
+        this.routeId = routeId;
+        this.bike = bike;
+        this.wheelchair = wheelchair;
         this.headsign = headsign;
-        this.lngLat = lngLat;
-        this.tripId = tripId
+        this.route = route;
+        this.line = line;
+        this.vehicleType = vehicleType;
+        this.currentCoords = [currentLng, currentLat];
+        this.nextCoords = [nextLng, nextLat];
     }
 }

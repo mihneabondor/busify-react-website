@@ -32,7 +32,7 @@ function MapNavbar() {
             resp.metropolitane.forEach(elem => expandedLinesRef.current.push(elem.name))
             resp.market.forEach(elem => expandedLinesRef.current.push(elem.name))
 
-            const anuntData = await fetch('https://busifybackend-40a76006141a.herokuapp.com/anunturi');
+            const anuntData = await fetch('https://busifyserver.onrender.com');
             const anunt = await anuntData.json();
 
             const endDateParts = anunt.end_date.split("/");

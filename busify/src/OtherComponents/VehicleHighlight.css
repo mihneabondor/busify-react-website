@@ -1,0 +1,13 @@
+.btn:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.stop-list-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch; /* <-- for iOS momentum scroll */
+    touch-action: pan-x;
+    scroll-behavior: smooth;
+}

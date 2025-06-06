@@ -36,13 +36,14 @@
 .orare-cell-badge {
     display: flex;
     align-items: center; /* Align icon and text vertically */
-    width: 65px; /* Fixed width for consistency */
-    padding: 5px 5px;
+    width: 70px; /* Fixed width for consistency */
+    padding: 3px 5px;
     border-radius: 5px; /* Rounded corners */
     color: white;
     justify-content: flex-start; /* Icon stays on the left */
     position: relative; /* Allows centering of text */
     margin-right: 10px;
+    /*z-index: 5;*/
 }
 
 .orare-cell-badge-icon {

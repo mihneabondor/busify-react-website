@@ -4,9 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from "react-router-dom";
 import BottomBar from '../OtherComponents/BottomBar';
 import {ReactComponent as OrarIcon} from '../Images/orarIcon.svg'
-import {ReactComponent as BusIcon} from '../Images/busIcon.svg'
-import {ReactComponent as TroleibusIcon} from '../Images/troleibusIcon.svg'
-import {ReactComponent as TramvaiIcon} from '../Images/tramvaiIcon.svg'
+import Marker from '../OtherComponents/Marker'
+import Anunt from "./Anunt";
 
 function Orare() {
     const searchValueRef = useRef();
@@ -18,6 +17,8 @@ function Orare() {
     const [searchValue, setSearchValue] = useState('');
 
     const [activeFilter, setActiveFilter] = useState('toate');
+    const [anunt, setAnunt] = useState(null);
+    const [modificare, setModificare] = useState(null);
 
     const search = (e) => {
         e.preventDefault();
@@ -41,25 +42,12 @@ function Orare() {
             joinArray(buses_basic.urbane)
             joinArray(buses_basic.metropolitane)
             joinArray(buses_basic.market)
+            joinArray(buses_basic.noapte)
             setLines(sol)
             linesRef.current = sol
             copie.current = sol
         } catch (err) {
             console.log(err)
-        }
-    }
-
-    const change = (e) => {
-        linesRef.current = copie.current
-        setLines(linesRef.current)
-        if (searchValueRef.current.value !== '') {
-            linesRef.current = linesRef.current.filter(elem => elem.name.includes(searchValueRef.current.value.toUpperCase()))
-            setLines(linesRef.current)
-
-            setTimeout(() => {
-                searchValueRef.current.scrollIntoView({"block":"center"})
-            }, 100);
-
         }
     }
 
@@ -71,7 +59,14 @@ function Orare() {
         <div className="orare">
             <div className="orare-content-header">
                 <h2><b>Orare</b></h2>
-                <Form style={{width: '100%'}}>
+                <Anunt/>
+                <Form style={{width: '90vw'}} onSubmit={(e) =>{
+                    e.preventDefault();
+                    if(lines.filter(elem => elem.name === searchValue).length > 0)
+                        nav(`/orare/${searchValue}`)
+                    else
+                        alert("Linie invalida")
+                }}>
                     <Form.Group>
                         <Form.Control type="Text" placeholder="Caută o linie" value={searchValue} onChange={(e) => {
                             setSearchValue(e.target.value)
@@ -123,16 +118,9 @@ function Orare() {
                              let url = `/orare/${line.name}`
                              nav(url)
                          }}>
-                        <div className={`orare-cell-badge ${line.type}`}>
-                            <div className='orare-cell-badge-icon'>
-                                {line.type === 'troleibuze' ?
-                                    <TroleibusIcon/>
-                                    : line.type === 'autobuze' ?
-                                        <BusIcon/>
-                                        : <TramvaiIcon/>}
-                            </div>
-                            <div className='orare-cell-badge-text'> {line.name} </div>
-                        </div>
+                        <Marker
+                            type={line.type}
+                            name={line.name} />
                         <div> {line.route}</div>
                         <OrarIcon style={{marginLeft: 'auto'}}/>
                     </div>

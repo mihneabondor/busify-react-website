@@ -4,28 +4,37 @@ import { useState, useEffect, useRef } from 'react';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import OrarTable from './OrarTable';
-import Button from 'react-bootstrap/Button';
-import { useNavigate } from "react-router-dom";
+import {useLocation, useNavigate, useSearchParams} from "react-router-dom";
 import { useParams } from "react-router-dom";
 import Traseu from "./Traseu";
-import Form from 'react-bootstrap/Form'
-import Anunt from "./Anunt";
-import anunt from "./Anunt";
-import { CiHeart } from "react-icons/ci";
-import { FaHeart } from "react-icons/fa";
 import BottomBar from "../OtherComponents/BottomBar";
 import {ReactComponent as BackButton} from "../Images/backButton.svg";
+import {ReactComponent as BusIcon} from "../Images/busIcon.svg";
+import {ReactComponent as TroleibusIcon} from "../Images/troleibusIcon.svg";
+import {ReactComponent as TramIcon} from "../Images/tramvaiIcon.svg";
+import {ReactComponent as HeartIcon} from "../Images/heartIcon.svg";
+import {ReactComponent as HeartIconFill} from "../Images/heartIconFill.svg";
 
 function Orar(props) {
     const [page, setPage] = useState('lv');
     const orarFullRef = useRef();
     const [orar, setOrar] = useState();
     const { linie } = useParams();
+    const [searchParams] = useSearchParams();
     const [route, setRoute] = useState();
     const [linieFav, setLinieFav] = useState(false)
     const [type, setType] = useState("");
 
     const nav = useNavigate();
+
+    const handleBackNavigation = () => {
+        const id = searchParams.get('id');
+        if (id) {
+            nav(`/map/?id=${id}`);
+        } else {
+            nav(-1);
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -42,10 +51,10 @@ function Orar(props) {
             if(orarFullRef.current.station.s)
                 orarFullRef.current.station.s.lines = orarFullRef.current.station.s.lines.filter(elem => elem[0] || elem[1])
 
-            const anuntData = await fetch('https://busifybackend-40a76006141a.herokuapp.com/anunturi');
+            const anuntData = await fetch('https://busifyserver.onrender.com/anunturi');
             const anunt = await anuntData.json();
-            const date = new Date(anunt.end_date);
-
+            const [day, month, year] = anunt.end_date.split("/").map(Number);
+            const date = new Date(year, month - 1, day);
             let anuntOrar = '';
             if(date > new Date()){
                 anunt.modificari.forEach(elem => {
@@ -55,14 +64,15 @@ function Orar(props) {
                     if(date.setHours(0, 0, 0, 0) === today.setHours(0, 0, 0, 0)){
                         if(elem.orar === 'sambata'){
                             if(orarFullRef.current.station.s){
-                            anuntOrar = 's';
-                            setOrar(orarFullRef.current.station.s)
+                                anuntOrar = 's';
+                                setOrar(orarFullRef.current.station.s)
                             } else {
                                 anuntOrar = 'lv';
                                 setOrar(orarFullRef.current.station.lv)
                             }
                         }
                         else if(elem.orar === 'duminica'){
+                            console.log('intra')
                             if(orarFullRef.current.station.d){
                                 anuntOrar = 'd';
                                 setOrar(orarFullRef.current.station.d)
@@ -140,25 +150,18 @@ function Orar(props) {
     return (
         <div className='orar-page-body'>
             <div className="orare-content-header">
-                <BackButton style={{marginRight: 'auto'}} onClick={() => {
-                    if (window.history.length > 1) {
-                        nav(-1)
-                    }
-                }}/>
-                <div className='orar-title-label'>
+                <BackButton style={{marginRight: 'auto', display: window.history.length > 1 ? "inital" : 'none'}} onClick={handleBackNavigation}/>
+                <div className='orar-title-label' style={{display: 'flex'}}>
                     {type === 'troleibuze' ?
-                        <img alt="" width='25px' height='25px'
-                             src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAB7ElEQVR4nO2aXUoDMRSFv4fiDqz9WYqCuAKruJD6g+2rVHQfiq5CEATfRF2DOn2uUqh9sJFAHsqQGZLJZJLqHLgvZc6599ybSTqdghsegHug4aAhuY/AHQHxDAig76DRVxpPBMQWsAC+gE4B/gYwUUZ2CIxbVchVAe614t4QAVqqq3Iy2xa8zaVpdqkATWAEvABT1cEqYqruQZl73dXEgeqYCByfwL6LiUUEJoSKnyJmmpFMQqRiYrvMRhEULTLizMbIq0Zgpg4vuUv5Rhs4VDnTdcgNwBi6ZeVyehfFkaYOWZsxdCOtYhK6k19XizGcyCVD1EZY8YnsAeOiZI8QGbXIWns6wnjpolUwIoAkj5BHjs2IyCPkkUNA1EaoJ+IF4t8urWQFjXzoCL2lfXkVjCTAblHyn/jS2KJ6dHwYkQ85VePEh5GZMiMfQ32jDRwD3z6MxBTGCF2oqI2kELrjop5ICrqOzIFTtbfLGKjPyuqyjb4xdGQpnMagRCM2+k5GdOdHq0QjNvpORnTvCLslGrHRdzKiG/3Q89Ia+jAyV8l83uyDKm72mMIYf8bIewTFiox4szFyHkHBIiPka0GrP7qISKOBJUpfr6HyJQai2p9jCsJbvksD4YsSjXjLt6bEdZ2SnZGi8pqy4JTvF+RlRZVR5d+zAAAAAElFTkSuQmCC"/>
-                        : type === 'autobuze' ? <img alt="" width='25px' height='25px'
-                                                     src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAABzklEQVR4nO2ZvU7DMBRGDwws0IGIkQeAFQEDPzuwUPVZeAAkJCqExMA7MDF0aNjZ4BnKltIBBiZAFQiMjBIJVbFrl7h22nzSla3q6n732ImS1KDWMnAEtIAH4AX4BMSY4xXoANdAHZjBULPAMfDhoWlhEDFQMwE5D6BZMSSuhkGsAF8BNCoMYk0HcmFRaAs32jb0P9MVubcAcSlhELe6As8lAunoCvQtQHYcQewa+j/piogSRX9SQMTUgvSABhAxfkWpd88E5ADopvO8ZFnItxoaENn7fjbJfsxL9rETg4o0IHJMsokOJBQJDcjvvAIZs0S1I1T3iBOJ6tKiZJdWdwKeIwnp4z0pMUgC7JkmhyDx37ffiQGJ8K+lIkBCeI0/CeXDSv5fuzhCrAKXwHcRICGHUr4bExXIgHyvsKh2ZECqFWkDG8B8OsYOV7lt4aWUqnCeWo4gbLyUykteV+RuOgBZt/SyAlGd19UcgNQsvaZzR2JF7o0DkNjSywokM5CrspCOLiBG8VLq3WGDRcdbUYehvuNOB1IPoEFhGIc6EN19EloM1dSBuJIoyl91Xvc3Hp1hUJx/06DQqUOQZlH+c2mxvJWRKyGLyBxXGsn/B6l4OuxEhf6WAAAAAElFTkSuQmCC"/>
-                            : <img alt="" width='25px' height='25px'
-                                   src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAChUlEQVR4nO2aPWsVQRSGH7ULCAaM6A0IimgXrURzFRX0J1hpQPEj4g/wRm2sQizSSaxV0MYPUBuxU7ARRYKNSCKmkKiYC0Iwt4grB05kWOYm+3FmJ4F9YJqZ2ffMuzOzX2ehPBuAQ8B14AHwBpgEpoA5oKNlTusmtc994BrQVI2oXABmgKRkEY1zsUxcdQbyFZhIGTsK9Dr9e7VuaeDS93bqRLRiGPmuwYeB9U79U60f8hwzpG3SZwk59pLWzxKB18ArT/2oDmrM0zambaM59KJxWgf7zNP2XNtOsQbYp4Od9rR90ba9rELWAQPARWAceKmD/Qu0nY3c1rpE+4zrhh9QjSjIBj0B3HU2fZkyq1rHUxeOYMiN66yzREKUaeBMSEN7gPcBDaTLO2C3tYkjwO8KTSRaJOZhKxM7U5u26tIGdlgYuZcx4GAB7WZG7TsWRrJelYqSRfuHhZGsS2C16v8n1t5IaiNd8J2dh8A27GkAj6uckc2Eo69KI6FJaiPLUM9ICZJ6aS1DvbTWwtLqIxxbqjTyCOjHnn7gSf2stQKxn3qT+jE+ReyZSOoZSeE7O5KBuqLvDw3Na3QKnOU8OqXxifoSMq0CRvLolMYn6ns73FrASB6d0vhEZRn4bmZ5jeTRKU0n45IYMVpaI132Ummmugi3jDZ7Fp3PFkYmCgzQutyyMCKf9hcimvgD7MKIyxGNDGPMeWC+QgPzmh0LglwabwKLAQ0sagzfpdmMjc6fDQuaU7fipDPjL4BNBEIyVx810Ddgf6Ac/YzG+KR5S1OaTsLnA7CdcDSAtxrrF3DMSnjQuUnJV/gewtOjsSSmxD5oISoiP4EbFf+hILEkpsQ+sFLvf6fcs2hxhnn4AAAAAElFTkSuQmCC"/>}
-                    <h2><b>Linia {linie}</b></h2>
+                        <TroleibusIcon style={{marginRight: '5px', marginTop: "3px"}} />
+                        : type === 'autobuze' ? <BusIcon style={{marginRight: '5px', marginTop: "3px"}}/>
+                            : <TramIcon style={{marginRight: '5px', marginTop: "3px"}}/>}
+                    <h2 style={{alignItems: "center", textAlign: "center"}}><b>Linia {linie}</b></h2>
                 </div>
                 <h4 style={{textAlign: 'center'}}>{route}</h4>
                 <div className="hr-like-div"/>
                 <div className="orar-header-buttons" style={{paddingTop: linieFav ? "0" : "0px"}}>
-                    <div className="orar-header-buttons-label">
+                    <div className="orar-header-buttons-label" onClick={()=>{nav(`/map/${linie}`)}}>
                         <img width="25" height="25" src="https://img.icons8.com/ios/50/marker--v1.png"
                              alt="marker--v1"/>
                         <div>Afișare pe hartă</div>
@@ -169,22 +172,20 @@ function Orar(props) {
                         var linii = localStorage.getItem('linii_favorite');
                         if (!linii)
                             linii = '';
-
                         if (linii.search(linie) !== -1) {
                             linii = linii.replace(linie + ' ', '')
                         } else {
                             linii += linie + ' ';
                         }
-
                         localStorage.setItem('linii_favorite', linii)
                     }}>
-                        <CiHeart style={{
+                        <HeartIcon style={{
                             minWidth: "30px",
                             minHeight: "30px",
                             marginRight: "5px",
                             display: linieFav ? "none" : "initial"
                         }}/>
-                        <FaHeart style={{
+                        <HeartIconFill style={{
                             minWidth: "30px",
                             minHeight: "30px",
                             marginRight: "5px",

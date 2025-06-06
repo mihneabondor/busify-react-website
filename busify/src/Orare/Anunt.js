@@ -3,13 +3,25 @@ import { useState, useEffect } from 'react';
 import {forEach} from "react-bootstrap/ElementChildren";
 
 function Anunt(props) {
-    const [anuntState, setAnunt] = useState([]);
-    const [anuntOrarAziState, setAnuntOrarAzi] = useState([]);
-    const [anuntOrarMaineState, setanuntOrarMaineState] = useState([]);
+    const [anunt, setAnunt] = useState(null);
+    const [anuntOrarAziState, setAnuntOrarAzi] = useState(null);
+    const [anuntOrarMaineState, setanuntOrarMaineState] = useState(null);
+
+    function formatRomanianDate(dateString) {
+        // Parse "dd/mm/yyyy"
+        const [day, month, year] = dateString.split("/").map(Number);
+        const date = new Date(year, month - 1, day); // JS months are 0-based
+
+        // Format to Romanian: e.g., "30 mai"
+        return new Intl.DateTimeFormat("ro-RO", {
+            day: "numeric",
+            month: "long"
+        }).format(date);
+    }
 
     const fetchData = async () => {
         try {
-            const anuntData = await fetch('https://busifybackend-40a76006141a.herokuapp.com/anunturi');
+            const anuntData = await fetch('https://busifyserver.onrender.com/anunturi');
             const anunt = await anuntData.json();
 
             const endDateParts = anunt.end_date.split("/");
@@ -50,14 +62,16 @@ function Anunt(props) {
     }, [])
 
     return (
-        <Alert variant='danger' style={{display: anuntState.anunt ? 'initial' : 'none', ...props.style}}>
-            {anuntState.anunt}
-            <div> <br/> <p>Azi se circula conform orarului {anuntOrarAziState.orar ? `de ${anuntOrarAziState.orar}` : " obisnuit"}. Maine este valabil orarul {anuntOrarMaineState.orar ? `de ${anuntOrarMaineState.orar}` : "obisnuit"}. </p> </div>
-            <hr/>
-            <small>
-                Conținut generat de AI, unele informații pot fi greșite. <a href={anuntState.link} target='_blank' style={{color: 'inherit'}}>Știre inițială</a>
-            </small>
-        </Alert>
+        <div>
+            { anunt ?
+                <div style={{background: 'white', width: '90vw', borderRadius: '5px', color: 'black', padding: '10px', marginBottom: '20px'}}>
+                    <div style={{marginBottom: '10px'}}><b>Modificare program de transport în {anunt.start_date === anunt.end_date ? `${formatRomanianDate(anunt.start_date)}` : `perioada ${formatRomanianDate(anunt.start_date)} - ${formatRomanianDate(anunt.end_date)}`}</b></div>
+
+                    <div style={{marginBottom: '10px'}}> {anunt.anunt} {anuntOrarAziState ? `Azi se circulă conform programului de ${anuntOrarAziState.orar}.` : null} {anuntOrarMaineState ? `Mâine se circulă conform programului de ${anuntOrarMaineState.orar}.` : null} </div>
+                    <a href={anunt.link} target={'_blank'} style={{color: 'gray'}}><small>Citește articolul</small></a>
+                </div>
+                : null}
+        </div>
     )
 }
 

@@ -7,6 +7,8 @@ import {ReactComponent as TrashIcon} from '../Images/favoriteTrashIcon.svg'
 import {ReactComponent as BusIcon} from '../Images/busIcon.svg'
 import {ReactComponent as TroleibusIcon} from '../Images/troleibusIcon.svg'
 import {ReactComponent as TramvaiIcon} from '../Images/tramvaiIcon.svg'
+import Marker from "../OtherComponents/Marker";
+import Anunt from "./Anunt";
 
 function Favorite() {
     const searchValueRef = useRef();
@@ -76,9 +78,17 @@ function Favorite() {
         <div className="orare">
             <div className="orare-content-header">
                 <h2><b>Linii favorite</b></h2>
-                <Form style={{width: '100%'}}>
+                <Anunt/>
+                <Form style={{width: '90vw'}} onSubmit={(e) =>{
+                    e.preventDefault();
+                    if(lines.filter(elem => elem.name === searchValue).length > 0 && localStorage.getItem('linii_favorite').split(" ").includes(`${searchValue}`))
+                        nav(`/favorite/${searchValue}`)
+                    else
+                        alert("Linie invalida")
+                }}>
                     <Form.Group>
                         <Form.Control type="Text" placeholder="Caută o linie" value={searchValue} onChange={(e) => {
+                            console.log(lines.includes(e.target.value))
                             setSearchValue(e.target.value)
                         }}/>
                     </Form.Group>
@@ -122,19 +132,12 @@ function Favorite() {
                     <div className='orare-cell'
                          style={{display: (activeFilter.toLowerCase() === line.type || activeFilter.toLowerCase() === "toate") && (searchValue === '' || line.name.includes(searchValue)) && favorite.includes(line.name) ? 'flex' : 'none'}}
                          onClick={() => {
-                             let url = `/orare/${line.name}`
+                             let url = `/favorite/${line.name}`
                              nav(url)
                          }}>
-                        <div className={`orare-cell-badge ${line.type}`}>
-                            <div className='orare-cell-badge-icon'>
-                                {line.type === 'troleibuze' ?
-                                    <TroleibusIcon/>
-                                    : line.type === 'autobuze' ?
-                                        <BusIcon/>
-                                        : <TramvaiIcon/>}
-                            </div>
-                            <div className='orare-cell-badge-text'> {line.name} </div>
-                        </div>
+                        <Marker
+                            type={line.type}
+                            name={line.name} />
                         <div> {line.route}</div>
                         <TrashIcon style={{marginLeft: 'auto'}} onClick={(e)=>{
                             e.stopPropagation(); // Prevent triggering the parent onClick

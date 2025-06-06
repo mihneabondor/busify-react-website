@@ -1,14 +1,14 @@
 .marker {
-  display: grid;
-  align-items: center;
-  font-size: 14px;
-  width: max-content;
-  height: 30px;
-  color: white;
-  background-color: purple;
-  border-radius: 5px;
-  padding: 5px;
-  z-index: 0;
+  /*display: grid;*/
+  /*align-items: center;*/
+  /*font-size: 14px;*/
+  /*width: max-content;*/
+  /*height: 30px;*/
+  /*color: white;*/
+  /*background-color: purple;*/
+  /*border-radius: 5px;*/
+  /*padding: 5px;*/
+  z-index: 2;
 }
 
 .marker-linie-favorita {
@@ -47,4 +47,24 @@
 
 .zindex100{
   z-index: 100 !important;
+}
+
+.bus-arrow-icon {
+  position: relative;
+  width: 41px;
+  height: 41px;
+  background: transparent;
+}
+
+.bus-arrow-icon::before {
+  content: "";
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%) rotate(0deg);
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 24px solid #8B56A4; /* Arrow color */
 }
