@@ -1,3 +1,4 @@
+// public/sw.js
 /* eslint-disable no-restricted-globals */
 /* eslint-env serviceworker */
 console.log('[SW] starting');
@@ -5,7 +6,8 @@ console.log('[SW] starting');
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
 if (workbox) {
-    console.log(`[SW] Workbox is loaded`);
+    console.log('[SW] Workbox is loaded');
+    workbox.setConfig({ debug: true });
 
     workbox.routing.registerRoute(
         ({ url }) =>
@@ -22,5 +24,5 @@ if (workbox) {
         })
     );
 } else {
-    console.log(`[SW] Workbox failed to load`);
+    console.log('[SW] Workbox failed to load');
 }
