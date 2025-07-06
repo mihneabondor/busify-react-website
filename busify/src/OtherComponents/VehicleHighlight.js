@@ -20,7 +20,6 @@ import {ReactComponent as SpreIcon} from '../Images/SpreIcon.svg'
 import {ReactComponent as DeLaIcon} from '../Images/DeLaIcon.svg'
 import {ReactComponent as ShareIcon} from '../Images/ShareIcon.svg'
 import {useNavigate, useSearchParams} from "react-router-dom";
-import Form from "react-bootstrap/Form";
 import CustomSwitch from "./CustomSwitch";
 
 function VehicleHighlight(props) {
@@ -33,6 +32,7 @@ function VehicleHighlight(props) {
     const stopCenteredFirstTimeRef = useRef(false);
     const [selectedStop, setSelectedStop] = useState(null)
     const [selectedStopTime, setselectedStopTime] = useState(0)
+    const selectedStopRef = useRef(null);
 
     const sheetRef = useRef(null);
 
@@ -77,8 +77,8 @@ function VehicleHighlight(props) {
                 minimumIndex = i;
                 minimumDistance = dist
             }
-            if(selectedStop === props.stops[i]) {
-                setselectedStopTime(Math.floor(Math.abs(dist) / 20 * 60))
+            if (selectedStopRef.current && selectedStopRef.current.stop_name === props.stops[i].stop_name) {
+                setselectedStopTime(Math.floor(Math.abs(dist) / 20 * 60));
             }
         }
         props.setNearestStop(props.stops[minimumIndex]);
@@ -119,6 +119,7 @@ function VehicleHighlight(props) {
     useEffect(() => {
         if(props.selectedStop) {
             setSelectedStop(props.selectedStop)
+            selectedStopRef.current = props.selectedStop
             try {
                 sheetRef.current.snapTo(({minHeight}) => minHeight)
             } catch {}
@@ -126,10 +127,10 @@ function VehicleHighlight(props) {
     }, [props.selectedStop])
 
     useEffect(() => {
-        if(selectedStop) {
+        if(selectedStop || selectedStopRef.current) {
             getNearestStop();
         }
-    }, [selectedStop])
+    }, [selectedStop, selectedStopRef])
 
     useEffect(() => {
         if(localStorage.getItem('linii_favorite')){
@@ -174,6 +175,7 @@ function VehicleHighlight(props) {
                             props.onHide()
                             stopCenteredFirstTimeRef.current = false;
                             setSelectedStop(null);
+                            selectedStopRef.current = null;
                             setselectedStopTime(null)
                         }}/>
                     </div>
@@ -262,16 +264,33 @@ function VehicleHighlight(props) {
                                 style={{filter: "brightness(0) saturate(100%)", scale: "0.9", marginRight: '10px'}}/>
                             Urmărește
                         </Button>
-                        <Button variant="secondary" style={{
-                            background: "#F5F6F8",
-                            color: 'black',
-                            // flex: '1',
-                            border: "none",
-                            display: 'flex',
-                            alignItems: "center",
-                            justifyContent: 'center',
-                        }} href={`sms:7479&body=${props.vehicle?.line}`}>
-                            <BiletIcon style={{marginRight: '10px'}}/>
+                        <Button
+                            variant="secondary"
+                            style={{
+                                background: "#F5F6F8",
+                                color: 'black',
+                                border: "none",
+                                display: 'flex',
+                                alignItems: "center",
+                                justifyContent: 'center',
+                            }}
+                            onClick={() => {
+                                const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+                                const message = props.vehicle?.line || '';
+                                const phoneNumber = '7479';
+
+                                let smsLink;
+
+                                if (isIOS) {
+                                    smsLink = `sms:${phoneNumber}&body=${encodeURIComponent(message)}`;
+                                    window.location.href = smsLink;
+                                } else {
+                                    smsLink = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
+                                    window.open(smsLink, '_blank');
+                                }
+                            }}
+                        >
+                            <BiletIcon style={{ marginRight: '10px' }} />
                             Bilet
                         </Button>
 
@@ -285,7 +304,7 @@ function VehicleHighlight(props) {
                             justifyContent: 'center',
                             outline: 'none'
                         }} onClick={() => {
-                            navigator.clipboard.writeText(`https://nou.busify.ro/map?id=${props.vehicle.label}`).then(r => alert("Link copiat!"))
+                            navigator.clipboard.writeText(`https://nou.busify.ro/map?id=${props.vehicle.label}`).then(props.copyLinkNotification)
                         }}>
                             <ShareIcon style={{marginRight: '10px'}}/>
                             Distribuie
@@ -295,7 +314,6 @@ function VehicleHighlight(props) {
             }
         >
             <div style={{margin: "15px", overflow: "hidden"}}>
-                <hr/>
                 <div style={{
                     display: "flex",
                     flexDirection: "row",
@@ -341,10 +359,9 @@ function VehicleHighlight(props) {
                                         zIndex: 1,
                                     }}
                                     onClick={() => {
+                                        selectedStopRef.current = step;
+                                        setSelectedStop(step)
                                         getNearestStop()
-                                        setTimeout(() => {
-                                            setSelectedStop(step)
-                                        }, 500)
                                     }}
                                 >
                                     {index + 1}
@@ -375,7 +392,9 @@ function VehicleHighlight(props) {
                     }}>
                         <BackIcon onClick={() => {
                             setSelectedStop(null)
+                            selectedStopRef.current = null
                             setselectedStopTime(null)
+                            getNearestStop()
                         }}/>
                         <div style={{marginLeft: '15px'}}><b>{selectedStop?.stop_name}</b></div>
                         <div style={{marginLeft: 'auto', display: 'flex', flexDirection: 'row', alignItems: "stretch"}}>

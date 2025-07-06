@@ -147,24 +147,39 @@ function Traseu() {
         // }
     }, []);
 
-    useEffect(() => {
-        map.current = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: [defLng, defLat],
-            zoom: 12,
-            attributionControl: false
-        });
-        const geo = new mapboxgl.GeolocateControl({
-            positionOptions: {
-                enableHighAccuracy: true
-            },
-            trackUserLocation: true,
-            showUserHeading: true,
-            showAccuracyCircle: true
-        })
-        map.current.addControl(geo);
+    const initializeMap =async () => {
+        try {
+            const request = await fetch('https://busifyserver.onrender.com/mapbox');
+            const data = await request.json();
+            mapboxgl.accessToken = data.accessToken;
+            map.current = new mapboxgl.Map({
+                container: 'map',
+                center: [defLng, defLat],
+                style: data.style,
+                zoom: 14,
+                attributionControl: false
+            });
+            map.current = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [defLng, defLat],
+                zoom: 12,
+                attributionControl: false
+            });
+            const geo = new mapboxgl.GeolocateControl({
+                positionOptions: {
+                    enableHighAccuracy: true
+                },
+                trackUserLocation: true,
+                showUserHeading: true,
+                showAccuracyCircle: true
+            })
+            map.current.addControl(geo);
+        } catch {}
+    }
 
+    useEffect(() => {
+        initializeMap();
         fetchData();
     }, [])
 

@@ -1,7 +1,6 @@
 import BottomBar from "../OtherComponents/BottomBar";
 import {ButtonGroup} from "react-bootstrap";
 import Button from "react-bootstrap/esm/Button";
-import Switch from 'react-ios-switch'
 
 import {ReactComponent as PCIcon} from "../Images/PCIcon.svg";
 import {ReactComponent as DonatiiIcon} from "../Images/favoriteIcon.svg";
@@ -26,7 +25,7 @@ function Settings() {
     return (
         <div
             style={{
-                height: '90vh',
+                height: '98vh',
                 background: '#F6F8FA',
                 padding: '50px 20px 0px 20px',
                 display: 'flex',
@@ -130,7 +129,7 @@ function Settings() {
                     flexDirection: 'row',
                     alignItems: 'center'
                 }} onClick={() => {
-                    window.open("https://revolut.me/m_bondor", '_blank')
+                    window.location.href = "https://revolut.me/m_bondor"
                 }}>
                     <DonatiiIcon style={{
                         filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
@@ -152,7 +151,7 @@ function Settings() {
                     flexDirection: 'row',
                     alignItems: 'center'
                 }} onClick={() => {
-                    window.open("https://busify.ro/contact", '_blank')
+                    window.location.href = "https://busify.ro/contact"
                 }}>
                     <TOSIcon style={{marginRight: 10}}/>
                     <div>Sugestii? Scrie-ne!</div>
@@ -176,7 +175,7 @@ function Settings() {
                     flexDirection: 'row',
                     alignItems: 'center'
                 }} onClick={() => {
-                    window.open("https://busify.ro/privacypolicy", '_blank')
+                    window.location.href = "https://busify.ro/privacypolicy"
                 }}>
                     <PCIcon style={{marginRight: 10}}/>
                     <div>Politică de confidențialitate</div>
@@ -194,7 +193,7 @@ function Settings() {
                     flexDirection: 'row',
                     alignItems: 'center'
                 }} onClick={() => {
-                    window.open("https://busify.ro/termsofservice", '_blank')
+                    window.location.href = "https://busify.ro/termsofservice"
                 }}>
                     <TOSIcon style={{marginRight: 10}}/>
                     <div>Termeni de utilizare</div>
@@ -204,8 +203,6 @@ function Settings() {
                     }}/>
                 </Button>
             </ButtonGroup>
-
-            <br/> <br/> <br/>
             <BottomBar/>
         </div>
     )

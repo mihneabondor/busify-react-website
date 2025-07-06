@@ -1,0 +1,24 @@
+.stiri-body-container{
+    width: 90vw;
+    margin-top: 20px;
+}
+
+.stiri-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stiri-body-container-label {
+    display: flex;
+    flex-direction: row;
+}
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+}

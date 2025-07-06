@@ -64,14 +64,15 @@ function BottomBar() {
     }
 
     return (
-        <div>
+        <div className="bottom-bar-fixed">
             <BottomNavigation
                 items={bottomNavItems}
                 selected={getSelected()}
-                onItemClick={(item) => {nav(item.page)}}
+                onItemClick={(item) => {
+                    nav(item.page)
+                }}
                 activeBgColor="white"
                 activeTextColor="#915FA8"
-                style={{zIndex: '100',position: "fixed", bottom: 0, width: "100%", borderRadius: "10px 10px 0 0", boxShadow: 'rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px'}}
             />
         </div>
     )

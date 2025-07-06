@@ -106,7 +106,7 @@ function Marker(props) {
                     </div>
                 ) : null}
                 <div className={props.iconite === "true" || props.iconite === undefined ? 'orare-cell-badge-text' : ""}>
-                    {text}
+                    <b>{text}</b>
                 </div>
             </div>
 

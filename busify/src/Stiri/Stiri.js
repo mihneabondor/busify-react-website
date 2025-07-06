@@ -52,17 +52,28 @@ function Stiri() {
                 </div>
 
                 {news.map(elem => (
-                    <Card className="text-white mt-3" style={{borderRadius: '10px', display: searchValue === '' || elem.title.toLowerCase().includes(searchValue.toLowerCase()) || elem.description.toLowerCase().includes(searchValue.toLowerCase()) ? 'flex' : 'none'}} onClick={()=>{window.open(elem.link)}}>
-                        <Card.Img src={require(`../Images/ThumbnailsStiri/image${elem.thumbnail}.png`)} alt="Card image" style={{maxHeight: '25vh', objectFit: "cover", borderRadius: "10px 10px 0 0"}} />
-                        <Card.ImgOverlay style={{background: "rgba(0, 0, 0, 0.5)",
+                    <Card className="text-white mt-3" style={{
+                        borderRadius: '10px',
+                        display: searchValue === '' || elem.title.toLowerCase().includes(searchValue.toLowerCase()) || elem.description.toLowerCase().includes(searchValue.toLowerCase()) ? 'flex' : 'none'
+                    }} onClick={() => {
+                        window.open(elem.link)
+                    }}>
+                        <Card.Img src={require(`../Images/ThumbnailsStiri/image${elem.thumbnail}.png`)} alt="Card image"
+                                  style={{maxHeight: '25vh', objectFit: "cover", borderRadius: "10px 10px 0 0"}}/>
+                        <Card.ImgOverlay style={{
+                            background: "rgba(0, 0, 0, 0.5)",
                             backdropFilter: "blur(10px)",
                             height: "min-content",
-                            overflow: "hidden"}}>
+                            overflow: "hidden"
+                        }}>
                             <div>
-                                <Card.Text className="truncate"> {formatRomanianDate(elem.pubDate)} <br/> <b> {elem.title} </b> </Card.Text>
+                                <Card.Text className="truncate"> {formatRomanianDate(elem.pubDate)} <br/>
+                                    <b> {elem.title} </b> </Card.Text>
                             </div>
                         </Card.ImgOverlay>
-                        <Card.Footer style={{color: "#40464C", display: 'flex', justifyContent: 'center', alignItems: 'center'}} onClick={() => window.location.href=elem.link} >
+                        <Card.Footer
+                            style={{color: "#40464C", display: 'flex', justifyContent: 'center', alignItems: 'center'}}
+                            onClick={() => window.location.href = elem.link}>
                             <b> Citește articolul </b>
                             <ArrowUpRight/>
                         </Card.Footer>

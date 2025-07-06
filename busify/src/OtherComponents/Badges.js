@@ -83,8 +83,9 @@ function Badges() {
             <Badge style={{
                 display: anuntState.anunt ? "initial" : "none",
                 padding: '10px',
-                outline: '2px solid white'
-            }} bg="danger" onClick={() => {
+                outline: '2px solid white',
+                background: '#E05757'
+            }} bg='undefined' onClick={() => {
                 nav('/orare')
             }}>Orar modificat</Badge>
         </div>

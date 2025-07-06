@@ -32,6 +32,28 @@ function Favorite() {
         } else alert('Linia pe care ai introdus-o nu exista!')
     }
 
+    function getNextDepartureTime(scheduleMatrix, direction) {
+        const colIndex = direction === "in" ? 0 : 1;
+        const now = new Date();
+
+        for (let i = 0; i < scheduleMatrix.length; i++) {
+            const timeString = scheduleMatrix[i][colIndex]?.replace('🚲', '');
+            if (!timeString) continue;
+            const [hours, minutes] = timeString.split(':').map(Number);
+            const departure = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate(),
+                hours,
+                minutes
+            );
+            if (departure >= now) {
+                return timeString;
+            }
+        }
+        return ""; // No future departure found
+    }
+
     const fetchData = async () => {
         try {
             const resp = await fetch('https://orare.busify.ro/public/buses_basic.json');
@@ -45,12 +67,55 @@ function Favorite() {
             joinArray(buses_basic.urbane)
             joinArray(buses_basic.metropolitane)
             joinArray(buses_basic.market)
-            setLines(sol)
             linesRef.current = sol
             copie.current = sol
 
             const favoriteString = localStorage.getItem('linii_favorite')
             setFavorite(favoriteString.split(' '))
+
+            for (const line of favoriteString.split(' ')) {
+                if(line === ''){
+                    continue;
+                }
+                const url = 'https://orare.busify.ro/public/' + line + '.json'
+                const resp = await fetch(url)
+                const data = await resp.json();
+                const index = sol.findIndex(elem => elem.name === line);
+
+                const dayType = (() => {
+                    const day = new Date().getDay();
+                    if (day === 0) return 'd'; // Sunday
+                    if (day === 6) return 's'; // Saturday
+                    return 'lv'; // Workdays
+                })();
+
+                // eslint-disable-next-line default-case
+                switch (dayType) {
+                    case 'lv':
+                        sol[index].in_stop_name = data.station.lv.in_stop_name;
+                        sol[index].out_stop_name = data.station.lv.out_stop_name;
+
+                        sol[index].nextDepartureIn = getNextDepartureTime(data.station.lv.lines, "in")
+                        sol[index].nextDepartureOut = getNextDepartureTime(data.station.lv.lines, "out")
+                        break
+                    case 's':
+                        sol[index].in_stop_name = data.station.s.in_stop_name;
+                        sol[index].out_stop_name = data.station.s.out_stop_name;
+
+                        sol[index].nextDepartureIn = getNextDepartureTime(data.station.s.lines, "in")
+                        sol[index].nextDepartureOut = getNextDepartureTime(data.station.s.lines, "out")
+                        break
+                    case 'd':
+                        sol[index].in_stop_name = data.station.d.in_stop_name;
+                        sol[index].out_stop_name = data.station.d.out_stop_name;
+
+                        sol[index].nextDepartureIn = getNextDepartureTime(data.station.d.lines, "in")
+                        sol[index].nextDepartureOut = getNextDepartureTime(data.station.d.lines, "out")
+                        break
+                }
+            }
+
+            setLines(sol)
         } catch (err) {
             console.log(err)
         }
@@ -130,16 +195,34 @@ function Favorite() {
                 </div>
                 {lines.map((line) => (
                     <div className='orare-cell'
-                         style={{display: (activeFilter.toLowerCase() === line.type || activeFilter.toLowerCase() === "toate") && (searchValue === '' || line.name.includes(searchValue)) && favorite.includes(line.name) ? 'flex' : 'none'}}
+                         style={{display: (activeFilter.toLowerCase() === line.type || activeFilter.toLowerCase() === "toate") && (favorite.includes(line.name)) && (searchValue === '' || line.name.toLowerCase().includes(searchValue.toLowerCase())) ? 'flex' : 'none'}}
                          onClick={() => {
                              let url = `/favorite/${line.name}`
                              nav(url)
                          }}>
                         <Marker
                             type={line.type}
-                            name={line.name} />
-                        <div> {line.route}</div>
-                        <TrashIcon style={{marginLeft: 'auto'}} onClick={(e)=>{
+                            name={line.name}
+                        />
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0, marginRight: '10px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>{line.in_stop_name}</div>
+                                <div><b>{line.nextDepartureIn}</b></div>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>{line.out_stop_name}</div>
+                                <div><b>{line.nextDepartureOut}</b></div>
+                            </div>
+                        </div>
+
+                        <TrashIcon style={{
+                            marginLeft: 'auto',
+                            flexShrink: 0,
+                            width: 32,
+                            height: 32,
+                            minWidth: 32,
+                            minHeight: 32
+                        }} onClick={(e) => {
                             e.stopPropagation(); // Prevent triggering the parent onClick
 
                             const favoriteNou = favorite.filter(item => item !== line.name);

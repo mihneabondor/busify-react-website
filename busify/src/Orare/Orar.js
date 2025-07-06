@@ -150,10 +150,11 @@ function Orar(props) {
     return (
         <div className='orar-page-body'>
             <div className="orare-content-header">
-                <BackButton style={{marginRight: 'auto', display: window.history.length > 1 ? "inital" : 'none'}} onClick={handleBackNavigation}/>
+                <BackButton style={{marginRight: 'auto', display: window.history.length > 1 ? "inital" : 'none'}}
+                            onClick={handleBackNavigation}/>
                 <div className='orar-title-label' style={{display: 'flex'}}>
                     {type === 'troleibuze' ?
-                        <TroleibusIcon style={{marginRight: '5px', marginTop: "3px"}} />
+                        <TroleibusIcon style={{marginRight: '5px', marginTop: "3px"}}/>
                         : type === 'autobuze' ? <BusIcon style={{marginRight: '5px', marginTop: "3px"}}/>
                             : <TramIcon style={{marginRight: '5px', marginTop: "3px"}}/>}
                     <h2 style={{alignItems: "center", textAlign: "center"}}><b>Linia {linie}</b></h2>
@@ -161,7 +162,9 @@ function Orar(props) {
                 <h4 style={{textAlign: 'center'}}>{route}</h4>
                 <div className="hr-like-div"/>
                 <div className="orar-header-buttons" style={{paddingTop: linieFav ? "0" : "0px"}}>
-                    <div className="orar-header-buttons-label" onClick={()=>{nav(`/map/${linie}`)}}>
+                    <div className="orar-header-buttons-label" onClick={() => {
+                        nav(`/map/${linie}`)
+                    }}>
                         <img width="25" height="25" src="https://img.icons8.com/ios/50/marker--v1.png"
                              alt="marker--v1"/>
                         <div>Afișare pe hartă</div>

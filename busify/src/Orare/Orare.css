@@ -56,7 +56,7 @@
 .orare-cell-badge-text {
     flex-grow: 1; /* Makes text take available space */
     text-align: center; /* Centers text */
-    margin-left: 5px;
+    margin-left: 3px;
 }
 .orare-cell:hover {
     cursor: pointer;

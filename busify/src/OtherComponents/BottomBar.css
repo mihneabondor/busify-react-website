@@ -1,0 +1,13 @@
+/* BottomBar.css */
+.bottom-bar-fixed {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    border-radius: 10px 10px 0 0;
+    box-shadow: rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;
+    width: 100vw;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    background: white;
+}

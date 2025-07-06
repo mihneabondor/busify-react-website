@@ -1,10 +1,9 @@
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './Map.css';
-import {useEffect, useRef, useState, useCallback, createRef} from "react";
+import React, {createRef, useCallback, useEffect, useRef, useState} from "react";
 import './Marker/Marker.css';
 import Spinner from 'react-bootstrap/Spinner';
-import React from 'react';
 import Undemibusu from "./Undemibusu.js";
 import {useNavigate, useParams, useSearchParams} from 'react-router-dom';
 import UndemibusuToast from "./UndemibusuToast.js";
@@ -17,8 +16,7 @@ import ReactDOM from 'react-dom/client';
 import Badges from "../OtherComponents/Badges";
 import VehicleMarkerWrapper from "../OtherComponents/VehicleMarkerWrapper";
 import debounce from 'lodash.debounce';
-
-mapboxgl.accessToken = 'pk.eyJ1IjoibWlobmVib25kb3IxIiwiYSI6ImNseDd1bDlxcDFyZnAya3M5YnpxOHlrdG4ifQ.ZMlxEn8Tz6jgGhJm16mXkg';
+import NotificationToast from "./NotificationToast";
 
 function Map() {
     var map = useRef();
@@ -60,7 +58,9 @@ function Map() {
 
     const [selectedVehicle, setSelectedVehicle] = useState(null)
     const selectedVehicleRef = useRef(null)
+
     const [showNotification, setShowNotification] = useState(false)
+    const [notificationTitle, setNotificationTitle] = useState('Link copiat!');
 
     const [showSms, setShowSms] = useState(false)
     const smsDataRef = useRef(null)
@@ -122,6 +122,27 @@ function Map() {
             (unique.current.find(elem => elem[0] === vehicle.line)[1] === false && selectedVehicleRef.current?.vehicle?.line !== vehicle.line))
     }
 
+    // Offset a [lng, lat] point to the right of the direction from start to end by 'distance' meters
+    function offsetToRight(start, end, distance = 0.0004) {
+        // Convert to radians
+        const toRad = deg => deg * Math.PI / 180;
+        const toDeg = rad => rad * 180 / Math.PI;
+
+        // Calculate direction angle
+        const dx = end[0] - start[0];
+        const dy = end[1] - start[1];
+        const angle = Math.atan2(dy, dx);
+
+        // Perpendicular angle to the right
+        const rightAngle = angle - Math.PI / 2;
+
+        // Offset in degrees (approximate, works for small distances)
+        const dLng = (distance * Math.cos(rightAngle));
+        const dLat = (distance * Math.sin(rightAngle));
+
+        return [start[0] + dLng, start[1] + dLat];
+    }
+
     const addMarker = (vehicle) => {
         const el = document.createElement('div');
         const root = ReactDOM.createRoot(el);
@@ -141,8 +162,12 @@ function Map() {
 
         el.className = "marker";
 
+        const offsetLngLat = (vehicle.nextCoords && vehicle.nextCoords[0] !== undefined)
+            ? offsetToRight(vehicle.lngLat, vehicle.nextCoords)
+            : vehicle.lngLat;
+
         const mapboxMarker = new mapboxgl.Marker(el)
-            .setLngLat(vehicle.lngLat)
+            .setLngLat(offsetLngLat)
             .addTo(map.current);
 
         mapboxMarker.getElement().addEventListener('click', async () => {
@@ -274,7 +299,9 @@ function Map() {
                     if (!vehi) return;
 
                     const start = entry.vehicle.lngLat;
-                    const end = vehi.lngLat;
+                    const end = (vehi.nextCoords && vehi.nextCoords[0] !== undefined)
+                        ? offsetToRight(vehi.lngLat, vehi.nextCoords)
+                        : vehi.lngLat;
                     const isVisible = markerEl.style.display !== "none";
 
                     const distance = Math.hypot(end[0] - start[0], end[1] - start[1]);
@@ -308,8 +335,12 @@ function Map() {
 
                         requestAnimationFrame(animate);
                     } else {
-                        entry.marker.setLngLat(end);
-                        entry.vehicle.lngLat = end;
+                        const offsetEnd = (vehi.nextCoords && vehi.nextCoords[0] !== undefined)
+                            ? offsetToRight(vehi.lngLat, vehi.nextCoords)
+                            : vehi.lngLat;
+
+                        entry.marker.setLngLat(offsetEnd);
+                        entry.vehicle.lngLat = vehi.lngLat;
                     }
 
                     if (entry.reactRef?.current?.updateVehicle) {
@@ -335,8 +366,7 @@ function Map() {
 
             processNextBatch();
         };
-
-        addNextBatch(); // Start the whole process
+        addNextBatch();
     };
 
     const updateSelectedVehicleAndStops = () => {
@@ -446,56 +476,62 @@ function Map() {
         map.current.addControl(button, "top-right");
     }
 
-    const generateMap = (refresh = false) => {
-        map.current = new mapboxgl.Map({
-            container: 'map',
-            center: [defLng, defLat],
-            style: 'mapbox://styles/mihnebondor1/cm989e83e00g801pg1e2udadb',
-            zoom: 14,
-            attributionControl: false
-        });
+    const generateMap = async (refresh = false) => {
+        try {
+            const request = await fetch('https://busifyserver.onrender.com/mapbox');
+            const data = await request.json();
+            mapboxgl.accessToken = data.accessToken;
+            map.current = new mapboxgl.Map({
+                container: 'map',
+                center: [defLng, defLat],
+                style: data.style,
+                zoom: 14,
+                attributionControl: false
+            });
 
-        map.current.setMaxBounds([
-            [23.0000, 46.2500], // Southwest corner
-            [24.0000, 47.0000]  // Northeast corner
-          ]);
-          
+            map.current.setMaxBounds([
+                [23.0000, 46.2500], // Southwest corner
+                [24.0000, 47.0000]  // Northeast corner
+            ]);
 
-        const geo = new mapboxgl.GeolocateControl({
-            positionOptions: {
-                enableHighAccuracy: true
-            },
-            trackUserLocation: true,
-            showUserHeading: true,
-        })
-        addSearchButton();
-        map.current.addControl(geo);
-        map.current.on('load', () => {
-            if (refresh)
-                map.current.flyTo({
-                    center: lastCoords.current,
-                    duration: 2000,
-                    zoom: lastZoom.current,
-                    essential: true
-                })
-            else if (!popupOpen.current) {
-                geo.trigger();
-                if(undemibusu === 'destinatii')
-                setTimeout(() => {
-                    getUserAddress()
-                }, 1000);
-            }
-        });
-        map.current.on('dragend', (e) => {
-            lastCoords.current = map.current.getCenter().toArray();
-            lastZoom.current = map.current.getZoom();
-        })
-        // Debounced version for smooth updates without over-triggering
 
-        // Attach the listener (usually inside useEffect)
+            const geo = new mapboxgl.GeolocateControl({
+                positionOptions: {
+                    enableHighAccuracy: true
+                },
+                trackUserLocation: true,
+                showUserHeading: true,
+            })
+            addSearchButton();
+            map.current.addControl(geo);
+            map.current.on('load', () => {
+                if (refresh)
+                    map.current.flyTo({
+                        center: lastCoords.current,
+                        duration: 2000,
+                        zoom: lastZoom.current,
+                        essential: true
+                    })
+                else if (!popupOpen.current) {
+                    geo.trigger();
+                    if (undemibusu === 'destinatii')
+                        setTimeout(() => {
+                            getUserAddress()
+                        }, 1000);
+                }
+            });
+            map.current.on('dragend', (e) => {
+                lastCoords.current = map.current.getCenter().toArray();
+                lastZoom.current = map.current.getZoom();
+            })
+            // Debounced version for smooth updates without over-triggering
 
-        const debouncedCheckMarkerVisibility = debounce(checkMarkerVisibility, 200);
-        map.current.on('moveend', debouncedCheckMarkerVisibility);
+            // Attach the listener (usually inside useEffect)
+
+            const debouncedCheckMarkerVisibility = debounce(checkMarkerVisibility, 200);
+            map.current.on('moveend', debouncedCheckMarkerVisibility);
+        } catch {
+        }
     }
 
     const checkMarkerVisibility = () => {
@@ -1216,10 +1252,19 @@ function Map() {
 
     useEffect(() => {
         if (map.current) return;
-        localStorage.setItem('labels', '')
-        handleSocketOns()
-        document.addEventListener("visibilitychange", handleVisibilityChange)
-        generateMap()
+
+        localStorage.setItem('labels', '');
+        handleSocketOns();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        generateMap();
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            if (socket.current) {
+                socket.current.disconnect();
+                socket.current = null;
+            }
+        };
     }, []);
 
     return (
@@ -1240,6 +1285,11 @@ function Map() {
                     setShowSearch(false)
                     setShowUndemibusuToast(true)
                 }}
+            />
+            <NotificationToast
+                show={showNotification}
+                onHide={()=>{setShowNotification(false)}}
+                title={notificationTitle}
             />
             <Undemibusu
                 show={showUndemibusu}
@@ -1328,6 +1378,10 @@ function Map() {
                 socket={socket}
                 selectedStop={selectedStop}
                 nearestStopRef={nearestStopRef}
+                copyLinkNotification = {() => {
+                    setNotificationTitle("Link copiat!")
+                    setShowNotification(true)
+                }}
             />
             <BottomBar/>
         </div >

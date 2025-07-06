@@ -60,9 +60,9 @@ function Orare() {
             <div className="orare-content-header">
                 <h2><b>Orare</b></h2>
                 <Anunt/>
-                <Form style={{width: '90vw'}} onSubmit={(e) =>{
+                <Form style={{width: '90vw'}} onSubmit={(e) => {
                     e.preventDefault();
-                    if(lines.filter(elem => elem.name === searchValue).length > 0)
+                    if (lines.filter(elem => elem.name === searchValue).length > 0)
                         nav(`/orare/${searchValue}`)
                     else
                         alert("Linie invalida")
@@ -113,21 +113,23 @@ function Orare() {
                 </div>
                 {lines.map((line) => (
                     <div className='orare-cell'
-                         style={{display: (activeFilter.toLowerCase() === line.type || activeFilter.toLowerCase() === "toate") && (searchValue === '' || line.name.includes(searchValue)) ? 'flex' : 'none'}}
+                         style={{display: (activeFilter.toLowerCase() === line.type || activeFilter.toLowerCase() === "toate") && (searchValue === '' || line.name.toLowerCase().includes(searchValue.toLowerCase())) ? 'flex' : 'none'}}
                          onClick={() => {
                              let url = `/orare/${line.name}`
                              nav(url)
                          }}>
                         <Marker
                             type={line.type}
-                            name={line.name} />
+                            name={line.name}/>
                         <div> {line.route}</div>
                         <OrarIcon style={{marginLeft: 'auto'}}/>
                     </div>
                 ))}
             </div>
-            <BottomBar/>
             <br/> <br/> <br/>
+            {/*<div style={{bottom: '0', position: 'fixed'}}>*/}
+            <BottomBar/>
+            {/*</div>*/}
         </div>
     )
 }
