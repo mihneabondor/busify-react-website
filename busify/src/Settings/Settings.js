@@ -3,10 +3,11 @@ import {ButtonGroup} from "react-bootstrap";
 import Button from "react-bootstrap/esm/Button";
 
 import {ReactComponent as PCIcon} from "../Images/PCIcon.svg";
-import {ReactComponent as DonatiiIcon} from "../Images/favoriteIcon.svg";
+import {ReactComponent as FavoriteIcon} from "../Images/favoriteIcon.svg";
 import {ReactComponent as TroleibusIcon} from "../Images/troleibusIcon.svg";
 import {ReactComponent as BusIcon} from "../Images/busIcon.svg";
 import {ReactComponent as TramIcon} from "../Images/tramvaiIcon.svg";
+import {ReactComponent as HeartIconFill} from "../Images/heartIconFill.svg";
 
 import {ReactComponent as TOSIcon} from "../Images/TOSIcon.svg";
 import {ReactComponent as ArrowRight} from "../Images/arrow-up-right.svg";
@@ -40,80 +41,80 @@ function Settings() {
 
             <small>Personalizare</small>
             <ButtonGroup vertical>
-            <Button variant="undefined" style={{
-                boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                background: 'white',
-                width: '90vw',
-                textAlign: 'left',
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center'
-            }}>
-                <TroleibusIcon style={{
-                    marginRight: 10,
-                    filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)'
-                }}/>
-                <div>Iconițele vehiculelor pe hartă</div>
-                <CustomSwitch
-                    checked={iconite}
-                    onChange={() => {
-                        if (localStorage.getItem("iconite") === "true") {
-                            localStorage.setItem("iconite", "false")
-                        } else {
-                            localStorage.setItem("iconite", "true")
-                        }
-                        setIconite(!iconite)
-                    }}
-                />
-            </Button>
+                <Button variant="undefined" style={{
+                    boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+                    background: 'white',
+                    width: '90vw',
+                    textAlign: 'left',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}>
+                    <TroleibusIcon style={{
+                        marginRight: 10,
+                        filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)'
+                    }}/>
+                    <div>Iconițele vehiculelor pe hartă</div>
+                    <CustomSwitch
+                        checked={iconite}
+                        onChange={() => {
+                            if (localStorage.getItem("iconite") === "true") {
+                                localStorage.setItem("iconite", "false")
+                            } else {
+                                localStorage.setItem("iconite", "true")
+                            }
+                            setIconite(!iconite)
+                        }}
+                    />
+                </Button>
 
-            <Button variant="undefined" style={{
-                boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                background: 'white',
-                width: '90vw',
-                textAlign: 'left',
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center'
-            }}>
-                <BusIcon style={{
-                    marginRight: 10,
-                    filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)'
-                }}/>
-                <div>Săgeți pe hartă</div>
-                <CustomSwitch
-                    checked={sageti}
-                    onChange={() => {
-                        if (localStorage.getItem("sageti") === "true") {
-                            localStorage.setItem("sageti", "false")
-                        } else {
-                            localStorage.setItem("sageti", "true")
-                        }
-                        setSageti(!sageti)
-                    }}
-                />
-            </Button>
+                <Button variant="undefined" style={{
+                    boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+                    background: 'white',
+                    width: '90vw',
+                    textAlign: 'left',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}>
+                    <BusIcon style={{
+                        marginRight: 10,
+                        filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)'
+                    }}/>
+                    <div>Săgeți pe hartă</div>
+                    <CustomSwitch
+                        checked={sageti}
+                        onChange={() => {
+                            if (localStorage.getItem("sageti") === "true") {
+                                localStorage.setItem("sageti", "false")
+                            } else {
+                                localStorage.setItem("sageti", "true")
+                            }
+                            setSageti(!sageti)
+                        }}
+                    />
+                </Button>
 
-            <Button variant="undefined" style={{
-                boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                background: 'white',
-                width: '90vw',
-                textAlign: 'left',
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center'
-            }}
-                    onClick={() =>{
-                        nav('/setari/panou-linii')
-                    }}
-            >
-                <TramIcon style={{
-                    marginRight: 10,
-                    filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)'
-                }}/>
-                <div>Configurează liniile afișate</div>
-                <ChevronRightIcon style={{marginLeft: 'auto'}}/>
-            </Button>
+                <Button variant="undefined" style={{
+                    boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+                    background: 'white',
+                    width: '90vw',
+                    textAlign: 'left',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center'
+                }}
+                        onClick={() => {
+                            nav('/setari/panou-linii')
+                        }}
+                >
+                    <TramIcon style={{
+                        marginRight: 10,
+                        filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)'
+                    }}/>
+                    <div>Configurează liniile afișate</div>
+                    <ChevronRightIcon style={{marginLeft: 'auto'}}/>
+                </Button>
             </ButtonGroup>
 
             <br/>
@@ -131,9 +132,8 @@ function Settings() {
                 }} onClick={() => {
                     window.location.href = "https://revolut.me/m_bondor"
                 }}>
-                    <DonatiiIcon style={{
+                    <HeartIconFill style={{
                         filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
-                        scale: "0.9",
                         marginRight: 10
                     }}/>
                     <div>Donează</div>
@@ -163,8 +163,7 @@ function Settings() {
             </ButtonGroup>
 
             <br/>
-
-            <small>Legal</small>
+            <small>Resetare</small>
             <ButtonGroup vertical>
                 <Button variant="undefined" style={{
                     boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
@@ -175,37 +174,62 @@ function Settings() {
                     flexDirection: 'row',
                     alignItems: 'center'
                 }} onClick={() => {
-                    window.location.href = "https://busify.ro/privacypolicy"
+                    localStorage.setItem("linii_favorite", "")
+                    alert("Liniile favorite au fost resetate.")
                 }}>
-                    <PCIcon style={{marginRight: 10}}/>
-                    <div>Politică de confidențialitate</div>
-                    <ArrowRight style={{
+                    <FavoriteIcon style={{
                         filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
-                        marginLeft: 'auto'
+                        scale: "0.9",
+                        marginRight: 10
                     }}/>
-                </Button>
-                <Button variant="undefined" style={{
-                    boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                    background: 'white',
-                    width: '90vw',
-                    textAlign: 'left',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                }} onClick={() => {
-                    window.location.href = "https://busify.ro/termsofservice"
-                }}>
-                    <TOSIcon style={{marginRight: 10}}/>
-                    <div>Termeni de utilizare</div>
-                    <ArrowRight style={{
-                        filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
-                        marginLeft: 'auto'
-                    }}/>
+                    <div>Resetare linii favorite</div>
                 </Button>
             </ButtonGroup>
-            <BottomBar/>
+
+                <br/>
+
+                <small>Legal</small>
+                <ButtonGroup vertical>
+                    <Button variant="undefined" style={{
+                        boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+                        background: 'white',
+                        width: '90vw',
+                        textAlign: 'left',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center'
+                    }} onClick={() => {
+                        window.location.href = "https://busify.ro/privacypolicy"
+                    }}>
+                        <PCIcon style={{marginRight: 10}}/>
+                        <div>Politică de confidențialitate</div>
+                        <ArrowRight style={{
+                            filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
+                            marginLeft: 'auto'
+                        }}/>
+                    </Button>
+                    <Button variant="undefined" style={{
+                        boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+                        background: 'white',
+                        width: '90vw',
+                        textAlign: 'left',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center'
+                    }} onClick={() => {
+                        window.location.href = "https://busify.ro/termsofservice"
+                    }}>
+                        <TOSIcon style={{marginRight: 10}}/>
+                        <div>Termeni de utilizare</div>
+                        <ArrowRight style={{
+                            filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
+                            marginLeft: 'auto'
+                        }}/>
+                    </Button>
+                </ButtonGroup>
+                <BottomBar/>
         </div>
-    )
+)
 }
 
 export default Settings;

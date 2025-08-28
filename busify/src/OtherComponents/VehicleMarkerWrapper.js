@@ -2,7 +2,7 @@
 import React, { useImperativeHandle, forwardRef, useState } from 'react';
 import Marker from './Marker';
 
-const VehicleMarkerWrapper = forwardRef(({ initialVehicle }, ref) => {
+const VehicleMarkerWrapper = forwardRef(({ initialVehicle }, ref, mapBearing) => {
     const [vehicle, setVehicle] = useState(initialVehicle);
 
     useImperativeHandle(ref, () => ({
@@ -28,6 +28,7 @@ const VehicleMarkerWrapper = forwardRef(({ initialVehicle }, ref) => {
                 lat: vehicle.nextCoords[1],
                 lng: vehicle.nextCoords[0]
             }}
+            mapBearing={mapBearing}
         />
     );
 });

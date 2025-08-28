@@ -7,7 +7,7 @@ function CustomSwitch(props) {
             onChange={props.onChange}
             disabled={props.disabled}
             onColor="#8A56A3"
-            style={{marginLeft: 'auto', scale: '0.8'}}
+            style={{marginLeft: props.marginLeftAuto === "false" ? '0' : 'auto', scale: '0.8'}}
         />
     )
 }

@@ -204,16 +204,19 @@ function VehicleHighlight(props) {
                             </div>
                         </div>
                         <div style={{marginLeft: 'auto', borderRadius: '100%', background: linieFav ? "#FBF3F3" : "#F5F6F8", padding: "10px"}} onClick={()=>{
-                            setLinieFav(!linieFav)
-                            var linii = localStorage.getItem('linii_favorite');
-                            if (!linii)
-                                linii = '';
-                            if (linii.search(props.vehicleRef.line) !== -1) {
-                                linii = linii.replace(props.vehicleRef.line + ' ', '')
+                            let linii = localStorage.getItem('linii_favorite');
+                            let favorites = linii ? linii.trim().split(/\s+/) : [];
+
+                            const line = String(props.vehicleRef.line);
+
+                            if (favorites.includes(line)) {
+                                favorites = favorites.filter(l => l !== line);
                             } else {
-                                linii += props.vehicleRef.line + ' ';
+                                favorites.push(line);
                             }
-                            localStorage.setItem('linii_favorite', linii)
+
+                            localStorage.setItem('linii_favorite', favorites.join(' '));
+                            setLinieFav(favorites.includes(line));
                         }}>
                             {linieFav ?
                                 <HeartIconFill style={{
@@ -313,7 +316,7 @@ function VehicleHighlight(props) {
                 </div>
             }
         >
-            <div style={{margin: "15px", overflow: "hidden"}}>
+                <div style={{margin: "15px", overflow: "hidden"}}>
                 <div style={{
                     display: "flex",
                     flexDirection: "row",

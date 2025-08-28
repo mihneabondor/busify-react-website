@@ -56,7 +56,8 @@ function Orar(props) {
             const [day, month, year] = anunt.end_date.split("/").map(Number);
             const date = new Date(year, month - 1, day);
             let anuntOrar = '';
-            if(date > new Date()){
+            console.log(date)
+            if(date <= new Date()){
                 anunt.modificari.forEach(elem => {
                     const dateParts = elem.zi.split('/')
                     const date = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
@@ -171,16 +172,20 @@ function Orar(props) {
                     </div>
 
                     <div className="orar-header-buttons-label" onClick={() => {
-                        setLinieFav(!linieFav)
-                        var linii = localStorage.getItem('linii_favorite');
-                        if (!linii)
-                            linii = '';
-                        if (linii.search(linie) !== -1) {
-                            linii = linii.replace(linie + ' ', '')
+                        setLinieFav(!linieFav);
+
+                        let linii = localStorage.getItem('linii_favorite');
+                        let favorites = linii ? linii.trim().split(/\s+/) : [];
+
+                        const line = String(linie);
+
+                        if (favorites.includes(line)) {
+                            favorites = favorites.filter(l => l !== line);
                         } else {
-                            linii += linie + ' ';
+                            favorites.push(line);
                         }
-                        localStorage.setItem('linii_favorite', linii)
+
+                        localStorage.setItem('linii_favorite', favorites.join(' '));
                     }}>
                         <HeartIcon style={{
                             minWidth: "30px",
@@ -192,7 +197,8 @@ function Orar(props) {
                             minWidth: "30px",
                             minHeight: "30px",
                             marginRight: "5px",
-                            display: linieFav ? "initial" : "none"
+                            display: linieFav ? "initial" : "none",
+                            scale: 0.8
                         }}/>
                         <div>Linie favorită</div>
                     </div>

@@ -1,7 +1,7 @@
 import './Orare.css'
 import Form from 'react-bootstrap/Form';
-import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from "react-router-dom";
+import {useEffect, useRef, useState} from 'react'
+import {useNavigate} from "react-router-dom";
 import BottomBar from '../OtherComponents/BottomBar';
 import {ReactComponent as TrashIcon} from '../Images/favoriteTrashIcon.svg'
 import {ReactComponent as BusIcon} from '../Images/busIcon.svg'
@@ -54,72 +54,91 @@ function Favorite() {
         return ""; // No future departure found
     }
 
+    function minutesUntilCurrentTime(timeString) {
+        if (typeof (timeString) !== 'undefined') {
+            timeString = timeString.replace('🚲', '')
+            const [inputHours, inputMinutes] = timeString.split(':').map(Number);
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            const currentDate = now.getDate();
+
+            const inputTime = new Date(currentYear, currentMonth, currentDate, inputHours, inputMinutes);
+            const diffMilliseconds = inputTime - now;
+            const diffMinutes = Math.round(diffMilliseconds / (1000 * 60));
+
+            return diffMinutes;
+        }
+        return 0;
+    }
+
     const fetchData = async () => {
         try {
             const resp = await fetch('https://orare.busify.ro/public/buses_basic.json');
             const buses_basic = await resp.json();
-            const sol = []
-            const joinArray = (arr) => {
-                arr.forEach(elem => {
-                    sol.push(elem)
+
+            const sol = [];
+            const joinArray = arr => sol.push(...arr);
+            joinArray(buses_basic.urbane);
+            joinArray(buses_basic.metropolitane);
+            joinArray(buses_basic.market);
+
+            linesRef.current = sol;
+            copie.current = sol;
+
+            const favoriteString = localStorage.getItem('linii_favorite') || '';
+            const favoriteList = favoriteString.split(' ').filter(Boolean);
+            setFavorite(favoriteList);
+
+            // ✅ Show basic lines first
+            setLines([...sol]);
+
+            const dayType = (() => {
+                const day = new Date().getDay();
+                if (day === 0) return 'd'; // Sunday
+                if (day === 6) return 's'; // Saturday
+                return 'lv'; // Workdays
+            })();
+
+            // ✅ Load all departure data in parallel
+            const updates = await Promise.all(
+                favoriteList.map(async (lineName) => {
+                    try {
+                        const url = `https://orare.busify.ro/public/${lineName}.json`;
+                        const resp = await fetch(url);
+                        const data = await resp.json();
+                        const stationData = data.station[dayType];
+
+                        return {
+                            name: lineName,
+                            in_stop_name: stationData.in_stop_name,
+                            out_stop_name: stationData.out_stop_name,
+                            nextDepartureIn: getNextDepartureTime(stationData.lines, "in"),
+                            nextDepartureOut: getNextDepartureTime(stationData.lines, "out"),
+                        };
+                    } catch (error) {
+                        console.warn(`Failed to load schedule for ${lineName}`, error);
+                        return null;
+                    }
                 })
-            }
-            joinArray(buses_basic.urbane)
-            joinArray(buses_basic.metropolitane)
-            joinArray(buses_basic.market)
-            linesRef.current = sol
-            copie.current = sol
+            );
 
-            const favoriteString = localStorage.getItem('linii_favorite')
-            setFavorite(favoriteString.split(' '))
+            // ✅ Once all data is ready, apply it in one go
+            setLines(prevLines => {
+                return prevLines.map(line => {
+                    const update = updates.find(u => u && u.name === line.name);
+                    return update
+                        ? { ...line, ...update }
+                        : line;
+                });
+            });
 
-            for (const line of favoriteString.split(' ')) {
-                if(line === ''){
-                    continue;
-                }
-                const url = 'https://orare.busify.ro/public/' + line + '.json'
-                const resp = await fetch(url)
-                const data = await resp.json();
-                const index = sol.findIndex(elem => elem.name === line);
-
-                const dayType = (() => {
-                    const day = new Date().getDay();
-                    if (day === 0) return 'd'; // Sunday
-                    if (day === 6) return 's'; // Saturday
-                    return 'lv'; // Workdays
-                })();
-
-                // eslint-disable-next-line default-case
-                switch (dayType) {
-                    case 'lv':
-                        sol[index].in_stop_name = data.station.lv.in_stop_name;
-                        sol[index].out_stop_name = data.station.lv.out_stop_name;
-
-                        sol[index].nextDepartureIn = getNextDepartureTime(data.station.lv.lines, "in")
-                        sol[index].nextDepartureOut = getNextDepartureTime(data.station.lv.lines, "out")
-                        break
-                    case 's':
-                        sol[index].in_stop_name = data.station.s.in_stop_name;
-                        sol[index].out_stop_name = data.station.s.out_stop_name;
-
-                        sol[index].nextDepartureIn = getNextDepartureTime(data.station.s.lines, "in")
-                        sol[index].nextDepartureOut = getNextDepartureTime(data.station.s.lines, "out")
-                        break
-                    case 'd':
-                        sol[index].in_stop_name = data.station.d.in_stop_name;
-                        sol[index].out_stop_name = data.station.d.out_stop_name;
-
-                        sol[index].nextDepartureIn = getNextDepartureTime(data.station.d.lines, "in")
-                        sol[index].nextDepartureOut = getNextDepartureTime(data.station.d.lines, "out")
-                        break
-                }
-            }
-
-            setLines(sol)
         } catch (err) {
-            console.log(err)
+            console.error('Error fetching lines:', err);
         }
-    }
+    };
+
 
     const change = (e) => {
         linesRef.current = copie.current
@@ -195,23 +214,24 @@ function Favorite() {
                 </div>
                 {lines.map((line) => (
                     <div className='orare-cell'
-                         style={{display: (activeFilter.toLowerCase() === line.type || activeFilter.toLowerCase() === "toate") && (favorite.includes(line.name)) && (searchValue === '' || line.name.toLowerCase().includes(searchValue.toLowerCase())) ? 'flex' : 'none'}}
+                         style={{display: (activeFilter.toLowerCase() === line?.type || activeFilter.toLowerCase() === "toate") && (favorite.includes(line?.name)) && (searchValue === '' || line?.name.toLowerCase().includes(searchValue.toLowerCase())) ? 'flex' : 'none'}}
                          onClick={() => {
-                             let url = `/favorite/${line.name}`
+                             let url = `/favorite/${line?.name}`
                              nav(url)
                          }}>
                         <Marker
-                            type={line.type}
-                            name={line.name}
+                            type={line?.type}
+                            name={line?.name}
                         />
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0, marginRight: '10px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>{line.in_stop_name}</div>
-                                <div><b>{line.nextDepartureIn}</b></div>
+                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                <div>{line?.in_stop_name}</div>
+                                <div
+                                    style={{fontWeight: minutesUntilCurrentTime(line?.nextDepartureIn) <= 15 ? "bold" : "initial"}}>{line?.nextDepartureIn}</div>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>{line.out_stop_name}</div>
-                                <div><b>{line.nextDepartureOut}</b></div>
+                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <div>{line?.out_stop_name}</div>
+                                <div style={{fontWeight: minutesUntilCurrentTime(line?.nextDepartureOut) <= 15 ? "bold" : "initial"}}>{line?.nextDepartureOut}</div>
                             </div>
                         </div>
 
@@ -225,7 +245,7 @@ function Favorite() {
                         }} onClick={(e) => {
                             e.stopPropagation(); // Prevent triggering the parent onClick
 
-                            const favoriteNou = favorite.filter(item => item !== line.name);
+                            const favoriteNou = favorite.filter(item => item !== line?.name);
                             setFavorite(favoriteNou);
 
                             setTimeout(() => {

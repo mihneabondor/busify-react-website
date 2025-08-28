@@ -9,7 +9,7 @@ function NotificationToast(props) {
         className="p-3"
         position={'top-end'}
     >
-    <Toast onClose={props.onHide} show={props.show} delay={7000} autohide>
+    <Toast onClose={props.onHide} show={props.show} delay={8000} autohide>
         <Toast.Header>
         <img
             src="../logo192.png"

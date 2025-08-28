@@ -111,12 +111,16 @@ function Marker(props) {
             </div>
 
             <div
+                className="marker-arrow"
+                data-bearing={arrowPosition.bearing}
+                data-dx={arrowPosition.dx}
+                data-dy={arrowPosition.dy}
                 style={{
                     display: props.vehiclePos && props.nextPos && props.sageti === "true" ? "initial" : "none",
                     position: 'absolute',
                     left: `${(badgeDims.width / 2) + arrowPosition.dx - (41 / 2)}px`,
                     top: `${(badgeDims.height / 2) + arrowPosition.dy - (41 / 2)}px`,
-                    transform: `rotate(${arrowPosition.bearing}deg)`,
+                    transform: `rotate(${arrowPosition.bearing - (props.mapBearing || 0)}deg)`,
                     transformOrigin: 'center center',
                     transition: 'transform 0.7s ease, top 0.7s ease, left 0.7s ease',
                     pointerEvents: 'none',

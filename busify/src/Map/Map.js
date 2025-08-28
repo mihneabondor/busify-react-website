@@ -77,6 +77,7 @@ function Map() {
 
     const nav = useNavigate();
 
+    const foundLabelsRef = useRef([]);
     const addStopMarker = (stop, index, length, stops) => {
         var el = document.createElement('div');
 
@@ -116,10 +117,15 @@ function Map() {
         setStopMarkersState(stopMarkers.current);
     };
 
-
     const hiddenMarkerCondition = (vehicle) => {
-        return ((selectedVehicleRef.current && selectedVehicleRef.current.vehicle.label !== vehicle.label) ||
-            (unique.current.find(elem => elem[0] === vehicle.line)[1] === false && selectedVehicleRef.current?.vehicle?.line !== vehicle.line))
+        if (foundLabelsRef.current.length > 0) {
+            // Only show vehicles whose label is in foundLabels
+            return !foundLabelsRef.current.includes(vehicle.label);
+        }
+        return (
+            (selectedVehicleRef.current && selectedVehicleRef.current.vehicle.label !== vehicle.label) ||
+            (unique.current.find(elem => elem[0] === vehicle.line)[1] === false && selectedVehicleRef.current?.vehicle?.line !== vehicle.line)
+        );
     }
 
     // Offset a [lng, lat] point to the right of the direction from start to end by 'distance' meters
@@ -144,6 +150,12 @@ function Map() {
     }
 
     const addMarker = (vehicle) => {
+        const existingIndex = markers.current.findIndex(m => m.vehicle.label === vehicle.label);
+        if (existingIndex !== -1) {
+            markers.current[existingIndex].marker.remove();
+            markers.current.splice(existingIndex, 1);
+        }
+
         const el = document.createElement('div');
         const root = ReactDOM.createRoot(el);
 
@@ -157,6 +169,7 @@ function Map() {
                     hidden:
                         hiddenMarkerCondition(vehicle)
                 }}
+                mapBearing={map.current.getBearing()}
             />
         );
 
@@ -203,6 +216,25 @@ function Map() {
         });
     };
 
+    // store timeout across renders
+    const updateMarkerTimeout = useRef(null);
+
+    const debouncedUpdateMarker = () => {
+        if (updateMarkerTimeout.current) {
+            clearTimeout(updateMarkerTimeout.current);
+        }
+        updateMarkerTimeout.current = setTimeout(() => {
+            if (vehicles.current.length > 2000) {
+                console.warn("Skipping updateMarker: too many vehicles", vehicles.current.length);
+                return;
+            }
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => updateMarker(), { timeout: 200 });
+            } else {
+                updateMarker();
+            }
+        }, 1000); // 1 second debounce
+    };
 
     const updateMarker = () => {
         // Cancel any in-progress update
@@ -210,164 +242,128 @@ function Map() {
             updateCancelToken.current.cancelled = true;
         }
 
-        // Create new token for this run
         updateCancelToken.current = { cancelled: false };
         const token = updateCancelToken.current;
 
-        const currentVehicleLabels = vehicles.current.map(v => v.label);
+        const currentVehicles = vehicles.current;
+        const currentVehicleLabels = currentVehicles.map(v => v.label);
         const existingLabels = markers.current.map(m => m.vehicle.label);
 
-        // Step 1: Remove obsolete markers
+        // Remove markers for vehicles that no longer exist
         markers.current = markers.current.filter(entry => {
             const stillExists = currentVehicleLabels.includes(entry.vehicle.label);
-            if (!stillExists) {
-                entry.marker.remove();
-            }
+            if (!stillExists) entry.marker.remove();
             return stillExists;
         });
 
-        // Step 2: Detect new vehicles
-        const newVehicles = vehicles.current.filter(v => !existingLabels.includes(v.label));
-        const BATCH_SIZE = 30;
+        // Find new vehicles
+        const newVehicles = currentVehicles.filter(v => !existingLabels.includes(v.label));
+        const BATCH_SIZE = 20;
         let addIndex = 0;
 
         const addNextBatch = () => {
             if (token.cancelled) return;
-
             const batch = newVehicles.slice(addIndex, addIndex + BATCH_SIZE);
             batch.forEach(elem => {
-                let exists = false;
-                try {
-                    unique.current.forEach((uniqueLine) => {
-                        if (uniqueLine[0] === elem.line) exists = true;
-                    });
-                    if (exists) addMarker(elem);
-                } catch (e) {
-                    console.log(elem);
+                let exists = unique.current.some(uniqueLine => uniqueLine[0] === elem.line);
+                if (exists) {
+                    try { addMarker(elem); }
+                    catch (e) { console.log("Error adding marker for", elem, e); }
                 }
             });
-
             addIndex += BATCH_SIZE;
             if (addIndex < newVehicles.length) {
-                setTimeout(addNextBatch, 50);
+                if ('requestIdleCallback' in window) {
+                    requestIdleCallback(addNextBatch, { timeout: 200 });
+                } else {
+                    setTimeout(addNextBatch, 100);
+                }
             } else {
-                updateExistingMarkersInChunks(token);
+                updateExistingMarkersInChunks();
             }
         };
 
-        const updateExistingMarkersInChunks = (token) => {
+        const updateExistingMarkersInChunks = () => {
             const selectedLabel = selectedVehicleRef.current?.vehicle?.label;
-
             const entries = [...markers.current].sort((a, b) => {
                 if (a.vehicle.label === selectedLabel) return -1;
                 if (b.vehicle.label === selectedLabel) return 1;
 
-                // Then prioritize visible markers
                 const aVisible = a.marker.getElement().style.display !== "none";
                 const bVisible = b.marker.getElement().style.display !== "none";
-
                 if (aVisible && !bVisible) return -1;
                 if (!aVisible && bVisible) return 1;
-
                 return 0;
             });
 
             let index = 0;
-            const MAX_ANIMATED_MARKERS = 60;
+            const MAX_ANIMATED_MARKERS = 20;
+            const animations = new Set();
 
             const processNextBatch = () => {
                 if (token.cancelled) return;
-
                 const batch = entries.slice(index, index + BATCH_SIZE);
                 let animatedCount = 0;
-                let animationsRemaining = 0;
-                const maybeContinue = () => {
-                    animationsRemaining--;
-                    if (animationsRemaining <= 0) {
-                        index += BATCH_SIZE;
-                        if (index < entries.length) {
-                            setTimeout(processNextBatch, 50);
-                        } else {
-                            if (!token.cancelled) updateSelectedVehicleAndStops();
-                        }
-                    }
-                };
 
                 batch.forEach(entry => {
-                    const markerEl = entry.marker.getElement();
-                    const vehi = vehicles.current.find(v => v.label === entry.vehicle.label);
+                    const vehi = currentVehicles.find(v => v.label === entry.vehicle.label);
                     if (!vehi) return;
 
                     const start = entry.vehicle.lngLat;
                     const end = (vehi.nextCoords && vehi.nextCoords[0] !== undefined)
                         ? offsetToRight(vehi.lngLat, vehi.nextCoords)
                         : vehi.lngLat;
-                    const isVisible = markerEl.style.display !== "none";
 
-                    const distance = Math.hypot(end[0] - start[0], end[1] - start[1]);
+                    const distance = Math.hypot(end[0]-start[0], end[1]-start[1]);
+                    const isVisible = entry.marker.getElement().style.display !== "none";
                     const shouldAnimate = isVisible && distance > 0.0001 && animatedCount < MAX_ANIMATED_MARKERS;
 
                     if (shouldAnimate) {
                         animatedCount++;
-                        animationsRemaining++;
-
-                        let progress = 0;
-                        const step = 0.05;
-
-                        const animate = () => {
-                            if (token.cancelled) return;
-
-                            progress += step;
-                            if (progress > 1) progress = 1;
-
-                            const lng = start[0] + (end[0] - start[0]) * progress;
-                            const lat = start[1] + (end[1] - start[1]) * progress;
-
-                            entry.marker.setLngLat([lng, lat]);
-                            entry.vehicle.lngLat = [lng, lat];
-
-                            if (progress < 1) {
-                                requestAnimationFrame(animate);
-                            } else {
-                                maybeContinue();
-                            }
-                        };
-
-                        requestAnimationFrame(animate);
-                    } else {
-                        const offsetEnd = (vehi.nextCoords && vehi.nextCoords[0] !== undefined)
-                            ? offsetToRight(vehi.lngLat, vehi.nextCoords)
-                            : vehi.lngLat;
-
-                        entry.marker.setLngLat(offsetEnd);
+                        animations.add({ entry, start, end, startTime: performance.now(), duration: 500 });
+                    } else if (distance > 0.00001) {
+                        entry.marker.setLngLat(end);
                         entry.vehicle.lngLat = vehi.lngLat;
                     }
 
                     if (entry.reactRef?.current?.updateVehicle) {
-                        entry.reactRef.current.updateVehicle({
-                            ...vehi,
-                            hidden:
-                                hiddenMarkerCondition(vehi)
-                        });
+                        entry.reactRef.current.updateVehicle({ ...vehi, hidden: hiddenMarkerCondition(vehi) });
                     }
 
                     entry.vehicle = { ...vehi };
                 });
 
-                if (animationsRemaining === 0) {
-                    index += BATCH_SIZE;
-                    if (index < entries.length) {
-                        setTimeout(processNextBatch, 50);
-                    } else {
-                        if (!token.cancelled) updateSelectedVehicleAndStops();
-                    }
+                index += BATCH_SIZE;
+                if (index < entries.length) setTimeout(processNextBatch, 50);
+                else if (!token.cancelled) updateSelectedVehicleAndStops();
+            };
+
+            const animateAll = (time) => {
+                if (token.cancelled) {
+                    animations.clear();
+                    return;
                 }
+                const finished = [];
+                animations.forEach(anim => {
+                    const elapsed = time - anim.startTime;
+                    let progress = Math.min(1, elapsed / anim.duration);
+                    const lng = anim.start[0] + (anim.end[0]-anim.start[0]) * progress;
+                    const lat = anim.start[1] + (anim.end[1]-anim.start[1]) * progress;
+                    anim.entry.marker.setLngLat([lng, lat]);
+                    anim.entry.vehicle.lngLat = [lng, lat];
+                    if (progress >= 1) finished.push(anim);
+                });
+                finished.forEach(anim => animations.delete(anim));
+                if (animations.size > 0) requestAnimationFrame(animateAll);
             };
 
             processNextBatch();
+            requestAnimationFrame(animateAll);
         };
+
         addNextBatch();
     };
+
 
     const updateSelectedVehicleAndStops = () => {
         if (selectedVehicleRef.current) {
@@ -433,7 +429,7 @@ function Map() {
 
                 addIndex += BATCH_SIZE;
                 if (addIndex < eligibleVehicles.length) {
-                    setTimeout(addNextBatch, 50);
+                    setTimeout(addNextBatch, 200);
                 }
                 checkMarkerVisibility()
             };
@@ -508,12 +504,36 @@ function Map() {
                 if (refresh)
                     map.current.flyTo({
                         center: lastCoords.current,
-                        duration: 2000,
+                        duration: 1500,
                         zoom: lastZoom.current,
                         essential: true
                     })
                 else if (!popupOpen.current) {
                     geo.trigger();
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const { latitude, longitude } = position.coords;
+                            map.current.jumpTo({
+                                center: [longitude, latitude],
+                                zoom: 14,
+                                duration: 1000
+                            });
+
+                            if (undemibusu === 'destinatii') {
+                                setTimeout(() => {
+                                    getUserAddress();
+                                }, 1000);
+                            }
+                        },
+                        (error) => {
+                            console.error("Geolocation error:", error);
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 5000, // optional
+                            maximumAge: 10000 // optional, use cached if recent
+                        }
+                    );
                     if (undemibusu === 'destinatii')
                         setTimeout(() => {
                             getUserAddress()
@@ -524,6 +544,39 @@ function Map() {
                 lastCoords.current = map.current.getCenter().toArray();
                 lastZoom.current = map.current.getZoom();
             })
+            map.current.on('rotate', () => {
+                const mapBearing = map.current.getBearing() * Math.PI / 180; // convert to radians
+
+                markers.current.forEach(({ marker }) => {
+                    const el = marker.getElement();
+                    const arrowEl = el.querySelector('.marker-arrow');
+
+                    if (arrowEl) {
+                        // Original values from dataset (string → number)
+                        const originalBearing = parseFloat(arrowEl.dataset.bearing) || 0;
+                        const originalDx = parseFloat(arrowEl.dataset.dx) || 0;
+                        const originalDy = parseFloat(arrowEl.dataset.dy) || 0;
+
+                        // Adjust bearing in degrees (rotate arrow to compensate map rotation)
+                        const newBearing = originalBearing - (map.current.getBearing());
+
+                        // Rotate dx/dy offsets by negative mapBearing to move arrow properly
+                        // Use 2D rotation formula:
+                        // x' = x * cos(θ) - y * sin(θ)
+                        // y' = x * sin(θ) + y * cos(θ)
+                        const cosB = Math.cos(-mapBearing);
+                        const sinB = Math.sin(-mapBearing);
+
+                        const rotatedDx = originalDx * cosB - originalDy * sinB;
+                        const rotatedDy = originalDx * sinB + originalDy * cosB;
+
+                        // Update arrow styles
+                        arrowEl.style.transform = `rotate(${newBearing}deg)`;
+                        arrowEl.style.left = `${(el.clientWidth / 2) + rotatedDx - (41 / 2)}px`;
+                        arrowEl.style.top = `${(el.clientHeight / 2) + rotatedDy - (41 / 2)}px`;
+                    }
+                });
+            });
             // Debounced version for smooth updates without over-triggering
 
             // Attach the listener (usually inside useEffect)
@@ -778,7 +831,7 @@ function Map() {
                                 'paint': {
                                     'line-color': '#62A7FB',
                                     'line-width': 3,
-                                    'line-dasharray': [2, 2]
+                                    'line-dasharray': [3, 3]
                                 }
                             });
 
@@ -999,7 +1052,6 @@ function Map() {
                 unique.current[index][1] = saved[i][1];
                 if (saved[i][1] === false) {
                     setCheckAllChecked(false)
-                    console.log(saved[i])
                 }
             }
         }
@@ -1062,31 +1114,60 @@ function Map() {
         } catch { }
     }
 
+    const lastVehiclesRef = useRef([]);
+
     const socketData = useCallback(async (data) => {
-        vehicles.current = [];
-        data.forEach((item) => {
-            const vehicle = new Vehicle(item.id, item.label, item.latitude, item.longitude, item.speed, item.tripId, item.routeId, item.bike, item.wheelchair, item.headsign, item.route, item.line, item.vehicleType, item.currentLatitude, item.currentLongitude, item.nextLatitude, item.nextLongitude);
-            vehicles.current.push(vehicle);
-        })
+        // Build new vehicle list
+        const newVehicles = data.map(item =>
+            new Vehicle(
+                item.id, item.label, item.latitude, item.longitude, item.speed,
+                item.tripId, item.routeId, item.bike, item.wheelchair, item.headsign,
+                item.route, item.line, item.vehicleType, item.currentLatitude,
+                item.currentLongitude, item.nextLatitude, item.nextLongitude
+            )
+        );
+
+        // 🔑 Compare new vs old
+        const hasChanged = () => {
+            if (newVehicles.length !== lastVehiclesRef.current.length) return true;
+
+            for (let i = 0; i < newVehicles.length; i++) {
+                const nv = newVehicles[i];
+                const ov = lastVehiclesRef.current[i];
+
+                // Compare only properties that matter for markers
+                if (
+                    nv.label !== ov.label ||
+                    nv.line !== ov.line ||
+                    Math.abs(nv.latitude - ov.latitude) > 0.00001 ||
+                    Math.abs(nv.longitude - ov.longitude) > 0.00001
+                ) {
+                    return true;
+                }
+            }
+            return false;
+        };
 
         if (!loaded && !loadedFirstTime) {
+            // ✅ Initial setup (no diffing here, always run)
+            vehicles.current = newVehicles;
+
             let s = [];
-            if (localStorage.getItem('linii_selectate')) s = localStorage.getItem('linii_selectate').split(',');
+            if (localStorage.getItem('linii_selectate'))
+                s = localStorage.getItem('linii_selectate').split(',');
 
             try {
                 const resp = await fetch('https://orare.busify.ro/public/buses_basic.json');
                 const buses_basic = await resp.json();
                 const joinArray = (arr) => {
-                    arr.forEach(elem => {
-                        unique.current.push([elem.name, true])
-                    })
-                }
-                joinArray(buses_basic.urbane)
-                joinArray(buses_basic.metropolitane)
-                joinArray(buses_basic.market)
-                joinArray(buses_basic.noapte)
+                    arr.forEach(elem => unique.current.push([elem.name, true]));
+                };
+                joinArray(buses_basic.urbane);
+                joinArray(buses_basic.metropolitane);
+                joinArray(buses_basic.market);
+                joinArray(buses_basic.noapte);
             } catch (err) {
-                console.log(err)
+                console.log(err);
             }
 
             let saved = [];
@@ -1094,39 +1175,43 @@ function Map() {
                 saved.push([s[i], s[i + 1] === 'true']);
 
             for (let i = 0; i < saved.length; i++) {
-                let index = getIndex(saved[i][0], unique.current)
+                let index = getIndex(saved[i][0], unique.current);
                 if (index !== -1) {
                     unique.current[index][1] = saved[i][1];
                     if (saved[i][1] === false)
-                        setCheckAllChecked(false)
+                        setCheckAllChecked(false);
                 }
             }
-            setUniqueLines(unique.current)
+            setUniqueLines(unique.current);
+
             if (!localStorage.getItem('linii_selectate'))
-                localStorage.setItem('linii_selectate', unique.current)
+                localStorage.setItem('linii_selectate', unique.current);
             if (!localStorage.getItem('iconite'))
-                localStorage.setItem('iconite', true)
+                localStorage.setItem('iconite', true);
             if (!localStorage.getItem('sageti'))
-                localStorage.setItem('sageti', true)
-            loadedFirstTime = true
-            setLoaded(true)
+                localStorage.setItem('sageti', true);
+
+            loadedFirstTime = true;
+            setLoaded(true);
+
             vehicles.current.forEach(elem => {
-                let exista = false
+                let exista = false;
                 unique.current.forEach((uniqueLine) => {
                     if (uniqueLine[0] === elem.line)
-                        exista = true
-                })
-                if (exista)
-                    addMarker(elem)
-            })
-            if(searchParams.get("notificationUserId")) {
-                localStorage.setItem('notificationUserId', searchParams.get("notificationUserId"))
+                        exista = true;
+                });
+                if (exista) addMarker(elem);
+            });
+
+            if (searchParams.get("notificationUserId")) {
+                localStorage.setItem('notificationUserId', searchParams.get("notificationUserId"));
             }
-            if (undemibusu === 'undemiibusu')
-                setShowUndemibusu(true)
-            else if (searchParams.get('id')) {
+
+            if (undemibusu === 'undemiibusu') {
+                setShowUndemibusu(true);
+            } else if (searchParams.get('id')) {
                 const elem = markers.current.find(elem => elem.vehicle.label === searchParams.get('id'));
-                const vehicle = elem.vehicle
+                const vehicle = elem.vehicle;
                 selectedVehicleRef.current = null;
                 stopMarkers.current.forEach(e => e.marker.remove());
                 stopMarkers.current = [];
@@ -1145,42 +1230,47 @@ function Map() {
                 selectedVehicleRef.current = { marker: elem.marker, vehicle };
 
                 resetMarkers();
-            } else if (undemibusu === 'destinatii')
-                setShowDestinatii(true)
-            else if(!localStorage.hasOwnProperty("onboarding_done")){
-                nav('/onboarding')
+            } else if (undemibusu === 'destinatii') {
+                setShowDestinatii(true);
+            } else if (!localStorage.hasOwnProperty("onboarding_done")) {
+                nav('/onboarding');
             } else {
                 let exista = false;
                 unique.current.forEach(elem => {
                     if (elem[0] === undemibusu)
-                        exista = true
-                })
+                        exista = true;
+                });
 
                 if (exista) {
-                    setShowUndemibusuToast(true)
+                    setShowUndemibusuToast(true);
                     let oneMatch = false;
-                    unique.current = unique.current.map((elem) => [elem[0], elem[0] === undemibusu ])
+                    unique.current = unique.current.map((elem) => [elem[0], elem[0] === undemibusu]);
                     unique.current.forEach(elem => {
-                        if (elem[1]) oneMatch = true
+                        if (elem[1]) oneMatch = true;
                     });
-                    if (!oneMatch)
-                        setShownVehicles();
+                    if (!oneMatch) setShownVehicles();
 
-                    setUniqueLines(unique.current)
-                    setCheckAllChecked(!oneMatch)
+                    setUniqueLines(unique.current);
+                    setCheckAllChecked(!oneMatch);
                     resetMarkers();
                 }
             }
-            } else {
-                updateMarker()
+        } else {
+            // ✅ Only update if something changed
+            if (hasChanged()) {
+                console.log("update detected")
+                vehicles.current = newVehicles;
+                lastVehiclesRef.current = newVehicles;
+                debouncedUpdateMarker();
+            }
         }
-
-    }, [])
+    }, []);
 
     const handleSocketOns = (visChange = false) => {
         socket.current = io('https://busifyserver.onrender.com')
         // socket.current = io('http://192.168.0.221:3001')
         socket.current.on('allVehicleData', data => {
+            console.log("new data")
             socketData(data)
             setTimeout(() => {
                 checkMarkerVisibility()
@@ -1250,13 +1340,29 @@ function Map() {
         })
     }
 
+    const donationNotification = () => {
+        const setNextDate = (days) => {
+            const nextDate = new Date();
+            nextDate.setDate(nextDate.getDate() + days);
+            localStorage.setItem("donation_notification_next_date", nextDate.toISOString());
+        }
+        if(!localStorage.hasOwnProperty("donation_notification_next_date")){
+            setNextDate(2);
+        } else if(new Date() > new Date(localStorage.getItem("donation_notification_next_date"))) {
+            setNotificationTitle("Îți place Busify? Susține dezvoltarea aplicației printr-o donație din pagina de setări. Mulțumim!")
+            setShowNotification(true);
+            setNextDate(31);
+        }
+    }
+
     useEffect(() => {
         if (map.current) return;
 
         localStorage.setItem('labels', '');
-        handleSocketOns();
-        document.addEventListener('visibilitychange', handleVisibilityChange);
         generateMap();
+        handleSocketOns();
+        donationNotification();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
             document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -1280,10 +1386,17 @@ function Map() {
                 setShownVehicles={setShownVehicles}
                 setCheckAllChecked={setCheckAllChecked}
                 resetMarkers={resetMarkers}
+                foundLabelsRef={foundLabelsRef}
                 setShowUndemibusuToast={setShowUndemibusuToast}
                 onHide={() => {
                     setShowSearch(false)
-                    setShowUndemibusuToast(true)
+                }}
+                onHideSearch={() => {
+                    resetMarkers()
+                    setShowSearch(false)
+                    setTimeout(() =>{
+                        setShowUndemibusuToast(true)
+                    }, 500)
                 }}
             />
             <NotificationToast
@@ -1321,11 +1434,14 @@ function Map() {
             <UndemibusuToast
                 header={undemibusu === 'undemiibusu' ? 'Unde mi-i busu?' : 'Căutare'}
                 show={showUndemibusuToast}
+                markers={markers}
+                foundLabelsRef={foundLabelsRef}
+                unique={unique}
                 onHide={() => {
                     setShownVehicles();
                     setShowUndemibusuToast(false)
                     setUniqueLines(unique.current)
-                    // setCheckAllChecked(true)
+                    foundLabelsRef.current = []
                     resetMarkers();
                     setUndemibusuBack(true)
                 }} />
@@ -1335,8 +1451,10 @@ function Map() {
                     setShownVehicles()
                     setSelectedVehicle(null)
                     selectedVehicleRef.current = null
-                    stopMarkers.current.forEach(e => e.marker.remove())
-                    stopMarkers.current = []
+                    setTimeout(() => {
+                        stopMarkers.current.forEach(e => e.marker.remove())
+                        stopMarkers.current = []
+                    }, 500)
                     removePolyline()
                     popupOpen.current = false
                     popupIndex.current = 0

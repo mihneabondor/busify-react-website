@@ -16,66 +16,97 @@ import {ReactComponent as StiriIconFill} from "../Images/stiriIconFill.svg"
 import {ReactComponent as SetariIcon} from "../Images/setariIcon.svg"
 import {ReactComponent as SetariIconFill} from "../Images/setariIconFill.svg"
 import {useNavigate} from "react-router-dom";
-
+import {useEffect, useState} from "react";
 
 
 function BottomBar() {
-    let nav = useNavigate()
+    const nav = useNavigate();
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+
+    const isMobileDevice = () => {
+        return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+    };
+
+    useEffect(() => {
+        if (!isMobileDevice()) return;
+
+        const handleFocusIn = (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                setKeyboardVisible(true);
+            }
+        };
+
+        const handleFocusOut = () => {
+            setTimeout(() => {
+                setKeyboardVisible(false);
+            }, 100); // Delay to prevent flickering
+        };
+
+        window.addEventListener('focusin', handleFocusIn);
+        window.addEventListener('focusout', handleFocusOut);
+
+        return () => {
+            window.removeEventListener('focusin', handleFocusIn);
+            window.removeEventListener('focusout', handleFocusOut);
+        };
+    }, []);
+
+    if (keyboardVisible) return null;
+
     const bottomNavItems = [
         {
             title: 'Acasă',
-            icon: <HomeIcon/>,
-            activeIcon: <HomeIconFill/>,
-            page: '/harta'
+            icon: <HomeIcon />,
+            activeIcon: <HomeIconFill />,
+            page: '/harta',
         },
         {
             title: 'Orare',
-            icon: <OrareIcon/>,
-            activeIcon: <OrareIconFill/>,
-            page: '/orare'
+            icon: <OrareIcon />,
+            activeIcon: <OrareIconFill />,
+            page: '/orare',
         },
         {
             title: 'Favorite',
-            icon: <FavoriteIcon/>,
-            activeIcon: <FavoriteIconFill/>,
-            page: '/favorite'
+            icon: <FavoriteIcon />,
+            activeIcon: <FavoriteIconFill />,
+            page: '/favorite',
         },
         {
             title: 'Știri',
-            icon: <StiriIcon/>,
-            activeIcon: <StiriIconFill/>,
-            page: '/stiri'
+            icon: <StiriIcon />,
+            activeIcon: <StiriIconFill />,
+            page: '/stiri',
         },
         {
             title: 'Setări',
-            icon: <SetariIcon/>,
-            activeIcon: <SetariIconFill/>,
-            page: '/setari'
+            icon: <SetariIcon />,
+            activeIcon: <SetariIconFill />,
+            page: '/setari',
         }
-    ]
+    ];
 
     const getSelected = () => {
-        for(let i = 0; i < bottomNavItems.length; i++) {
+        for (let i = 0; i < bottomNavItems.length; i++) {
             if (window.location.pathname.includes(bottomNavItems[i].page)) {
-                return i
+                return i;
             }
         }
-        return 0
-    }
+        return 0;
+    };
 
     return (
         <div className="bottom-bar-fixed">
             <BottomNavigation
                 items={bottomNavItems}
                 selected={getSelected()}
-                onItemClick={(item) => {
-                    nav(item.page)
-                }}
+                onItemClick={(item) => nav(item.page)}
                 activeBgColor="white"
                 activeTextColor="#915FA8"
             />
         </div>
-    )
+    );
 }
 
 export default BottomBar;

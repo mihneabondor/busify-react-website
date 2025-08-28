@@ -1,14 +1,23 @@
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
-import { useRef, useState } from 'react';
+import {useEffect, useRef, useState} from 'react';
 import Badge from 'react-bootstrap/esm/Badge';
 import '../Orare/Orar.css'
+import CustomSwitch from "../OtherComponents/CustomSwitch";
 
 function Search(props) {
     const searchRef = useRef()
     const [liniiGasite, setLiniiGasite] = useState([])
     const [liniiAdiacente, setLiniiiAdiacente] = useState(true)
+    const [sugesttii, setSugesttii] = useState([])
+
+    useEffect(() => {
+        if(props.show) {
+            const history = localStorage.getItem("search_history")?.trim().split(' ').reverse() || []
+            setSugesttii(history)
+        }
+    }, [props.show])
 
     const change = (e) => {
         e.preventDefault()
@@ -26,6 +35,107 @@ function Search(props) {
         setLiniiGasite(newLiniiGasite)
     }
 
+    const search = () => {
+        let exista = false;
+        const inputValue = searchRef.current?.value?.toUpperCase()?.trim() || '';
+        const searchTargets = [...liniiGasite, inputValue].filter(target =>
+            target && typeof target === 'string' && target.trim() !== ''
+        );
+
+        // Separate 3-digit numbers
+        const threeDigitNumbers = searchTargets.filter(target => /^\d{3}$/.test(target));
+        const nonThreeDigitTargets = searchTargets.filter(target => !/^\d{3}$/.test(target));
+
+        // ✅ Combine and save to localStorage as "24 43P 25"
+        const fullSearch = [...threeDigitNumbers, ...nonThreeDigitTargets];
+        if (fullSearch.length) {
+            const existingRaw = localStorage.getItem("search_history") || "";
+            const existing = existingRaw.split(" ").filter(x => x.trim() !== "");
+            const updated = Array.from(new Set([...existing, ...fullSearch])); // remove duplicates
+            localStorage.setItem("search_history", updated.join(" "));
+        }
+
+        // Store 3-digit numbers separately
+        if (threeDigitNumbers.length) {
+            exista = true;
+            const existing = JSON.parse(localStorage.getItem('special_numbers') || '[]');
+            props.foundLabelsRef.current = Array.from(new Set([...existing, ...threeDigitNumbers]));
+        }
+
+        setLiniiGasite(nonThreeDigitTargets);
+
+        if (nonThreeDigitTargets.length) {
+            if (liniiAdiacente) {
+                const patterns = nonThreeDigitTargets
+                    .map(target => {
+                        try {
+                            const escapedStart = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            return new RegExp(`^${escapedStart}(?:[a-zA-Z]*)$`);
+                        } catch (e) {
+                            console.error('Error creating regex for:', target);
+                            return null;
+                        }
+                    })
+                    .filter(Boolean);
+
+                exista = props.unique.current?.some(elem =>
+                    patterns.some(pattern => elem?.[0] && pattern.test(elem[0]))
+                ) ?? false;
+            } else {
+                exista = props.unique.current?.some(elem =>
+                    nonThreeDigitTargets.includes(elem?.[0])
+                ) ?? false;
+            }
+
+            if (exista) {
+                let oneMatch = false;
+                props.unique.current = props.unique.current?.map((elem) =>
+                    [elem?.[0], nonThreeDigitTargets.includes(elem?.[0])]
+                ) || [];
+
+                if (liniiAdiacente) {
+                    const check = (line) => {
+                        return nonThreeDigitTargets.some(target => {
+                            if (!target || !line) return false;
+                            try {
+                                const pattern = new RegExp(`^${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:[a-zA-Z]*)$`);
+                                return pattern.test(line);
+                            } catch (e) {
+                                console.error('Pattern matching error:', e);
+                                return false;
+                            }
+                        });
+                    };
+
+                    props.unique.current = props.unique.current.map(elem =>
+                        [elem?.[0], check(elem?.[0]) || elem?.[1]]
+                    );
+                }
+
+                oneMatch = props.unique.current.some(elem => elem?.[1]);
+
+                if (!oneMatch) {
+                    props.setShownVehicles?.();
+                } else {
+                    props.setShowUndemibusuToast?.();
+                }
+
+                props.setUniqueLines?.(props.unique.current || []);
+                props.setCheckAllChecked?.(!oneMatch);
+                props.resetMarkers?.();
+            }
+        }
+
+        if (!exista) {
+            props.onHide();
+        } else {
+            props.onHideSearch();
+        }
+
+        setLiniiGasite([]);
+    }
+
+
     return (
         <Modal centered show={props.show} onHide={() => {
             props.onHide()
@@ -35,122 +145,59 @@ function Search(props) {
                 <Modal.Title>Căutare</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <Form.Control placeholder="Ex: 25 43" aria-describedby="desc" onChange={change} ref={searchRef} />
-                <Form.Text id="desc" muted>
-                    Întrodu liniile căutate sau numărele de parc, separate prin câte un spațiu
-                </Form.Text>
+                <Form.Control placeholder="Ex: 25 43P 253" aria-describedby="desc" onChange={change} ref={searchRef}/>
                 {liniiGasite.map((elem, ind) => (
-                    <Badge pill bg="secondary" key={ind} style={{marginRight: '10px', cursor: 'pointer'}} onClick={() => removeLine(ind)}>
+                    <Badge pill bg="secondary" key={ind} style={{marginRight: '10px', cursor: 'pointer'}}
+                           onClick={() => removeLine(ind)}>
                         {elem} <small> <b>X</b></small>
                     </Badge>
                 ))}
+                {sugesttii.length ?
+                    <div>
+                        <br/>
+                        <div>Sugestii</div>
+                        <div style={{
+                            display: 'flex',
+                            overflowY: 'auto'
+                        }}>
+                            {sugesttii.map((elem) => (
+                                <Button variant='undefined'
+                                        style={{marginRight: '5px', background: "#B2B2B2", color: 'white'}}
+                                        onClick={() => {
+                                            searchRef.current.value = elem;
+                                            search();
+                                        }}>
+                                    {elem}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                    : null}
+
                 <br/>
-                <Form.Check
-                    type="switch"
-                    label="Arată liniile adiacente (ex. 43 43P 43B)"
-                    id='custom-switch'
-                    checked={liniiAdiacente}
-                    onChange={() => setLiniiiAdiacente(!liniiAdiacente)}
-                />
+                <div style={{display: 'flex', alignItems: 'center'}}>
+                    <CustomSwitch
+                        marginLeftAuto="false"
+                        checked={liniiAdiacente}
+                        onChange={() => setLiniiiAdiacente(!liniiAdiacente)}
+                    />
+                    Arată liniile adiacente (43 43P 43B)
+                </div>
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="secondary" onClick={() => {
+                <Button variant="undefined" style={{background: "#B2B2B2", color: "white"}} onClick={() => {
                     props.onHide()
                     setLiniiGasite([])
                 }}>
                     Închide
                 </Button>
-                <Button style={{background: 'purple'}} variant="primary" onClick={() => {
-                    // Get all search targets including the new input value
-                    const inputValue = searchRef.current?.value?.toUpperCase()?.trim() || '';
-                    const searchTargets = [...liniiGasite, inputValue].filter(target =>
-                        target && typeof target === 'string' && target.trim() !== ''
-                    );
-
-// Process 3-digit targets first
-                    const processedTargets = searchTargets.map(target => {
-                        if (/^\d{3}$/.test(target)) {
-                            const matchingVehicle = props.vehicles?.find(v => v?.label === target);
-                            return matchingVehicle?.line || target;
-                        }
-                        return target;
-                    });
-
-                    setLiniiGasite(processedTargets);
-
-                    let exista = false;
-                    if (processedTargets.length) {
-                        if (liniiAdiacente) {
-                            // Create patterns for all targets
-                            const patterns = processedTargets
-                                .map(target => {
-                                    try {
-                                        const escapedStart = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                                        return new RegExp(`^${escapedStart}(?:[a-zA-Z]*)$`);
-                                    } catch (e) {
-                                        console.error('Error creating regex for:', target);
-                                        return null;
-                                    }
-                                })
-                                .filter(Boolean);
-
-                            // Check if any element matches any pattern
-                            exista = props.unique.current?.some(elem =>
-                                patterns.some(pattern => elem?.[0] && pattern.test(elem[0]))
-                            ) ?? false;
-                        } else {
-                            // Simple includes check for all targets
-                            exista = props.unique.current?.some(elem =>
-                                processedTargets.includes(elem?.[0])
-                            ) ?? false;
-                        }
-
-                        if (exista) {
-                            let oneMatch = false;
-
-                            // First pass - exact matches against all targets
-                            props.unique.current = props.unique.current?.map((elem) =>
-                                [elem?.[0], processedTargets.includes(elem?.[0])]
-                            ) || [];
-
-                            if (liniiAdiacente) {
-                                // Second pass - adjacent matches against all targets
-                                const check = (line) => {
-                                    return processedTargets.some(target => {
-                                        if (!target || !line) return false;
-                                        try {
-                                            const pattern = new RegExp(`^${target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:[a-zA-Z]*)$`);
-                                            return pattern.test(line);
-                                        } catch (e) {
-                                            console.error('Pattern matching error:', e);
-                                            return false;
-                                        }
-                                    });
-                                };
-
-                                props.unique.current = props.unique.current.map(elem =>
-                                    [elem?.[0], check(elem?.[0]) || elem?.[1]]
-                                );
-                            }
-
-                            // Check if we have at least one match
-                            oneMatch = props.unique.current.some(elem => elem?.[1]);
-
-                            if (!oneMatch) {
-                                props.setShownVehicles?.();
-                            } else {
-                                props.setShowUndemibusuToast?.();
-                            }
-
-                            props.setUniqueLines?.(props.unique.current || []);
-                            props.setCheckAllChecked?.(!oneMatch);
-                            props.resetMarkers?.();
-                        }
-                    }
-
-                    props.onHide?.();
-                    setLiniiGasite([]);
-                }}>
+                <Button
+                    style={{background: '#8A56A3', color: 'white'}}
+                    variant="undefined"
+                    onClick={() => {
+                        search();
+                    }}
+                >
                     Caută
                 </Button>
             </Modal.Footer>

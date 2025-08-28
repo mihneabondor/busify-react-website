@@ -1,61 +1,68 @@
-import Toast from 'react-bootstrap/Toast';
-import ToastContainer from 'react-bootstrap/ToastContainer';
-import Button from 'react-bootstrap/esm/Button';
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import Marker from "../OtherComponents/Marker";
 import CloseButton from "react-bootstrap/CloseButton";
 import {BottomSheet} from "react-spring-bottom-sheet";
 
 function UndemibusuToast(props) {
-    const [expanded, setExpanded] = useState(true)
+    const [uniqueMarkers, setUniqueMarkers] = useState([]);
+
+    useEffect(() => {
+        if (props.show) {
+            setTimeout(() => {
+                const visibleMarkers = props.markers.current.filter(elem =>
+                    (props.unique.current.find(el => el[0] === elem.vehicle.line)?.[1] === true &&
+                        !props.foundLabelsRef.current.length) ||
+                    props.foundLabelsRef.current.includes(elem.vehicle.label)
+                );
+
+                console.log(props.foundLabelsRef.current);
+                console.log(visibleMarkers)
+
+                const seen = new Set();
+                const uniqueMarkersTemp = visibleMarkers.filter(item => {
+                    if (seen.has(item.vehicle.line)) return false;
+                    seen.add(item.vehicle.line);
+                    return true;
+                });
+
+                setUniqueMarkers(uniqueMarkersTemp);
+            }, 500);
+        }
+    }, [props.markers, props.unique, props.show]);
+
     return (
-        // <ToastContainer
-        //     className="p-3"
-        //     position={'bottom-center'}
-        //     style={{ zIndex: 1, translate: '0px -8vh' }}
-        // >
-        //     <Toast show={props.show}>
-        //         <Toast.Header closeButton={false}>
-        //             <img
-        //                 src="../logo192.png"
-        //                 width='25px'
-        //                 height='25px'
-        //
-        //                 className="rounded me-2"
-        //             />
-        //             <strong className="me-auto">{props.header}</strong>
-        //             <img
-        //                     style={{
-        //                         marginLeft: '20px',
-        //                         cursor: 'pointer',
-        //                         rotate: expanded ? '90deg' : '0deg'
-        //                     }}
-        //                     width='20px'
-        //                     height='20px'
-        //                     src= { expanded ? "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAABWElEQVR4nO3bwW7CMBAE0Em/soUPKuXMoYf+ZXuBy1SOjGRFIXFMJOSdGWkFlyD8cNDaGAAYABwBfOTncjkAYK5vRYRjASCJMORByyNcJgg/AN4gNhMuRoARBiPACCmeCTDCrn3CGcAfgC+IIlzzdelR8juBRUERgREAnkEIA9CKEAqgBSEcwFaEkABbEMIC1CKEBqhBCA+whiABsNQ2ywA8mglSAGsI3eYM4LbwydZWt/ndYfDdLodTTsW6vnXwn+MrOY7jOI6zc6N16/V3h3ue6THulZq1bsMdusyuGy3OlNRJFaojcGETReL0GouSPJ/AyZ6BHAJnNk2kEPhg10gGgQvbZhIIXNk3DI/AFYDwCKwACI3ASoCwCNwAEBLhWqzqJP/vcMqHKbcuaUMhtCbc7dASI8AIYzwTYIQxngkwwhj3CZhHOEAsU4T3V7+hVyQhpIGnGv4BDUeLkcktg7YAAAAASUVORK5CYII=" : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAzUlEQVR4nO3ZQQqDMBSE4bnEk16xPW5d9DgpKaU8iproauYxP2TvR4gmBnDOKdQuDMrKQEYFgKc6ZAGwfh9+VYVEmokXgJsiJDYQUIPEDkIKEgcIGUgMEBKQGQQ9ZBZBDTmDoIWcRVBCriDoMoKlEjPRe6RdbN/VSnevgHDO4bOQ+4KWbkk/CPqrVrKo8LELI0gK5plokwcXasQshB4xA5FAjCAyiCOIFGIPIofYgkgi/iGyiAyRRmRIvu6SPGO3NCRnotxVcasCcc7h1xuvJbgvN2HU5wAAAABJRU5ErkJggg=="}
-        //                     onClick={() => {
-        //                         if(expanded)
-        //                             setExpanded(false)
-        //                         else setExpanded(true)
-        //                     }}></img>
-        //         </Toast.Header>
-        //         <Toast.Body style={{display: expanded ? 'grid' : 'none'}}>
-        //             <p>Apasă aici pentru a vizualiza toate liniile</p>
-        //             <Button style={{background: 'purple'}} onClick={props.onHide}>Revino</Button>
-        //         </Toast.Body>
-        //     </Toast>
-        // </ToastContainer>
         <BottomSheet
             open={props.show}
             expandOnContentDrag={false}
             scrollLocking={false}
             blocking={false}
-            snapPoints={({minHeight}) => [minHeight]} // example snap points
             defaultSnap={({minHeight}) => minHeight}
         >
-            <div style={{margin: '15px'}}>
-                <p>Apasă aici pentru a vizualiza toate liniile</p>
-                <Button style={{background: '#8A56A3'}} onClick={props.onHide}>Revino</Button>
+            <div style={{margin: '10px 20px'}}>
+                {uniqueMarkers?.length > 0 ? uniqueMarkers?.map((el, i) => (
+                    <div style={{display: "flex", flexDirection: "row", alignItems: "center", marginBottom: '5px'}}>
+                        <Marker
+                            type={el.vehicle.vehicleType}
+                            name={el.vehicle.line}
+                            minContent={true}
+                        />
+                        <div style={{textAlign: 'left'}}><b>{el.vehicle.route}</b></div>
+                        <CloseButton style={{marginLeft: 'auto', display: i === 0 ? "initial" : "none"}}
+                                     onClick={() => {
+                                         setUniqueMarkers([])
+                                         props.onHide()
+                                     }}/>
+                    </div>
+                ))
+                    :
+                    <div style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                    Nu s-au găsit vehicule pentru căutarea ta.
+                        <CloseButton style={{marginLeft: 'auto'}}
+                                     onClick={() => {
+                                         setUniqueMarkers([])
+                                         props.onHide()
+                                     }}/>
+                </div>}
             </div>
         </BottomSheet>
     )

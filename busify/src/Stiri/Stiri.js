@@ -17,6 +17,7 @@ function Stiri() {
             console.log("intra")
             let resp = await fetch('https://busifyserver.onrender.com/stiri');
             let data = await resp.json();
+            data = data.slice(0, 9);
             setNews(data)
             console.log(data)
         } catch (e) { console.log(e) }

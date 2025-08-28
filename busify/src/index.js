@@ -20,12 +20,6 @@ import Settings from "./Settings/Settings";
 import PanouDisplayLinii from "./PanouDisplayLinii/PanouDisplayLinii";
 import Onboarding from "./Onboarding/Onboarding";
 
-// ✅ Service Worker registration
-// In your main JS (e.g., index.js)
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js'); // Do NOT add { type: 'module' }
-}
-
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <BrowserRouter>
