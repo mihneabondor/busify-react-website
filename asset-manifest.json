@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.5e69e29a.css",
-    "main.js": "/static/js/main.9f25ddc1.js",
+    "main.js": "/static/js/main.0279845a.js",
     "static/media/image7 2.png": "/static/media/image7 2.f5061430b48bac569c43.png",
     "static/media/image7.png": "/static/media/image7.f5061430b48bac569c43.png",
     "static/media/Third.png": "/static/media/Third.9f2496eeddd7c42e031b.png",
@@ -12,6 +12,7 @@
     "static/media/image6.png": "/static/media/image6.15151e3a36db25a2c277.png",
     "static/media/image0.png": "/static/media/image0.98c4a74a49e88b118ff0.png",
     "static/media/image10.png": "/static/media/image10.98c4a74a49e88b118ff0.png",
+    "static/media/image11.png": "/static/media/image11.98c4a74a49e88b118ff0.png",
     "static/media/image3.png": "/static/media/image3.086e1885e87b94eb3bd2.png",
     "static/media/image5.png": "/static/media/image5.e32c78c644984dec395c.png",
     "static/media/image1.png": "/static/media/image1.ef79ce9beb4581baee35.png",
@@ -61,10 +62,10 @@
     "static/media/ChevronRightIcon.svg": "/static/media/ChevronRightIcon.758ef38bb2110e934778fa4524432c40.svg",
     "static/media/backIcon.svg": "/static/media/backIcon.156cbffdc2250db9107fa46e75b6beaa.svg",
     "main.5e69e29a.css.map": "/static/css/main.5e69e29a.css.map",
-    "main.9f25ddc1.js.map": "/static/js/main.9f25ddc1.js.map"
+    "main.0279845a.js.map": "/static/js/main.0279845a.js.map"
   },
   "entrypoints": [
     "static/css/main.5e69e29a.css",
-    "static/js/main.9f25ddc1.js"
+    "static/js/main.0279845a.js"
   ]
 }
