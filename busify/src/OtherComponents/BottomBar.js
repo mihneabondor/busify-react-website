@@ -15,14 +15,15 @@ import {ReactComponent as StiriIconFill} from "../Images/stiriIconFill.svg"
 
 import {ReactComponent as SetariIcon} from "../Images/setariIcon.svg"
 import {ReactComponent as SetariIconFill} from "../Images/setariIconFill.svg"
-import {useNavigate} from "react-router-dom";
-import {useEffect, useState} from "react";
+
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
 
 
 function BottomBar() {
     const nav = useNavigate();
+    const location = useLocation();
     const [keyboardVisible, setKeyboardVisible] = useState(false);
-
 
     const isMobileDevice = () => {
         return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
@@ -38,9 +39,7 @@ function BottomBar() {
         };
 
         const handleFocusOut = () => {
-            setTimeout(() => {
-                setKeyboardVisible(false);
-            }, 100); // Delay to prevent flickering
+            setTimeout(() => setKeyboardVisible(false), 100); // Delay to prevent flickering
         };
 
         window.addEventListener('focusin', handleFocusIn);
@@ -52,56 +51,44 @@ function BottomBar() {
         };
     }, []);
 
-    if (keyboardVisible) return null;
+    const bottomNavItems = useMemo(() => [
+        { title: 'Acasă', icon: <HomeIcon />, activeIcon: <HomeIconFill />, page: '/' },
+        { title: 'Orare', icon: <OrareIcon />, activeIcon: <OrareIconFill />, page: '/orare' },
+        { title: 'Favorite', icon: <FavoriteIcon />, activeIcon: <FavoriteIconFill />, page: '/favorite' },
+        { title: 'Știri', icon: <StiriIcon />, activeIcon: <StiriIconFill />, page: '/stiri' },
+        { title: 'Setări', icon: <SetariIcon />, activeIcon: <SetariIconFill />, page: '/setari' }
+    ], []);
 
-    const bottomNavItems = [
-        {
-            title: 'Acasă',
-            icon: <HomeIcon />,
-            activeIcon: <HomeIconFill />,
-            page: '/harta',
-        },
-        {
-            title: 'Orare',
-            icon: <OrareIcon />,
-            activeIcon: <OrareIconFill />,
-            page: '/orare',
-        },
-        {
-            title: 'Favorite',
-            icon: <FavoriteIcon />,
-            activeIcon: <FavoriteIconFill />,
-            page: '/favorite',
-        },
-        {
-            title: 'Știri',
-            icon: <StiriIcon />,
-            activeIcon: <StiriIconFill />,
-            page: '/stiri',
-        },
-        {
-            title: 'Setări',
-            icon: <SetariIcon />,
-            activeIcon: <SetariIconFill />,
-            page: '/setari',
-        }
-    ];
+    // Compute selected index based on location
+    const selectedIndex = useMemo(() => {
+        const path = location.pathname;
 
-    const getSelected = () => {
-        for (let i = 0; i < bottomNavItems.length; i++) {
-            if (window.location.pathname.includes(bottomNavItems[i].page)) {
-                return i;
+        return bottomNavItems.findIndex(item => {
+            if (item.page === '/') {
+                return ['/','/map','/harta'].some(p => path === p || path.startsWith(p + '/'));
             }
-        }
-        return 0;
-    };
+            return path === item.page || path.startsWith(item.page + '/');
+        });
+    }, [location.pathname, bottomNavItems]);
+
+    useEffect(() => {
+        console.log("Location changed:", location.pathname, "selected index:", selectedIndex);
+    }, [location, selectedIndex]);
+
+    if (keyboardVisible) return null;
 
     return (
         <div className="bottom-bar-fixed">
             <BottomNavigation
+                key={location.pathname}
                 items={bottomNavItems}
-                selected={getSelected()}
-                onItemClick={(item) => nav(item.page)}
+                selected={selectedIndex >= 0 ? selectedIndex : 0}
+                onItemClick={(item, index) => {
+                    if (location.pathname !== item.page) {
+                        nav(item.page);
+                    }
+                }}
+                disableSelection
                 activeBgColor="white"
                 activeTextColor="#915FA8"
             />

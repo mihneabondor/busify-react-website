@@ -501,6 +501,7 @@ function Map() {
             addSearchButton();
             map.current.addControl(geo);
             map.current.on('load', () => {
+                handleSocketOns();
                 if (refresh)
                     map.current.flyTo({
                         center: lastCoords.current,
@@ -1351,16 +1352,16 @@ function Map() {
         } else if(new Date() > new Date(localStorage.getItem("donation_notification_next_date"))) {
             setNotificationTitle("Îți place Busify? Susține dezvoltarea aplicației printr-o donație din pagina de setări. Mulțumim!")
             setShowNotification(true);
-            setNextDate(31);
+            setNextDate(30);
         }
     }
 
     useEffect(() => {
         if (map.current) return;
+        // console.log("Map mounted");
 
         localStorage.setItem('labels', '');
         generateMap();
-        handleSocketOns();
         donationNotification();
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -1370,6 +1371,7 @@ function Map() {
                 socket.current.disconnect();
                 socket.current = null;
             }
+            // console.log("Map unmounted");
         };
     }, []);
 

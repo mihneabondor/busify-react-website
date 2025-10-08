@@ -59,7 +59,7 @@ function Stiri() {
                     }} onClick={() => {
                         window.open(elem.link)
                     }}>
-                        <Card.Img src={require(`../Images/ThumbnailsStiri/image${elem.thumbnail}.png`)} alt="Card image"
+                        <Card.Img src={require(`../Images/ThumbnailsStiri/image${elem.thumbnail}.png`)}
                                   style={{maxHeight: '25vh', objectFit: "cover", borderRadius: "10px 10px 0 0"}}/>
                         <Card.ImgOverlay style={{
                             background: "rgba(0, 0, 0, 0.5)",
@@ -82,7 +82,6 @@ function Stiri() {
                 ))}
             </div>
             <br/>
-            <small style={{color: 'gray'}}>📸 Barakat Maya</small>
             <br/><br/><br/>
             <BottomBar/>
         </div>

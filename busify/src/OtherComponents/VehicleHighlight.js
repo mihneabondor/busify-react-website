@@ -484,7 +484,12 @@ function VehicleHighlight(props) {
                         background: "#8B56A4",
                         border: 'none'
                     }} onClick={() => {
-                        nav(`/orare/${props.vehicle?.line}?id=${props.vehicle?.label}`)
+                        props.onHide()
+                        stopCenteredFirstTimeRef.current = false;
+                        setSelectedStop(null);
+                        selectedStopRef.current = null;
+                        setselectedStopTime(null)
+                        nav(`/orare/${props.vehicle?.line}`)
                     }}>
                         <OrarIcon style={{marginRight: '5px'}}/>
                         <b>Vezi orarul liniei {props.vehicle?.line}</b>
