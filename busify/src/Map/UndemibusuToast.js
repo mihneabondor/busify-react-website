@@ -7,28 +7,26 @@ function UndemibusuToast(props) {
     const [uniqueMarkers, setUniqueMarkers] = useState([]);
 
     useEffect(() => {
-        if (props.show) {
-            setTimeout(() => {
-                const visibleMarkers = props.markers.current.filter(elem =>
-                    (props.unique.current.find(el => el[0] === elem.vehicle.line)?.[1] === true &&
-                        !props.foundLabelsRef.current.length) ||
-                    props.foundLabelsRef.current.includes(elem.vehicle.label)
-                );
+        setTimeout(() => {
+            const visibleMarkers = props.markersState.filter(elem =>
+                (props.unique.current.find(el => el[0] === elem.vehicle.line)?.[1] === true &&
+                    !props.foundLabelsRef.current.length) ||
+                props.foundLabelsRef.current.includes(elem.vehicle.label)
+            );
 
-                console.log(props.foundLabelsRef.current);
-                console.log(visibleMarkers)
+            console.log(props.foundLabelsRef.current);
+            console.log(visibleMarkers)
 
-                const seen = new Set();
-                const uniqueMarkersTemp = visibleMarkers.filter(item => {
-                    if (seen.has(item.vehicle.line)) return false;
-                    seen.add(item.vehicle.line);
-                    return true;
-                });
+            const seen = new Set();
+            const uniqueMarkersTemp = visibleMarkers.filter(item => {
+                if (seen.has(item.vehicle.line)) return false;
+                seen.add(item.vehicle.line);
+                return true;
+            });
 
-                setUniqueMarkers(uniqueMarkersTemp);
-            }, 500);
-        }
-    }, [props.markers, props.unique, props.show]);
+            setUniqueMarkers(uniqueMarkersTemp);
+        }, 1000);
+    }, []);
 
     return (
         <BottomSheet
@@ -56,7 +54,7 @@ function UndemibusuToast(props) {
                 ))
                     :
                     <div style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    Nu s-au găsit vehicule pentru căutarea ta.
+                    Apasă pe X pentru a reveni.
                         <CloseButton style={{marginLeft: 'auto'}}
                                      onClick={() => {
                                          setUniqueMarkers([])

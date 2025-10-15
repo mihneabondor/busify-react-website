@@ -164,7 +164,7 @@ function Orar(props) {
                 <div className="hr-like-div"/>
                 <div className="orar-header-buttons" style={{paddingTop: linieFav ? "0" : "0px"}}>
                     <div className="orar-header-buttons-label" onClick={() => {
-                        nav(`/map/${linie}`)
+                        nav(`/map/${linie}`, {replace: false})
                     }}>
                         <img width="25" height="25" src="https://img.icons8.com/ios/50/marker--v1.png"
                              alt="marker--v1"/>

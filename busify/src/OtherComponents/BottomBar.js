@@ -18,6 +18,7 @@ import {ReactComponent as SetariIconFill} from "../Images/setariIconFill.svg"
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
+import {AliveScope} from "react-activation";
 
 
 function BottomBar() {
@@ -84,9 +85,10 @@ function BottomBar() {
                 items={bottomNavItems}
                 selected={selectedIndex >= 0 ? selectedIndex : 0}
                 onItemClick={(item, index) => {
-                    if (location.pathname !== item.page) {
-                        nav(item.page);
-                    }
+                    nav(
+                        item.page === '/' && (location.pathname === '/setari' || location.pathname === '/map') ? '/map' : item.page,
+                        { replace: false }
+                    );
                 }}
                 disableSelection
                 activeBgColor="white"

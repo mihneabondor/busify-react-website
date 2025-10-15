@@ -25,6 +25,7 @@ function Map() {
     var lastCoords = useRef([defLng, defLat]);
     var lastZoom = useRef(12)
     var markers = useRef([]);
+    const [markersState, setMarkersState ] = useState([]);
     var stopMarkers = useRef([]);
     let vehicles = useRef([]);
     const [uniqueLines, setUniqueLines] = useState([]);
@@ -438,6 +439,7 @@ function Map() {
         };
 
         removeNextBatch();
+        setMarkersState(markers.current);
     };
 
     function addSettingsButton() {
@@ -1257,7 +1259,6 @@ function Map() {
                 }
             }
         } else {
-            // ✅ Only update if something changed
             if (hasChanged()) {
                 console.log("update detected")
                 vehicles.current = newVehicles;
@@ -1394,11 +1395,9 @@ function Map() {
                     setShowSearch(false)
                 }}
                 onHideSearch={() => {
-                    resetMarkers()
                     setShowSearch(false)
-                    setTimeout(() =>{
-                        setShowUndemibusuToast(true)
-                    }, 500)
+                    resetMarkers()
+                    setShowUndemibusuToast(true)
                 }}
             />
             <NotificationToast
@@ -1437,6 +1436,7 @@ function Map() {
                 header={undemibusu === 'undemiibusu' ? 'Unde mi-i busu?' : 'Căutare'}
                 show={showUndemibusuToast}
                 markers={markers}
+                markersState={markersState}
                 foundLabelsRef={foundLabelsRef}
                 unique={unique}
                 onHide={() => {

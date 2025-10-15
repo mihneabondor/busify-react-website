@@ -35,19 +35,13 @@ if ('serviceWorker' in navigator) {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-    <AliveScope>
     <BrowserRouter>
+        <AliveScope>
       <Routes>
-          <Route path="/" render={(props) => (
-              <KeepAlive>
-                  <Route computedMath = {props.match}>
-                      <Map />
-                  </Route>
-              </KeepAlive>
-          )} />
-            <Route path="/map" element={<KeepAlive><Map /></KeepAlive>} />
+          <Route path="/" element={<KeepAlive><Map /></KeepAlive>} />
+            <Route path="/map" element={<Map/>} />
             <Route path="/harta" element={<KeepAlive><Map /></KeepAlive>} />
-            <Route path="/map/:undemibusu" element={<KeepAlive><Map /></KeepAlive>} />
+            <Route path="/map/:undemibusu" element={<Map/>} />
             <Route path="/orare" element={<Orare />} />
             <Route path="/orare/:linie" element={<Orar />} />
             <Route path="/favorite/:linie" element={<Orar />} />
@@ -60,6 +54,7 @@ root.render(
             <Route path='/.well-known/assetlinks.json' element={<FileViewer filePath="../public/assetlinks.json" />} />
             <Route path="*" element={<KeepAlive><Map /></KeepAlive>} />
       </Routes>
-    </BrowserRouter>
     </AliveScope>
+    </BrowserRouter>
+
 );
