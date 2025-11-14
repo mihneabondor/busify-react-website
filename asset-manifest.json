@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.6182c447.css",
-    "main.js": "/static/js/main.b7e76f85.js",
+    "main.css": "/static/css/main.5e69e29a.css",
+    "main.js": "/static/js/main.d2d39b6b.js",
     "static/media/image7 2.png": "/static/media/image7 2.f5061430b48bac569c43.png",
     "static/media/image7.png": "/static/media/image7.f5061430b48bac569c43.png",
     "static/media/Third.png": "/static/media/Third.9f2496eeddd7c42e031b.png",
@@ -61,11 +61,11 @@
     "static/media/arrow-up-right.svg": "/static/media/arrow-up-right.2999d167ad8d7255574c2a9ab0577212.svg",
     "static/media/ChevronRightIcon.svg": "/static/media/ChevronRightIcon.758ef38bb2110e934778fa4524432c40.svg",
     "static/media/backIcon.svg": "/static/media/backIcon.156cbffdc2250db9107fa46e75b6beaa.svg",
-    "main.6182c447.css.map": "/static/css/main.6182c447.css.map",
-    "main.b7e76f85.js.map": "/static/js/main.b7e76f85.js.map"
+    "main.5e69e29a.css.map": "/static/css/main.5e69e29a.css.map",
+    "main.d2d39b6b.js.map": "/static/js/main.d2d39b6b.js.map"
   },
   "entrypoints": [
-    "static/css/main.6182c447.css",
-    "static/js/main.b7e76f85.js"
+    "static/css/main.5e69e29a.css",
+    "static/js/main.d2d39b6b.js"
   ]
 }
