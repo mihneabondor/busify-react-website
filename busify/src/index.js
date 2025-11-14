@@ -39,7 +39,8 @@ root.render(
         <AliveScope>
       <Routes>
           <Route path="/" element={<KeepAlive><Map /></KeepAlive>} />
-            <Route path="/map" element={<Map/>} />
+            <Route path="/map" element={<KeepAlive><Map /></KeepAlive>} />
+            <Route path="/mapAfterSettings" element={<Map/>} />
             <Route path="/harta" element={<KeepAlive><Map /></KeepAlive>} />
             <Route path="/map/:undemibusu" element={<Map/>} />
             <Route path="/orare" element={<Orare />} />

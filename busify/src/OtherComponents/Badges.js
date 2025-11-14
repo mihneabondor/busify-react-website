@@ -66,7 +66,7 @@ function Badges() {
             <Badge style={{
                 display: vineriRef.current ? "initial" : "none",
                 marginBottom: 5,
-                background: '#629D59',
+                background: '#0CBE7E',
                 padding: '10px',
                 outline: '2px solid white'
             }} bg='undefined'>

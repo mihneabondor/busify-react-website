@@ -20,6 +20,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import {AliveScope} from "react-activation";
 
+const STORAGE_KEY = 'lastMapPath';
+const MAP_PATHS = ['/', '/map', '/harta'];
 
 function BottomBar() {
     const nav = useNavigate();
@@ -40,7 +42,7 @@ function BottomBar() {
         };
 
         const handleFocusOut = () => {
-            setTimeout(() => setKeyboardVisible(false), 100); // Delay to prevent flickering
+            setTimeout(() => setKeyboardVisible(false), 100);
         };
 
         window.addEventListener('focusin', handleFocusIn);
@@ -52,6 +54,17 @@ function BottomBar() {
         };
     }, []);
 
+    // Track the last map path in sessionStorage
+    useEffect(() => {
+        const p = location.pathname;
+
+        // Check if current path is exactly one of the map paths
+        if (MAP_PATHS.includes(p)) {
+            sessionStorage.setItem(STORAGE_KEY, p);
+            console.log("✓ Stored map path:", p);
+        }
+    }, [location.pathname]);
+
     const bottomNavItems = useMemo(() => [
         { title: 'Acasă', icon: <HomeIcon />, activeIcon: <HomeIconFill />, page: '/' },
         { title: 'Orare', icon: <OrareIcon />, activeIcon: <OrareIconFill />, page: '/orare' },
@@ -62,33 +75,55 @@ function BottomBar() {
 
     // Compute selected index based on location
     const selectedIndex = useMemo(() => {
-        const path = location.pathname;
+        const p = location.pathname;
 
         return bottomNavItems.findIndex(item => {
             if (item.page === '/') {
-                return ['/','/map','/harta'].some(p => path === p || path.startsWith(p + '/'));
+                return MAP_PATHS.some(m => p === m || p.startsWith(m + '/'));
             }
-            return path === item.page || path.startsWith(item.page + '/');
+
+            return p === item.page || p.startsWith(item.page + '/');
         });
     }, [location.pathname, bottomNavItems]);
-
-    useEffect(() => {
-        console.log("Location changed:", location.pathname, "selected index:", selectedIndex);
-    }, [location, selectedIndex]);
 
     if (keyboardVisible) return null;
 
     return (
         <div className="bottom-bar-fixed">
             <BottomNavigation
-                key={location.pathname}
                 items={bottomNavItems}
                 selected={selectedIndex >= 0 ? selectedIndex : 0}
                 onItemClick={(item, index) => {
-                    nav(
-                        item.page === '/' && (location.pathname === '/setari' || location.pathname === '/map') ? '/map' : item.page,
-                        { replace: false }
-                    );
+                    const target = item.page;
+                    const currentPath = location.pathname;
+                    const lastMapPath = sessionStorage.getItem(STORAGE_KEY) || '/';
+
+                    console.log("🔘 Clicked:", item.title, "| Current:", currentPath, "| Stored map:", lastMapPath);
+
+                    // Clicking MAP tab (home)
+                    if (target === '/') {
+                        // Coming from settings → load fresh map to apply changes
+                        if (currentPath === '/setari' || currentPath.startsWith('/setari/')) {
+                            console.log("⚙️ From settings, loading fresh map");
+                            nav('/mapAfterSettings', { replace: false });
+                            return;
+                        }
+
+                        // Already on a map path → do nothing
+                        if (MAP_PATHS.includes(currentPath)) {
+                            console.log("🏠 Already on map, staying");
+                            return;
+                        }
+
+                        // Normal → return to last map path
+                        console.log("↩️ Returning to:", lastMapPath);
+                        nav(lastMapPath, { replace: false });
+                        return;
+                    }
+
+                    // Non-map routes
+                    console.log("➡️ Navigating to:", target);
+                    nav(target, { replace: false });
                 }}
                 disableSelection
                 activeBgColor="white"
