@@ -4,13 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/Badges.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/Badges.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/index.js" afterDir="false" />
-    </list>
+    <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -94,7 +88,7 @@
       <workItem from="1733230251845" duration="22000" />
       <workItem from="1763022589289" duration="1671000" />
       <workItem from="1763031066173" duration="604000" />
-      <workItem from="1763125480382" duration="3029000" />
+      <workItem from="1763125480382" duration="3344000" />
     </task>
     <servers />
   </component>

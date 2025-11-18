@@ -1358,6 +1358,12 @@ function Map() {
     }
 
     useEffect(() => {
+        if (loaded && map.current) {
+            map.current.resize();
+        }
+    }, [loaded]);
+
+    useEffect(() => {
         if (map.current) return;
         // console.log("Map mounted");
 
