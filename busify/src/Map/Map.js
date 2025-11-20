@@ -17,6 +17,7 @@ import Badges from "../OtherComponents/Badges";
 import VehicleMarkerWrapper from "../OtherComponents/VehicleMarkerWrapper";
 import debounce from 'lodash.debounce';
 import NotificationToast from "./NotificationToast";
+import {useActivate} from "react-activation";
 
 function Map() {
     var map = useRef();
@@ -1268,6 +1269,12 @@ function Map() {
         }
     }, []);
 
+    useActivate(() => {
+        if(map.current) {
+            map.current.resize();
+        }
+    })
+
     const handleSocketOns = (visChange = false) => {
         socket.current = io('https://busifyserver.onrender.com')
         // socket.current = io('http://192.168.0.221:3001')
@@ -1299,6 +1306,9 @@ function Map() {
     const handleVisibilityChange = () => {
         console.log("visiblity changed to " + document.visibilityState)
         if(document.visibilityState === "visible") {
+            if(map.current) {
+                map.current.resize();
+            }
             handleSocketOns(true)
         } else {
             if(socket.current) {
