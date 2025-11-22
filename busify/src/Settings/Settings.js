@@ -15,6 +15,7 @@ import {useState} from "react";
 import CustomSwitch from "../OtherComponents/CustomSwitch";
 import {ReactComponent as ChevronRightIcon} from "../Images/ChevronRightIcon.svg";
 import {useNavigate} from "react-router-dom";
+import PaywallSheet from "../Paywall/PaywallSheet";
 
 
 
@@ -22,6 +23,7 @@ function Settings() {
     const [iconite, setIconite] = useState(localStorage.getItem("iconite") === "true");
     const [sageti, setSageti] = useState(localStorage.getItem("sageti"));
     const nav = useNavigate();
+    const [showDonationPaywall, setShowDonationPaywall] = useState(false);
 
     return (
         <div
@@ -226,8 +228,36 @@ function Settings() {
                             marginLeft: 'auto'
                         }}/>
                     </Button>
+                    <Button variant="undefined" style={{
+                        boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+                        background: 'white',
+                        width: '90vw',
+                        textAlign: 'left',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center'
+                    }} onClick={() => {
+                        setShowDonationPaywall(true)
+                    }}>
+                        <TOSIcon style={{marginRight: 10}}/>
+                        <div>Donatii</div>
+                        <ArrowRight style={{
+                            filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
+                            marginLeft: 'auto'
+                        }}/>
+                    </Button>
                 </ButtonGroup>
-                <BottomBar/>
+
+            <PaywallSheet
+                show={showDonationPaywall}
+                onHide={() => {
+                    setShowDonationPaywall(false);
+                }}
+            />
+
+            {
+                !showDonationPaywall ? <BottomBar/> : null
+            }
         </div>
 )
 }

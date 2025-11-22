@@ -5,13 +5,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/busify/src/Paywall/Paywall.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/busify/src/Paywall/PaywallSheet.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Settings/Settings 2.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Settings/Settings.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Settings/Settings.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -42,6 +55,7 @@
     &quot;npm.start (1).executor&quot;: &quot;Run&quot;,
     &quot;npm.start.executor&quot;: &quot;Run&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Applications/WebStorm.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -94,6 +108,12 @@
       <workItem from="1763125480382" duration="3344000" />
       <workItem from="1763490614496" duration="347000" />
       <workItem from="1763644179570" duration="138000" />
+      <workItem from="1763657784736" duration="1040000" />
+      <workItem from="1763717831793" duration="11953000" />
+      <workItem from="1763741240868" duration="1192000" />
+      <workItem from="1763804949595" duration="88000" />
+      <workItem from="1763805462043" duration="1509000" />
+      <workItem from="1763809104637" duration="667000" />
     </task>
     <servers />
   </component>

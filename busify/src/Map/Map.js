@@ -24,7 +24,7 @@ function Map() {
     var defLng = 23.591423;
     var defLat = 46.770439;
     var lastCoords = useRef([defLng, defLat]);
-    var lastZoom = useRef(12)
+    var lastZoom = useRef(13)
     var markers = useRef([]);
     const [markersState, setMarkersState ] = useState([]);
     var stopMarkers = useRef([]);
@@ -484,7 +484,7 @@ function Map() {
                 container: 'map',
                 center: [defLng, defLat],
                 style: data.style,
-                zoom: 14,
+                zoom: 13,
                 attributionControl: false
             });
 
@@ -519,7 +519,7 @@ function Map() {
                             const { latitude, longitude } = position.coords;
                             map.current.jumpTo({
                                 center: [longitude, latitude],
-                                zoom: 14,
+                                zoom: 13,
                                 duration: 1000
                             });
 
@@ -1287,11 +1287,11 @@ function Map() {
                     map.current.flyTo({
                         center: selectedVehicleRef.current.vehicle.lngLat,
                         duration: 1000,
-                        zoom: 14,
+                        zoom: 13,
                         essential: true
                     });
                     lastCoords.current = selectedVehicleRef.current.vehicle.lngLat;
-                    lastZoom.current = 14
+                    lastZoom.current = 13
                 }
                 visChange = false
             }, 1500)
