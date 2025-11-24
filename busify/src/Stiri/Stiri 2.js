@@ -72,7 +72,7 @@ function Stiri() {
             <br/>
             <small style={{color: 'gray'}}>📸 Barakat Maya</small>
             <br/><br/><br/>
-            <BottomBar/>
+            {/*<BottomBar/>*/}
         </div>
     )
 }

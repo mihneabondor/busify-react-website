@@ -21,6 +21,7 @@ import {ReactComponent as DeLaIcon} from '../Images/DeLaIcon.svg'
 import {ReactComponent as ShareIcon} from '../Images/ShareIcon.svg'
 import {useNavigate, useSearchParams} from "react-router-dom";
 import CustomSwitch from "./CustomSwitch";
+import {useSheet} from "../Contexts/SheetContext";
 
 function VehicleHighlight(props) {
     const nav = useNavigate()
@@ -42,7 +43,11 @@ function VehicleHighlight(props) {
 
     const [stops, setStops] = useState([]);
 
+    const {sheetOpen, setSheetOpen} = useSheet();
+
     const [searchParams] = useSearchParams();
+
+    const isOpen = props.show !== null && props.show !== undefined;
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
         function toRadians(degrees) {
@@ -85,7 +90,6 @@ function VehicleHighlight(props) {
         props.nearestStopRef.current = props.stops[minimumIndex];
 
         if(stopCenteredFirstTimeRef.current === false && props.vehicle) {
-            console.log('intra?')
             stopCenteredFirstTimeRef.current = true;
             setTimeout(() => {
                 const stopEl = stopRefs.current[minimumIndex];
@@ -133,6 +137,11 @@ function VehicleHighlight(props) {
     }, [selectedStop, selectedStopRef])
 
     useEffect(() => {
+        console.log('VehicleHighlight show:', isOpen);
+        setSheetOpen(isOpen);
+    }, [isOpen, setSheetOpen]);
+
+    useEffect(() => {
         if(localStorage.getItem('linii_favorite')){
             const favorite = localStorage.getItem('linii_favorite').split(' ')
             setLinieFav(favorite.includes(props.vehicleRef?.line))
@@ -150,6 +159,8 @@ function VehicleHighlight(props) {
 
         setStops(props.stops)
     }, [props.show, selectedStop])
+
+    if (!isOpen) return null;
 
     return (
         <BottomSheet

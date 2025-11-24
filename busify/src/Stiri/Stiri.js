@@ -83,7 +83,7 @@ function Stiri() {
             </div>
             <br/>
             <br/><br/><br/>
-            <BottomBar/>
+            {/*<BottomBar/>*/}
         </div>
     )
 }

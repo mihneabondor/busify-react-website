@@ -19,6 +19,7 @@ import {ReactComponent as SetariIconFill} from "../Images/setariIconFill.svg"
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import {AliveScope} from "react-activation";
+import {useSheet} from "../Contexts/SheetContext";
 
 const STORAGE_KEY = 'lastMapPath';
 const MAP_PATHS = ['/', '/map', '/harta'];
@@ -27,6 +28,8 @@ function BottomBar() {
     const nav = useNavigate();
     const location = useLocation();
     const [keyboardVisible, setKeyboardVisible] = useState(false);
+    const { sheetOpen, subscribe } = useSheet();
+    const [localSheetOpen, setLocalSheetOpen] = useState(sheetOpen);
 
     const isMobileDevice = () => {
         return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
@@ -53,6 +56,17 @@ function BottomBar() {
             window.removeEventListener('focusout', handleFocusOut);
         };
     }, []);
+
+    useEffect(() => {
+        setLocalSheetOpen(sheetOpen);
+
+        const unsubscribe = subscribe?.((value) => {
+            console.log('BottomBar received sheet update:', value);
+            setLocalSheetOpen(value);
+        });
+
+        return () => unsubscribe?.();
+    }, [sheetOpen, subscribe]);
 
     // Track the last map path in sessionStorage
     useEffect(() => {
@@ -86,7 +100,7 @@ function BottomBar() {
         });
     }, [location.pathname, bottomNavItems]);
 
-    if (keyboardVisible) return null;
+    if (keyboardVisible || localSheetOpen) return null;
 
     return (
         <div className="bottom-bar-fixed">
@@ -94,36 +108,39 @@ function BottomBar() {
                 items={bottomNavItems}
                 selected={selectedIndex >= 0 ? selectedIndex : 0}
                 onItemClick={(item, index) => {
-                    const target = item.page;
-                    const currentPath = location.pathname;
-                    const lastMapPath = sessionStorage.getItem(STORAGE_KEY) || '/';
-
-                    console.log("🔘 Clicked:", item.title, "| Current:", currentPath, "| Stored map:", lastMapPath);
-
-                    // Clicking MAP tab (home)
-                    if (target === '/') {
-                        // Coming from settings → load fresh map to apply changes
-                        if (currentPath === '/setari' || currentPath.startsWith('/setari/')) {
-                            console.log("⚙️ From settings, loading fresh map");
-                            nav('/mapAfterSettings', { replace: false });
-                            return;
-                        }
-
-                        // Already on a map path → do nothing
-                        if (MAP_PATHS.includes(currentPath)) {
-                            console.log("🏠 Already on map, staying");
-                            return;
-                        }
-
-                        // Normal → return to last map path
-                        console.log("↩️ Returning to:", lastMapPath);
-                        nav(lastMapPath, { replace: false });
-                        return;
-                    }
+                    // const target = item.page;
+                    // const currentPath = location.pathname;
+                    // const lastMapPath = sessionStorage.getItem(STORAGE_KEY) || '/';
+                    //
+                    // console.log("🔘 Clicked:", item.title, "| Current:", currentPath, "| Stored map:", lastMapPath);
+                    //
+                    // // Clicking MAP tab (home)
+                    // if (target === '/') {
+                    //     // Coming from settings → load fresh map to apply changes
+                    //     if (currentPath === '/setari' || currentPath.startsWith('/setari/')) {
+                    //         console.log("⚙️ From settings, loading fresh map");
+                    //         nav('/mapAfterSettings', { replace: false });
+                    //         return;
+                    //     }
+                    //
+                    //     // Already on a map path → do nothing
+                    //     if (MAP_PATHS.includes(currentPath)) {
+                    //         console.log("🏠 Already on map, staying");
+                    //         return;
+                    //     }
+                    //
+                    //     // Normal → return to last map path
+                    //     console.log("↩️ Returning to:", lastMapPath);
+                    //     nav(lastMapPath, { replace: false });
+                    //     return;
+                    // }
 
                     // Non-map routes
-                    console.log("➡️ Navigating to:", target);
-                    nav(target, { replace: false });
+                    // console.log("➡️ Navigating to:", target);
+                    // if(item.page === "/setari") {
+                    // }
+                    sessionStorage.setItem("navigation_last_page", location.pathname);
+                    nav(item.page, { replace: false });
                 }}
                 disableSelection
                 activeBgColor="white"

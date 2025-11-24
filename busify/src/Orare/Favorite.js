@@ -101,7 +101,6 @@ function Favorite() {
                 return 'lv'; // Workdays
             })();
 
-            // ✅ Load all departure data in parallel
             const updates = await Promise.all(
                 favoriteList.map(async (lineName) => {
                     try {
@@ -124,7 +123,6 @@ function Favorite() {
                 })
             );
 
-            // ✅ Once all data is ready, apply it in one go
             setLines(prevLines => {
                 return prevLines.map(line => {
                     const update = updates.find(u => u && u.name === line.name);
@@ -254,8 +252,11 @@ function Favorite() {
                         }}/>
                     </div>
                 ))}
+
+                {lines.filter(line => favorite.includes(line?.name)).length === 0 ? (
+                    <div>Nu ai nicio linie setată ca favorite, dar le poți seta din pagina de orare!</div>
+                ) : null}
             </div>
-            <BottomBar/>
             <br/> <br/> <br/>
         </div>
     )

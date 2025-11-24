@@ -19,6 +19,8 @@ import Stiri from "./Stiri/Stiri";
 import Settings from "./Settings/Settings";
 import PanouDisplayLinii from "./PanouDisplayLinii/PanouDisplayLinii";
 import Onboarding from "./Onboarding/Onboarding";
+import BottomBar from "./OtherComponents/BottomBar";
+import { SheetProvider } from './Contexts/SheetContext';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -36,26 +38,25 @@ if ('serviceWorker' in navigator) {
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <BrowserRouter>
-        <AliveScope>
-      <Routes>
-          <Route path="/" element={<KeepAlive><Map /></KeepAlive>} />
-            <Route path="/map" element={<KeepAlive><Map /></KeepAlive>} />
-            <Route path="/mapAfterSettings" element={<Map/>} />
-            <Route path="/harta" element={<KeepAlive><Map /></KeepAlive>} />
-            <Route path="/map/:undemibusu" element={<Map/>} />
-            <Route path="/orare" element={<Orare />} />
-            <Route path="/orare/:linie" element={<Orar />} />
-            <Route path="/favorite/:linie" element={<Orar />} />
-            <Route path="/favorite" element={<Favorite />} />
-            <Route path="/storeredirect" element={<AppStoreRedirects />} />
-            <Route path="/stiri" element={<Stiri />} />
-            <Route path="/setari" element={<Settings />} />
-            <Route path="/setari/panou-linii" element={<PanouDisplayLinii />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path='/.well-known/assetlinks.json' element={<FileViewer filePath="../public/assetlinks.json" />} />
-            <Route path="*" element={<KeepAlive><Map /></KeepAlive>} />
-      </Routes>
-    </AliveScope>
+        <SheetProvider>
+            <AliveScope>
+                <Routes>
+                    <Route path="/" element={<KeepAlive><Map /></KeepAlive>} />
+                    <Route path="/map/:undemibusu" element={<Map/>} />
+                    <Route path="/orare" element={<Orare />} />
+                    <Route path="/orare/:linie" element={<Orar />} />
+                    <Route path="/favorite/:linie" element={<Orar />} />
+                    <Route path="/favorite" element={<Favorite />} />
+                    <Route path="/storeredirect" element={<AppStoreRedirects />} />
+                    <Route path="/stiri" element={<Stiri />} />
+                    <Route path="/setari" element={<Settings />} />
+                    <Route path="/setari/panou-linii" element={<PanouDisplayLinii />} />
+                    <Route path="/onboarding" element={<Onboarding />} />
+                    <Route path='/.well-known/assetlinks.json' element={<FileViewer filePath="../public/assetlinks.json" />} />
+                    <Route path="*" element={<KeepAlive><Map /></KeepAlive>} />
+                </Routes>
+            </AliveScope>
+            <BottomBar/>
+        </SheetProvider>
     </BrowserRouter>
-
 );

@@ -14,8 +14,13 @@ import {ReactComponent as ArrowRight} from "../Images/arrow-up-right.svg";
 import {useState} from "react";
 import CustomSwitch from "../OtherComponents/CustomSwitch";
 import {ReactComponent as ChevronRightIcon} from "../Images/ChevronRightIcon.svg";
-import {useNavigate} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import PaywallSheet from "../Paywall/PaywallSheet";
+
+import { TbLocation } from "react-icons/tb";
+import { GrConfigure } from "react-icons/gr";
+import { LiaPiggyBankSolid } from "react-icons/lia";
+import { GoCommentDiscussion } from "react-icons/go";
 
 
 
@@ -23,6 +28,7 @@ function Settings() {
     const [iconite, setIconite] = useState(localStorage.getItem("iconite") === "true");
     const [sageti, setSageti] = useState(localStorage.getItem("sageti"));
     const nav = useNavigate();
+    const location = useLocation();
     const [showDonationPaywall, setShowDonationPaywall] = useState(false);
 
     return (
@@ -52,7 +58,7 @@ function Settings() {
                     flexDirection: 'row',
                     alignItems: 'center'
                 }}>
-                    <TroleibusIcon style={{
+                    <BusIcon style={{
                         marginRight: 10,
                         filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)'
                     }}/>
@@ -79,8 +85,9 @@ function Settings() {
                     flexDirection: 'row',
                     alignItems: 'center'
                 }}>
-                    <BusIcon style={{
+                    <TbLocation style={{
                         marginRight: 10,
+                        scale: "1.3",
                         filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)'
                     }}/>
                     <div>Săgeți pe hartă</div>
@@ -110,8 +117,9 @@ function Settings() {
                             nav('/setari/panou-linii')
                         }}
                 >
-                    <TramIcon style={{
+                    <GrConfigure style={{
                         marginRight: 10,
+                        scale: "1.2",
                         filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)'
                     }}/>
                     <div>Configurează liniile afișate</div>
@@ -132,13 +140,14 @@ function Settings() {
                     flexDirection: 'row',
                     alignItems: 'center'
                 }} onClick={() => {
-                    window.location.href = "https://revolut.me/m_bondor"
+                    setShowDonationPaywall(true)
                 }}>
-                    <HeartIconFill style={{
+                    <LiaPiggyBankSolid style={{
+                        scale: "1.7",
                         filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
                         marginRight: 10
                     }}/>
-                    <div>Donează</div>
+                    <div>Donează (în lucru)</div>
                     <ArrowRight style={{
                         filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
                         marginLeft: 'auto'
@@ -155,36 +164,16 @@ function Settings() {
                 }} onClick={() => {
                     window.location.href = "https://busify.ro/contact"
                 }}>
-                    <TOSIcon style={{marginRight: 10}}/>
+                    <GoCommentDiscussion style={{
+                        marginRight: 10,
+                        scale: "1.4",
+                        filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)'
+                    }}/>
                     <div>Sugestii? Scrie-ne!</div>
                     <ArrowRight style={{
                         filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
                         marginLeft: 'auto'
                     }}/>
-                </Button>
-            </ButtonGroup>
-
-            <br/>
-            <small>Resetare</small>
-            <ButtonGroup vertical>
-                <Button variant="undefined" style={{
-                    boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                    background: 'white',
-                    width: '90vw',
-                    textAlign: 'left',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                }} onClick={() => {
-                    localStorage.setItem("linii_favorite", "")
-                    alert("Liniile favorite au fost resetate.")
-                }}>
-                    <FavoriteIcon style={{
-                        filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
-                        scale: "0.9",
-                        marginRight: 10
-                    }}/>
-                    <div>Resetare linii favorite</div>
                 </Button>
             </ButtonGroup>
 
@@ -203,7 +192,7 @@ function Settings() {
                     }} onClick={() => {
                         window.location.href = "https://busify.ro/privacypolicy"
                     }}>
-                        <PCIcon style={{marginRight: 10}}/>
+                        <PCIcon style={{marginRight: 10, scale: '0.9'}}/>
                         <div>Politică de confidențialitate</div>
                         <ArrowRight style={{
                             filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
@@ -221,26 +210,8 @@ function Settings() {
                     }} onClick={() => {
                         window.location.href = "https://busify.ro/termsofservice"
                     }}>
-                        <TOSIcon style={{marginRight: 10}}/>
+                        <TOSIcon style={{marginRight: 10, scale: '0.9'}}/>
                         <div>Termeni de utilizare</div>
-                        <ArrowRight style={{
-                            filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
-                            marginLeft: 'auto'
-                        }}/>
-                    </Button>
-                    <Button variant="undefined" style={{
-                        boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                        background: 'white',
-                        width: '90vw',
-                        textAlign: 'left',
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center'
-                    }} onClick={() => {
-                        setShowDonationPaywall(true)
-                    }}>
-                        <TOSIcon style={{marginRight: 10}}/>
-                        <div>Donatii</div>
                         <ArrowRight style={{
                             filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
                             marginLeft: 'auto'
@@ -254,10 +225,6 @@ function Settings() {
                     setShowDonationPaywall(false);
                 }}
             />
-
-            {
-                !showDonationPaywall ? <BottomBar/> : null
-            }
         </div>
 )
 }

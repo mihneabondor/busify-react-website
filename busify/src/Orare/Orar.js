@@ -240,7 +240,7 @@ function Orar(props) {
                 <Traseu/>
             </div> : <div></div>}
             <br/> <br/> <br/>
-            <BottomBar/>
+            {/*<BottomBar/>*/}
         </div>
     )
 }

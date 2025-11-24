@@ -128,7 +128,7 @@ function Orare() {
             </div>
             <br/> <br/> <br/>
             {/*<div style={{bottom: '0', position: 'fixed'}}>*/}
-            <BottomBar/>
+            {/*<BottomBar/>*/}
             {/*</div>*/}
         </div>
     )
