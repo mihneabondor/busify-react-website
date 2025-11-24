@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -7,10 +7,17 @@ import { Button } from "react-bootstrap";
 import './Onboarding.css';
 import { ReactComponent as First } from '../Images/Onboarding/First.svg';
 import {useNavigate} from "react-router-dom";
+import {useSheet} from "../Contexts/SheetContext";
 
 function Onboarding() {
     const [swiperInstance, setSwiperInstance] = useState(null);
     const nav = useNavigate();
+
+    const {setSheetOpen} = useSheet();
+
+    useEffect(() => {
+        setSheetOpen(true);
+    })
 
     return (
         <div
@@ -219,6 +226,7 @@ function Onboarding() {
                     boxShadow: 'none',
                     border: 'none',
                 }} onClick={() => {
+                    setSheetOpen(false);
                     nav('/setari/panou-linii')
                 }}>
                     Sari peste
@@ -234,8 +242,10 @@ function Onboarding() {
                         border: 'none',
                     }}
                     onClick={() => {
-                        if(swiperInstance?.isEnd)
+                        if(swiperInstance?.isEnd) {
+                            setSheetOpen(false)
                             nav('/setari/panou-linii')
+                        }
                         else
                             swiperInstance?.slideNext()
                     }}

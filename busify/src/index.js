@@ -35,6 +35,14 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+window.receiveStatusUpdateFromiOS = (message) => {
+    try {
+        if(message.status === "success") {
+            localStorage.setItem("active_subscription", JSON.stringify(message));
+        }
+    } catch (e) {}
+};
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <BrowserRouter>

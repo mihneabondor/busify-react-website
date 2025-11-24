@@ -126,6 +126,7 @@ function PanouDisplayLinii() {
                 <BackButton style={{marginRight: '75vw', display: window.history.length > 1 ? "inital" : 'none'}} onClick={() => {
                     if(!localStorage.hasOwnProperty("onboarding_done")) {
                         localStorage.setItem("onboarding_done", "true");
+                        sessionStorage.setItem("navigation_last_page", "/setari")
                         nav('/');
                     } else nav('/setari');
                 }}/>
