@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.5e69e29a.css",
-    "main.js": "/static/js/main.dc549174.js",
+    "main.js": "/static/js/main.cdd9b512.js",
     "static/media/image7 2.png": "/static/media/image7 2.f5061430b48bac569c43.png",
     "static/media/image7.png": "/static/media/image7.f5061430b48bac569c43.png",
     "static/media/Third.png": "/static/media/Third.9f2496eeddd7c42e031b.png",
@@ -62,10 +62,10 @@
     "static/media/ChevronRightIcon.svg": "/static/media/ChevronRightIcon.758ef38bb2110e934778fa4524432c40.svg",
     "static/media/backIcon.svg": "/static/media/backIcon.156cbffdc2250db9107fa46e75b6beaa.svg",
     "main.5e69e29a.css.map": "/static/css/main.5e69e29a.css.map",
-    "main.dc549174.js.map": "/static/js/main.dc549174.js.map"
+    "main.cdd9b512.js.map": "/static/js/main.cdd9b512.js.map"
   },
   "entrypoints": [
     "static/css/main.5e69e29a.css",
-    "static/js/main.dc549174.js"
+    "static/js/main.cdd9b512.js"
   ]
 }
