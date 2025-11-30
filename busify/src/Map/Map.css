@@ -8,7 +8,7 @@
 }
 
 .map-container {
-    height: 100dvh;
+    height: calc(100dvh - 60px);
 }
 
 .spinner-container {

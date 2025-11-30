@@ -178,7 +178,7 @@ function PanouDisplayLinii() {
                 ))}
             </div>
             {/*<BottomBar />*/}
-            {/*<br /> <br /> <br />*/}
+            <br /> <br /> <br />
         </div>
     )
 }

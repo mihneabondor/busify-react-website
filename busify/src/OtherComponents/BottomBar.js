@@ -100,53 +100,20 @@ function BottomBar() {
         });
     }, [location.pathname, bottomNavItems]);
 
-    if (keyboardVisible || localSheetOpen) return null;
+    if (keyboardVisible || sheetOpen) return null;
 
     return (
-        <div className="bottom-bar-fixed">
-            <BottomNavigation
-                items={bottomNavItems}
-                selected={selectedIndex >= 0 ? selectedIndex : 0}
-                onItemClick={(item, index) => {
-                    // const target = item.page;
-                    // const currentPath = location.pathname;
-                    // const lastMapPath = sessionStorage.getItem(STORAGE_KEY) || '/';
-                    //
-                    // console.log("🔘 Clicked:", item.title, "| Current:", currentPath, "| Stored map:", lastMapPath);
-                    //
-                    // // Clicking MAP tab (home)
-                    // if (target === '/') {
-                    //     // Coming from settings → load fresh map to apply changes
-                    //     if (currentPath === '/setari' || currentPath.startsWith('/setari/')) {
-                    //         console.log("⚙️ From settings, loading fresh map");
-                    //         nav('/mapAfterSettings', { replace: false });
-                    //         return;
-                    //     }
-                    //
-                    //     // Already on a map path → do nothing
-                    //     if (MAP_PATHS.includes(currentPath)) {
-                    //         console.log("🏠 Already on map, staying");
-                    //         return;
-                    //     }
-                    //
-                    //     // Normal → return to last map path
-                    //     console.log("↩️ Returning to:", lastMapPath);
-                    //     nav(lastMapPath, { replace: false });
-                    //     return;
-                    // }
-
-                    // Non-map routes
-                    // console.log("➡️ Navigating to:", target);
-                    // if(item.page === "/setari") {
-                    // }
-                    sessionStorage.setItem("navigation_last_page", location.pathname);
-                    nav(item.page, { replace: false });
-                }}
-                disableSelection
-                activeBgColor="white"
-                activeTextColor="#915FA8"
-            />
-        </div>
+        <BottomNavigation
+            items={bottomNavItems}
+            selected={selectedIndex >= 0 ? selectedIndex : 0}
+            onItemClick={(item, index) => {
+                sessionStorage.setItem("navigation_last_page", location.pathname);
+                nav(item.page, { replace: false });
+            }}
+            disableSelection
+            activeBgColor="white"
+            activeTextColor="#915FA8"
+        />
     );
 }
 

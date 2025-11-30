@@ -254,7 +254,7 @@ function Favorite() {
                 ))}
 
                 {lines.filter(line => favorite.includes(line?.name)).length === 0 ? (
-                    <div>Nu ai nicio linie setată ca favorite, dar le poți seta din pagina de orare!</div>
+                    <div style={{margin: "20px"}}>Nu ai nicio linie setată ca favorite, dar le poți seta din pagina de orare!</div>
                 ) : null}
             </div>
             <br/> <br/> <br/>

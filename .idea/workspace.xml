@@ -6,15 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Onboarding/Onboarding 2.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Onboarding/Onboarding 2.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Onboarding/Onboarding.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Onboarding/Onboarding.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/PanouDisplayLinii/PanouDisplayLinii 2.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Orare/Favorite.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Orare/Favorite.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/PanouDisplayLinii/PanouDisplayLinii.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/PanouDisplayLinii/PanouDisplayLinii.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Paywall/Paywall.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Paywall/Paywall.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Settings/Settings.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Settings/Settings.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -117,7 +115,16 @@
       <workItem from="1763805462043" duration="1509000" />
       <workItem from="1763809104637" duration="667000" />
       <workItem from="1763986255078" duration="7677000" />
-      <workItem from="1764001634806" duration="10335000" />
+      <workItem from="1764001634806" duration="10811000" />
+      <workItem from="1764013158606" duration="290000" />
+      <workItem from="1764136346468" duration="1649000" />
+      <workItem from="1764151407286" duration="1472000" />
+      <workItem from="1764170112159" duration="1302000" />
+      <workItem from="1764175715364" duration="40000" />
+      <workItem from="1764186340971" duration="1280000" />
+      <workItem from="1764434998795" duration="2055000" />
+      <workItem from="1764442734349" duration="269000" />
+      <workItem from="1764513793489" duration="3839000" />
     </task>
     <servers />
   </component>

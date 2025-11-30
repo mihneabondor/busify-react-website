@@ -505,7 +505,7 @@ function Map() {
                             const { latitude, longitude } = position.coords;
                             map.current.jumpTo({
                                 center: [longitude, latitude],
-                                zoom: 13,
+                                // zoom: 13,
                                 duration: 1000
                             });
 
@@ -1277,11 +1277,11 @@ function Map() {
                     map.current.flyTo({
                         center: selectedVehicleRef.current.vehicle.lngLat,
                         duration: 1000,
-                        zoom: 13,
+                        // zoom: 13,
                         essential: true
                     });
                     lastCoords.current = selectedVehicleRef.current.vehicle.lngLat;
-                    lastZoom.current = 13
+                    // lastZoom.current = 13
                 }
                 visChange = false
             }, 1500)

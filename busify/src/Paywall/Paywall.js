@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useRef, useState} from "react";
 
 import logo from "../Images/Logo/logo512.png";
 import {ButtonGroup} from "react-bootstrap";
@@ -12,30 +12,43 @@ import { HiOutlineAdjustments } from "react-icons/hi";
 import CloseButton from "react-bootstrap/CloseButton";
 import Spinner from "react-bootstrap/Spinner";
 import Confetti from 'react-confetti'
+import { GoDotFill } from "react-icons/go";
 
 export default function Paywall(props) {
     const [selected, setSelected] = useState("5lei");
     const [message, setMessage] = useState(null);
+    const messageRef = useRef(null);
     const [subscription, setSubscription] = useState(null);
 
     useEffect(() => {
         setSubscription(JSON.parse(localStorage.getItem("active_subscription")));
 
-        window.receiveStatusUpdateFromiOS = (message) => {
+        const handleSubscriptionUpdate = (message) => {
             try {
-                setMessage(message)
+                // Parse message if it's a string, otherwise use directly
+                const parsedMessage = typeof message === 'string' ? JSON.parse(message) : message;
+                setMessage(parsedMessage);
+                messageRef.current = parsedMessage;
 
-                if(message.status === "success") {
-                    setSubscription(message);
-                    localStorage.setItem("active_subscription", JSON.stringify(message));
+                if(parsedMessage.status === "success" || parsedMessage.status === "no_active_subscription") {
+                    setSubscription(parsedMessage.status === "success" ? parsedMessage : null);
+                    localStorage.setItem("active_subscription", JSON.stringify(parsedMessage.status === "success" ? parsedMessage : null));
                 }
             } catch (e) {
-                setMessage(e)
+                setMessage({ status: "error", error: "Error processing update: " + e.message });
             }
         };
 
+        // 1. iOS Listener (Already present)
+        window.receiveStatusUpdateFromiOS = handleSubscriptionUpdate;
+
+        // 2. ANDROID Listener (NEW)
+        window.receiveStatusUpdateFromAndroid = handleSubscriptionUpdate;
+
         return () => {
+            // Clean up both listeners
             delete window.receiveStatusUpdateFromiOS;
+            delete window.receiveStatusUpdateFromAndroid;
         };
     }, []);
 
@@ -48,6 +61,16 @@ export default function Paywall(props) {
         });
     };
 
+    const isRunningInAndroidApp = () => {
+        // Check if the Android Bridge object is available
+        return window.AndroidBridge && typeof window.AndroidBridge.postMessage === 'function';
+    }
+
+    const isRunningIniOSApp = () => {
+        // Check for iOS webkit message handler
+        return window.webkit?.messageHandlers?.donationHandler;
+    }
+
 
     return(
         <div style={{
@@ -55,6 +78,7 @@ export default function Paywall(props) {
             background: "#F6F8FA",
             height:"100dvh",
             overflow: 'auto',
+            paddingBottom: "120px"
         }}>
             {
                 subscription ? <Confetti numberOfPieces = {100}/> : null
@@ -88,73 +112,73 @@ export default function Paywall(props) {
 
                 {
                     !subscription ?
-                    <ButtonGroup vertical style={{marginBottom:'20px'}}>
-                        <Button variant="undefined" style={{
-                            boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                            background: 'white',
-                            width: '90vw',
-                            textAlign: 'left',
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center'
-                        }} onClick={() => {setSelected("5lei")}}>
-                            {
-                                selected === "5lei" ?
-                                    <IoCheckmarkCircle style={{color: '8B56A4', scale: '1.5'}} /> : <FaRegCircle style={{color: '8B56A4', scale: '1.3'}} />
-                            }
-                            <div style={{marginLeft: '10px'}}>Donație de 5 lei</div>
-                            <div style={{marginLeft: 'auto'}}>4.99 ron/lună</div>
-                            <hr/>
-                        </Button>
-                        <Button variant="undefined" style={{
-                            boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                            background: 'white',
-                            width: '90vw',
-                            textAlign: 'left',
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center'
-                        }} onClick={() => {setSelected("10lei")}}>
-                            {
-                                selected === "10lei" ?
-                                    <IoCheckmarkCircle style={{color: '8B56A4', scale: '1.5'}} /> : <FaRegCircle style={{color: '8B56A4', scale: '1.3'}} />
-                            }
-                            <div style={{marginLeft: '10px'}}>Donație de 10 lei</div>
-                            <div style={{marginLeft: 'auto'}}>9.99 ron/lună</div>
-                        </Button>
-                        <Button variant="undefined" style={{
-                            boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                            background: 'white',
-                            width: '90vw',
-                            textAlign: 'left',
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center'
-                        }} onClick={() => {setSelected("25lei")}}>
-                            {
-                                selected === "25lei" ?
-                                    <IoCheckmarkCircle style={{color: '8B56A4', scale: '1.5'}} /> : <FaRegCircle style={{color: '8B56A4', scale: '1.3'}} />
-                            }
-                            <div style={{marginLeft: '10px'}}>Donație de 25 lei</div>
-                            <div style={{marginLeft: 'auto'}}>24.99 ron/lună</div>
-                        </Button>
-                        <Button variant="undefined" style={{
-                            boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                            background: 'white',
-                            width: '90vw',
-                            textAlign: 'left',
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center'
-                        }} onClick={() => {setSelected("50lei")}}>
-                            {
-                                selected === "50lei" ?
-                                    <IoCheckmarkCircle style={{color: '8B56A4', scale: '1.5'}} /> : <FaRegCircle style={{color: '8B56A4', scale: '1.3'}} />
-                            }
-                            <div style={{marginLeft: '10px'}}>Donație de 50 lei</div>
-                            <div style={{marginLeft: 'auto'}}>49.99 ron/lună</div>
-                        </Button>
-                    </ButtonGroup>
+                        <ButtonGroup vertical style={{marginBottom:'20px'}}>
+                            <Button variant="undefined" style={{
+                                boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+                                background: 'white',
+                                width: '90vw',
+                                textAlign: 'left',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                            }} onClick={() => {setSelected("5lei")}}>
+                                {
+                                    selected === "5lei" ?
+                                        <IoCheckmarkCircle style={{color: '#8B56A4', scale: '1.5'}} /> : <FaRegCircle style={{color: '#8B56A4', scale: '1.3'}} />
+                                }
+                                <div style={{marginLeft: '10px'}}>Donație de 5 lei</div>
+                                <div style={{marginLeft: 'auto'}}>4.99 ron/lună</div>
+                                <hr/>
+                            </Button>
+                            <Button variant="undefined" style={{
+                                boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+                                background: 'white',
+                                width: '90vw',
+                                textAlign: 'left',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                            }} onClick={() => {setSelected("10lei")}}>
+                                {
+                                    selected === "10lei" ?
+                                        <IoCheckmarkCircle style={{color: '#8B56A4', scale: '1.5'}} /> : <FaRegCircle style={{color: '#8B56A4', scale: '1.3'}} />
+                                }
+                                <div style={{marginLeft: '10px'}}>Donație de 10 lei</div>
+                                <div style={{marginLeft: 'auto'}}>9.99 ron/lună</div>
+                            </Button>
+                            <Button variant="undefined" style={{
+                                boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+                                background: 'white',
+                                width: '90vw',
+                                textAlign: 'left',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                            }} onClick={() => {setSelected("25lei")}}>
+                                {
+                                    selected === "25lei" ?
+                                        <IoCheckmarkCircle style={{color: '#8B56A4', scale: '1.5'}} /> : <FaRegCircle style={{color: '#8B56A4', scale: '1.3'}} />
+                                }
+                                <div style={{marginLeft: '10px'}}>Donație de 25 lei</div>
+                                <div style={{marginLeft: 'auto'}}>24.99 ron/lună</div>
+                            </Button>
+                            <Button variant="undefined" style={{
+                                boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
+                                background: 'white',
+                                width: '90vw',
+                                textAlign: 'left',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                            }} onClick={() => {setSelected("50lei")}}>
+                                {
+                                    selected === "50lei" ?
+                                        <IoCheckmarkCircle style={{color: '#8B56A4', scale: '1.5'}} /> : <FaRegCircle style={{color: '#8B56A4', scale: '1.3'}} />
+                                }
+                                <div style={{marginLeft: '10px'}}>Donație de 50 lei</div>
+                                <div style={{marginLeft: 'auto'}}>49.99 ron/lună</div>
+                            </Button>
+                        </ButtonGroup>
                         : null
                 }
 
@@ -163,8 +187,7 @@ export default function Paywall(props) {
                         Beneficii exclusive pentru donatori
                     </small>
                 </div>
-
-                <ButtonGroup vertical>
+                <ButtonGroup vertical style={{marginBottom:'20px'}}>
                     <Button variant="undefined" style={{
                         boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
                         background: 'white',
@@ -231,47 +254,103 @@ export default function Paywall(props) {
                         </div>
                     </Button>
                 </ButtonGroup>
+
+                <div style={{textAlign:"left", display: 'flex', justifyContent: 'left'}}>
+                    <small style={{color: 'gray'}}>
+                        Roadmap
+                    </small>
+                </div>
+                <ButtonGroup vertical>
+                    <Button variant="undefined" style={{background: "white", textAlign: "left"}}>
+                        <GoDotFill style={{marginRight: '5px', color: '#8B56A4'}} />
+                        Propriul sistem de direcții și indicații pas cu pas
+                    </Button>
+                    <Button variant="undefined" style={{background: "white", textAlign: "left"}}>
+                        <GoDotFill style={{marginRight: '5px', color: '#8B56A4'}} />
+                        Implementarea unei soluții pentru marker-ele care se suprapun pe hartă
+                    </Button>
+                    <Button variant="undefined" style={{background: "white", textAlign: "left"}}>
+                        <GoDotFill style={{marginRight: '5px', color: '#8B56A4'}} />
+                        Optimizarea semnificativă hărții
+                    </Button>
+                    <Button variant="undefined" style={{background: "white", textAlign: "left"}}>
+                        <GoDotFill style={{marginRight: '5px', color: '#8B56A4'}} />
+                        Integrare 24Pay sau o metodă proprie pentru cumpărarea unui bilet
+                    </Button>
+                    <Button variant="undefined" style={{background: "white", textAlign: "left"}}>
+                        <GoDotFill style={{marginRight: '5px', color: '#8B56A4'}} />
+                        Extindere în alte orașe
+                    </Button>
+                </ButtonGroup>
             </div>
+
+
 
             <div
                 style={{
                     display: 'flex',
                     justifyContent: 'center',
                     flexDirection: 'column',
-                    margin: '20px'
+                    position: "fixed",
+                    bottom: 0,
+                    zIndex: 9999,
+                    width: '100%',
+                    background: "white",
+                    paddingTop: "15px",
+                    boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px"
                 }}
             >
+
+                {
+                    message ? message.status === "error" ? <div style={{ color: 'red', textAlign: 'center', marginBottom: '10px' }}>{message.error}</div> : null : null
+                }
+
                 {
                     !subscription ?
-                <Button
-                    variant="undefined"
-                    style={{
-                        backgroundColor: '#8B56A4',
-                        color: 'white',
-                        fontWeight: 'bold',
-                        borderRadius: 8,
-                        boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px"
-                    }}
-                    onClick={() => {
-                        const amount = selected.replace("lei", "").trim();
+                        <Button
+                            variant="undefined"
+                            style={{
+                                backgroundColor: '#8B56A4',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                borderRadius: 8,
+                                boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px",
+                                margin: "0 20px"
+                            }}
+                            onClick={() => {
+                                const amount = selected.replace("lei", "").trim();
 
-                        const message = {
-                            type: "DONATION_REQUEST",
-                            amount: amount
-                        };
+                                const message = {
+                                    type: "DONATION_REQUEST",
+                                    amount: amount
+                                };
 
-                        if (window.webkit?.messageHandlers?.donationHandler) {
-                            window.webkit.messageHandlers.donationHandler.postMessage(message);
-                        } else {
-                            alert("Abonamentele se pot realiza doar in interiorul aplicatiei de pe iOS sau Android.")
-                            console.log("Not in iOS WebView");
-                        }
-                    }}
-                >
-                    {
-                        message ? message.status === "waiting" ? <Spinner animation="border" /> : message.status === "success" ? "Succes" : message.status === "error" ? "Eroare :(" : "Continua" : "Continuă"
-                    }
-                </Button>
+                                if (isRunningIniOSApp()) {
+                                    // iOS Integration
+                                    window.webkit.messageHandlers.donationHandler.postMessage(message);
+                                    setTimeout(() => {
+                                        if(messageRef.current === null) {
+                                            setMessage({
+                                                status: "error",
+                                                error: "Asigura-te ca aplicația este la zi!"
+                                            }, 2000)
+                                        }
+                                    })
+                                } else if (isRunningInAndroidApp()) {
+                                    window.AndroidBridge.postMessage(JSON.stringify(message));
+                                    setMessage({ status: "waiting" });
+                                } else {
+                                    setMessage({
+                                        status : "error",
+                                        error : "Abonamentele se pot realiza doar în interiorul aplicației de mobil. Asigură-te că aceasta este la zi!"
+                                    })
+                                }
+                            }}
+                        >
+                            {
+                                message?.status === "waiting" ? <Spinner animation="border" /> : message?.status === "success" ? "Succes" : message?.status === "error" ? "Eroare :(" : "Continuă"
+                            }
+                        </Button>
                         : null
                 }
 
@@ -281,10 +360,16 @@ export default function Paywall(props) {
                             variant={'undefined'}
                             style={{ color: 'gray' }}
                             onClick={() => {
-                                if (window.webkit?.messageHandlers?.restoreHandler) {
+                                if (isRunningIniOSApp()) {
                                     window.webkit.messageHandlers.restoreHandler.postMessage({
                                         type: "RESTORE_REQUEST"
                                     });
+                                    setMessage({ status: "waiting" });
+                                } else if (isRunningInAndroidApp()) {
+                                    window.AndroidBridge.postMessage(JSON.stringify({
+                                        type: "RESTORE_PURCHASES"
+                                    }));
+                                    setMessage({ status: "waiting" });
                                 } else {
                                     alert("Restore este disponibil doar în aplicația iOS / Android.");
                                 }
@@ -293,10 +378,6 @@ export default function Paywall(props) {
                             <small>Restore purchases</small>
                         </Button>
                         : null
-                }
-
-                {
-                    message ? message.status === "error" ? message.error : null : null
                 }
             </div>
         </div>
