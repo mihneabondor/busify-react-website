@@ -34,7 +34,7 @@ function Onboarding() {
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                padding: '20px 5px'
+                padding: '20px 5px 0 5px'
             }}>
                 <img
                     src={require('../Images/Logo/logo512.png')}
@@ -227,6 +227,8 @@ function Onboarding() {
                     border: 'none',
                 }} onClick={() => {
                     setSheetOpen(false);
+                    sessionStorage.setItem("navigation_last_page", "/onboarding")
+                    localStorage.setItem("onboarding_done", "true");
                     nav('/setari/panou-linii')
                 }}>
                     Sari peste
@@ -244,6 +246,8 @@ function Onboarding() {
                     onClick={() => {
                         if(swiperInstance?.isEnd) {
                             setSheetOpen(false)
+                            sessionStorage.setItem("navigation_last_page", "/onboarding")
+                            localStorage.setItem("onboarding_done", "true");
                             nav('/setari/panou-linii')
                         }
                         else

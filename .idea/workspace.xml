@@ -5,14 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/busify/src/Images/Logo/beta.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/busify/src/Images/Logo/flag.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/busify/src/Images/Logo/retro.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/busify/src/Images/Logo/snow.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/busify/src/Images/Logo/turbo.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Orare/Favorite.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Orare/Favorite.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Onboarding/Onboarding.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Onboarding/Onboarding.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/PanouDisplayLinii/PanouDisplayLinii.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/PanouDisplayLinii/PanouDisplayLinii.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Paywall/Paywall.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Paywall/Paywall.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Settings/Settings.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Settings/Settings.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,6 +60,11 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/busify/src/Images/Logo" />
+    </key>
+  </component>
   <component name="RunManager" selected="npm.start (1)">
     <configuration name="start (1)" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/busify/package.json" />
@@ -125,6 +131,14 @@
       <workItem from="1764434998795" duration="2055000" />
       <workItem from="1764442734349" duration="269000" />
       <workItem from="1764513793489" duration="3839000" />
+      <workItem from="1764583573741" duration="3256000" />
+      <workItem from="1764667325630" duration="13000" />
+      <workItem from="1764752430365" duration="128000" />
+      <workItem from="1764849793794" duration="212000" />
+      <workItem from="1764943198466" duration="17704000" />
+      <workItem from="1765012752315" duration="23000" />
+      <workItem from="1765015470844" duration="6139000" />
+      <workItem from="1765023397695" duration="424000" />
     </task>
     <servers />
   </component>

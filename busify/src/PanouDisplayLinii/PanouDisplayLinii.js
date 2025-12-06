@@ -124,8 +124,7 @@ function PanouDisplayLinii() {
         <div className="orare">
             <div className="orare-content-header">
                 <BackButton style={{marginRight: '75vw', display: window.history.length > 1 ? "inital" : 'none'}} onClick={() => {
-                    if(!localStorage.hasOwnProperty("onboarding_done")) {
-                        localStorage.setItem("onboarding_done", "true");
+                    if(sessionStorage.getItem("navigation_last_page") === "/onboarding") {
                         sessionStorage.setItem("navigation_last_page", "/setari")
                         nav('/');
                     } else nav('/setari');
