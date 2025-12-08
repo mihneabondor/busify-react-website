@@ -12,12 +12,14 @@ import {io} from 'socket.io-client'
 import Search from "./Search.js";
 import BottomBar from "../OtherComponents/BottomBar";
 import VehicleHighlight from "../OtherComponents/VehicleHighlight";
-import ReactDOM from 'react-dom/client';
+import ReactDOM, {createRoot} from 'react-dom/client';
 import Badges from "../OtherComponents/Badges";
 import VehicleMarkerWrapper from "../OtherComponents/VehicleMarkerWrapper";
 import debounce from 'lodash.debounce';
 import NotificationToast from "./NotificationToast";
 import {useActivate} from "react-activation";
+import PaywallSheet from "../Paywall/PaywallSheet";
+import { LiaPiggyBankSolid } from "react-icons/lia";
 
 function Map() {
     var map = useRef();
@@ -78,6 +80,8 @@ function Map() {
     const nearestStopRef = useRef(null);
 
     const updateCancelToken = useRef({ cancelled: false });
+
+    const [showDonationPopup, setShowDonationPopup] = useState(false);
 
     const nav = useNavigate();
 
@@ -461,6 +465,29 @@ function Map() {
         map.current.addControl(button, "top-right");
     }
 
+    function addDonationButton() {
+        class settingsButton {
+            onAdd(map) {
+                const div = document.createElement("div");
+                div.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+                const btn = document.createElement("button");
+                div.appendChild(btn);
+                const root = createRoot(btn);
+                root.render(
+                    <LiaPiggyBankSolid
+                        style={{scale: "1.7", filter: "brightness(0) saturate(100%) invert(56%) sepia(80%) saturate(873%) hue-rotate(167deg) brightness(90%) contrast(93%)"}}
+                    />
+                );
+                div.addEventListener("contextmenu", (e) => e.preventDefault());
+                div.addEventListener("click", () => setShowDonationPopup(prev => !prev));
+
+                return div;
+            }
+        }
+        const button = new settingsButton();
+        map.current.addControl(button, "top-right");
+    }
+
     const generateMap = async (refresh = false) => {
         try {
             const request = await fetch('https://busifyserver.onrender.com/mapbox');
@@ -489,6 +516,7 @@ function Map() {
             })
             addSearchButton();
             map.current.addControl(geo);
+            addDonationButton();
             map.current.on('load', () => {
                 handleSocketOns();
                 if (refresh)
@@ -718,11 +746,11 @@ function Map() {
                             left: normalPadding - 30,
                             right: normalPadding - 30
                         }
-                        map.current.fitBounds(bounds, {
-                            padding: padding,
-                            duration: 1250,
-                            maxZoom: 14
-                        })
+                        // map.current.fitBounds(bounds, {
+                        //     padding: padding,
+                        //     duration: 1250,
+                        //     maxZoom: 14
+                        // })
 
                     }
 
@@ -1346,14 +1374,13 @@ function Map() {
         const setNextDate = (days) => {
             const nextDate = new Date();
             nextDate.setDate(nextDate.getDate() + days);
-            localStorage.setItem("donation_notification_next_date", nextDate.toISOString());
+            localStorage.setItem("donation_popup_next_date", nextDate.toISOString());
         }
-        if(!localStorage.hasOwnProperty("donation_notification_next_date")){
-            setNextDate(2);
-        } else if(new Date() > new Date(localStorage.getItem("donation_notification_next_date"))) {
-            setNotificationTitle("Îți place Busify? Susține dezvoltarea aplicației printr-o donație din pagina de setări. Mulțumim!")
-            setShowNotification(true);
-            setNextDate(30);
+        if(!localStorage.hasOwnProperty("donation_popup_next_date")){
+            setNextDate(1);
+        } else if(!localStorage.hasOwnProperty("donation_shown_once") && new Date() > new Date(localStorage.getItem("donation_popup_next_date"))) {
+            setShowDonationPopup(true)
+            localStorage.setItem("donation_shown_once", "true")
         }
     }
 
@@ -1365,7 +1392,6 @@ function Map() {
 
     useEffect(() => {
         if (map.current) return;
-        // console.log("Map mounted");
 
         localStorage.setItem('labels', '');
         generateMap();
@@ -1378,7 +1404,6 @@ function Map() {
                 socket.current.disconnect();
                 socket.current = null;
             }
-            // console.log("Map unmounted");
         };
     }, []);
 
@@ -1410,6 +1435,12 @@ function Map() {
                 show={showNotification}
                 onHide={()=>{setShowNotification(false)}}
                 title={notificationTitle}
+            />
+            <PaywallSheet
+                show={showDonationPopup}
+                onHide={() => {
+                    setShowDonationPopup(false);
+                }}
             />
             <Undemibusu
                 show={showUndemibusu}

@@ -5,15 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/busify/src/Images/Logo/beta.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/busify/src/Images/Logo/flag.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/busify/src/Images/Logo/retro.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/busify/src/Images/Logo/snow.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/busify/src/Images/Logo/turbo.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Onboarding/Onboarding.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Onboarding/Onboarding.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/PanouDisplayLinii/PanouDisplayLinii.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/PanouDisplayLinii/PanouDisplayLinii.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Paywall/Paywall.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Paywall/Paywall.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -139,6 +132,7 @@
       <workItem from="1765012752315" duration="23000" />
       <workItem from="1765015470844" duration="6139000" />
       <workItem from="1765023397695" duration="424000" />
+      <workItem from="1765027963346" duration="1422000" />
     </task>
     <servers />
   </component>
