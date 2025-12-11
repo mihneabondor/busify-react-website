@@ -6,7 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Map/NotificationToast.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/NotificationToast.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/VehicleMarkerWrapper.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/VehicleMarkerWrapper.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/index.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,6 +52,7 @@
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;npm.start (1).executor&quot;: &quot;Run&quot;,
     &quot;npm.start.executor&quot;: &quot;Run&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
     &quot;ts.external.directory.path&quot;: &quot;/Applications/WebStorm.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
@@ -133,6 +138,13 @@
       <workItem from="1765015470844" duration="6139000" />
       <workItem from="1765023397695" duration="424000" />
       <workItem from="1765027963346" duration="1422000" />
+      <workItem from="1765218178597" duration="1568000" />
+      <workItem from="1765307163682" duration="44000" />
+      <workItem from="1765365652543" duration="1470000" />
+      <workItem from="1765370108811" duration="4000" />
+      <workItem from="1765377933699" duration="1191000" />
+      <workItem from="1765454367035" duration="3061000" />
+      <workItem from="1765477323637" duration="2277000" />
     </task>
     <servers />
   </component>

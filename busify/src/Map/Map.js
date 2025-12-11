@@ -27,7 +27,11 @@ function Map() {
     var defLat = 46.770439;
     var lastCoords = useRef([defLng, defLat]);
     var lastZoom = useRef(13)
-    var markers = useRef([]);
+    // OPTIMIZATION: Use Map for O(1) lookups by vehicle label
+    // Note: Using window.Map because component is named "Map" which shadows the built-in
+    var markers = useRef(new window.Map());
+    // OPTIMIZATION: Track visible markers in a Set for fast visibility checks
+    var visibleMarkers = useRef(new window.Set());
     const [markersState, setMarkersState ] = useState([]);
     var stopMarkers = useRef([]);
     let vehicles = useRef([]);
@@ -84,6 +88,25 @@ function Map() {
     const [showDonationPopup, setShowDonationPopup] = useState(false);
 
     const nav = useNavigate();
+
+    // OPTIMIZATION: Cache localStorage values to avoid repeated reads
+    const localStorageCache = useRef({
+        linii_selectate: null,
+        iconite: null,
+        sageti: null
+    });
+
+    const getLocalStorageCached = (key) => {
+        if (localStorageCache.current[key] === null) {
+            localStorageCache.current[key] = localStorage.getItem(key);
+        }
+        return localStorageCache.current[key];
+    };
+
+    const setLocalStorageCached = (key, value) => {
+        localStorage.setItem(key, value);
+        localStorageCache.current[key] = value;
+    };
 
     const foundLabelsRef = useRef([]);
     const addStopMarker = (stop, index, length, stops) => {
@@ -158,10 +181,11 @@ function Map() {
     }
 
     const addMarker = (vehicle) => {
-        const existingIndex = markers.current.findIndex(m => m.vehicle.label === vehicle.label);
-        if (existingIndex !== -1) {
-            markers.current[existingIndex].marker.remove();
-            markers.current.splice(existingIndex, 1);
+        // OPTIMIZATION: O(1) lookup with Map instead of O(n) findIndex
+        const existing = markers.current.get(vehicle.label);
+        if (existing) {
+            existing.marker.remove();
+            markers.current.delete(vehicle.label);
         }
 
         const el = document.createElement('div');
@@ -174,8 +198,7 @@ function Map() {
                 ref={markerComponentRef}
                 initialVehicle={{
                     ...vehicle,
-                    hidden:
-                        hiddenMarkerCondition(vehicle)
+                    hidden: hiddenMarkerCondition(vehicle)
                 }}
                 mapBearing={map.current.getBearing()}
             />
@@ -216,12 +239,15 @@ function Map() {
             }, 1000)
         });
 
-        // Save everything for later update
-        markers.current.push({
+        // OPTIMIZATION: O(1) insertion with Map instead of O(n) push
+        markers.current.set(vehicle.label, {
             marker: mapboxMarker,
             vehicle,
             reactRef: markerComponentRef
         });
+
+        // Initialize visibility tracking - assume visible until checkMarkerVisibility runs
+        visibleMarkers.current.add(vehicle.label);
     };
 
     // store timeout across renders
@@ -254,18 +280,24 @@ function Map() {
         const token = updateCancelToken.current;
 
         const currentVehicles = vehicles.current;
-        const currentVehicleLabels = currentVehicles.map(v => v.label);
-        const existingLabels = markers.current.map(m => m.vehicle.label);
+        // OPTIMIZATION: Use Set for O(1) lookups instead of Array.includes()
+        // Note: Using window.Set/Map because component is named "Map" which shadows the built-in
+        const currentVehicleLabelsSet = new window.Set(currentVehicles.map(v => v.label));
+        // OPTIMIZATION: Create a Map for O(1) vehicle lookups by label
+        const currentVehiclesMap = new window.Map(currentVehicles.map(v => [v.label, v]));
 
-        // Remove markers for vehicles that no longer exist
-        markers.current = markers.current.filter(entry => {
-            const stillExists = currentVehicleLabels.includes(entry.vehicle.label);
-            if (!stillExists) entry.marker.remove();
-            return stillExists;
+        // OPTIMIZATION: Remove markers for vehicles that no longer exist using Map
+        const labelsToRemove = [];
+        markers.current.forEach((entry, label) => {
+            if (!currentVehicleLabelsSet.has(label)) {
+                entry.marker.remove();
+                labelsToRemove.push(label);
+            }
         });
+        labelsToRemove.forEach(label => markers.current.delete(label));
 
-        // Find new vehicles
-        const newVehicles = currentVehicles.filter(v => !existingLabels.includes(v.label));
+        // OPTIMIZATION: Find new vehicles using Set for O(1) checks
+        const newVehicles = currentVehicles.filter(v => !markers.current.has(v.label));
         const BATCH_SIZE = 20;
         let addIndex = 0;
 
@@ -293,46 +325,56 @@ function Map() {
 
         const updateExistingMarkersInChunks = () => {
             const selectedLabel = selectedVehicleRef.current?.vehicle?.label;
-            const entries = [...markers.current].sort((a, b) => {
-                if (a.vehicle.label === selectedLabel) return -1;
-                if (b.vehicle.label === selectedLabel) return 1;
 
-                const aVisible = a.marker.getElement().style.display !== "none";
-                const bVisible = b.marker.getElement().style.display !== "none";
-                if (aVisible && !bVisible) return -1;
-                if (!aVisible && bVisible) return 1;
-                return 0;
+            // OPTIMIZATION: Build priority lists without sorting - O(n) instead of O(n log n)
+            const priorityEntries = [];
+            const visibleEntries = [];
+            const hiddenEntries = [];
+
+            markers.current.forEach((entry, label) => {
+                if (label === selectedLabel) {
+                    priorityEntries.push(entry);
+                } else if (visibleMarkers.current.has(label)) {
+                    visibleEntries.push(entry);
+                } else {
+                    hiddenEntries.push(entry);
+                }
             });
 
+            // Concatenate in priority order without sorting
+            const entries = [...priorityEntries, ...visibleEntries, ...hiddenEntries];
+
             let index = 0;
-            const MAX_ANIMATED_MARKERS = 20;
-            const animations = new Set();
 
             const processNextBatch = () => {
                 if (token.cancelled) return;
                 const batch = entries.slice(index, index + BATCH_SIZE);
-                let animatedCount = 0;
 
                 batch.forEach(entry => {
-                    const vehi = currentVehicles.find(v => v.label === entry.vehicle.label);
+                    // OPTIMIZATION: O(1) lookup with Map instead of O(n) find
+                    const vehi = currentVehiclesMap.get(entry.vehicle.label);
                     if (!vehi) return;
 
-                    const start = entry.vehicle.lngLat;
                     const end = (vehi.nextCoords && vehi.nextCoords[0] !== undefined)
                         ? offsetToRight(vehi.lngLat, vehi.nextCoords)
                         : vehi.lngLat;
 
-                    const distance = Math.hypot(end[0]-start[0], end[1]-start[1]);
-                    const isVisible = entry.marker.getElement().style.display !== "none";
-                    const shouldAnimate = isVisible && distance > 0.0001 && animatedCount < MAX_ANIMATED_MARKERS;
+                    // Check if position actually changed (threshold to avoid micro-movements)
+                    const oldLngLat = entry.marker.getLngLat();
+                    const positionChanged = Math.abs(oldLngLat.lng - end[0]) > 0.00001 ||
+                                            Math.abs(oldLngLat.lat - end[1]) > 0.00001;
 
-                    if (shouldAnimate) {
-                        animatedCount++;
-                        animations.add({ entry, start, end, startTime: performance.now(), duration: 500 });
-                    } else if (distance > 0.00001) {
+                    const el = entry.marker.getElement();
+
+                    if (positionChanged) {
+                        // Add animating class before position change
+                        el.classList.add('marker-animating');
                         entry.marker.setLngLat(end);
-                        entry.vehicle.lngLat = vehi.lngLat;
+                        // Remove class after animation completes
+                        setTimeout(() => el.classList.remove('marker-animating'), 850);
                     }
+
+                    entry.vehicle.lngLat = vehi.lngLat;
 
                     if (entry.reactRef?.current?.updateVehicle) {
                         entry.reactRef.current.updateVehicle({ ...vehi, hidden: hiddenMarkerCondition(vehi) });
@@ -346,27 +388,7 @@ function Map() {
                 else if (!token.cancelled) updateSelectedVehicleAndStops();
             };
 
-            const animateAll = (time) => {
-                if (token.cancelled) {
-                    animations.clear();
-                    return;
-                }
-                const finished = [];
-                animations.forEach(anim => {
-                    const elapsed = time - anim.startTime;
-                    let progress = Math.min(1, elapsed / anim.duration);
-                    const lng = anim.start[0] + (anim.end[0]-anim.start[0]) * progress;
-                    const lat = anim.start[1] + (anim.end[1]-anim.start[1]) * progress;
-                    anim.entry.marker.setLngLat([lng, lat]);
-                    anim.entry.vehicle.lngLat = [lng, lat];
-                    if (progress >= 1) finished.push(anim);
-                });
-                finished.forEach(anim => animations.delete(anim));
-                if (animations.size > 0) requestAnimationFrame(animateAll);
-            };
-
             processNextBatch();
-            requestAnimationFrame(animateAll);
         };
 
         addNextBatch();
@@ -375,8 +397,9 @@ function Map() {
 
     const updateSelectedVehicleAndStops = () => {
         if (selectedVehicleRef.current) {
-            const updatedVehicle = markers.current.find(elem =>
-                elem.vehicle.label === selectedVehicleRef.current.vehicle.label)?.vehicle;
+            // OPTIMIZATION: O(1) lookup with Map.get() instead of O(n) find()
+            const entry = markers.current.get(selectedVehicleRef.current.vehicle.label);
+            const updatedVehicle = entry?.vehicle;
 
             if (updatedVehicle) {
                 selectedVehicleRef.current.vehicle = updatedVehicle;
@@ -386,11 +409,7 @@ function Map() {
                 }));
                 addPolyline(updatedVehicle, false);
 
-                const stops = stopMarkers.current.map(elem => elem.stop);
-                // stopMarkers.current.forEach(stopMarker => stopMarker.marker.remove());
-                // stopMarkers.current = [];
                 getStops(selectedVehicleRef.current.vehicle.tripId);
-                // stops.forEach((stop, index) => addStopMarker(stop, index, stops.length));
             }
         }
     };
@@ -405,9 +424,10 @@ function Map() {
     const resetMarkers = () => {
         const BATCH_SIZE = 25;
 
-        // Step 1: Remove existing markers in chunks
-        const toRemove = [...markers.current]; // Clone to avoid mutation issues
-        markers.current = []; // Clear marker tracking immediately
+        // Step 1: Remove existing markers in chunks using Map
+        const toRemove = Array.from(markers.current.values());
+        markers.current.clear(); // OPTIMIZATION: Use Map.clear() instead of reassignment
+        visibleMarkers.current.clear(); // Clear visibility tracking
 
         let removeIndex = 0;
 
@@ -446,7 +466,7 @@ function Map() {
         };
 
         removeNextBatch();
-        setMarkersState(markers.current);
+        setMarkersState(Array.from(markers.current.values()));
     };
 
     function addSearchButton() {
@@ -562,6 +582,7 @@ function Map() {
                 lastCoords.current = map.current.getCenter().toArray();
                 lastZoom.current = map.current.getZoom();
             })
+
             map.current.on('rotate', () => {
                 const mapBearing = map.current.getBearing() * Math.PI / 180; // convert to radians
 
@@ -618,7 +639,8 @@ function Map() {
             [bounds.getEast() + paddingLng, bounds.getNorth() + paddingLat]
         );
 
-        const entries = [...markers.current];
+        // OPTIMIZATION: Convert Map values to array for batch processing
+        const entries = Array.from(markers.current.values());
         const BATCH_SIZE = 25;
         let index = 0;
 
@@ -628,12 +650,15 @@ function Map() {
             batch.forEach(({ vehicle, marker }) => {
                 const el = marker.getElement();
                 const inBounds = paddedBounds.contains(vehicle.lngLat);
-                const currentlyHidden = el.style.display === "none";
+                const isCurrentlyVisible = visibleMarkers.current.has(vehicle.label);
 
-                if (inBounds && currentlyHidden) {
-                    el.style.display = "block";
-                } else if (!inBounds && !currentlyHidden) {
-                    el.style.display = "none";
+                if (inBounds && !isCurrentlyVisible) {
+                    // OPTIMIZATION: Use CSS class instead of inline style
+                    visibleMarkers.current.add(vehicle.label);
+                    el.classList.remove('marker-hidden');
+                } else if (!inBounds && isCurrentlyVisible) {
+                    visibleMarkers.current.delete(vehicle.label);
+                    el.classList.add('marker-hidden');
                 }
             });
 
@@ -1059,7 +1084,11 @@ function Map() {
 
     const setShownVehicles = () => {
         let s = [];
-        if (localStorage.getItem('linii_selectate')) s = localStorage.getItem('linii_selectate').split(',');
+        // Invalidate cache and read fresh value from localStorage
+        // (settings page may have changed linii_selectate)
+        localStorageCache.current.linii_selectate = null;
+        const cachedLinii = getLocalStorageCached('linii_selectate');
+        if (cachedLinii) s = cachedLinii.split(',');
         let saved = [];
         for (let i = 0; i < s.length; i += 2)
             saved.push([s[i], s[i + 1] === 'true']);
@@ -1171,8 +1200,10 @@ function Map() {
             vehicles.current = newVehicles;
 
             let s = [];
-            if (localStorage.getItem('linii_selectate'))
-                s = localStorage.getItem('linii_selectate').split(',');
+            // OPTIMIZATION: Use cached localStorage value
+            const cachedLinii = getLocalStorageCached('linii_selectate');
+            if (cachedLinii)
+                s = cachedLinii.split(',');
 
             try {
                 const resp = await fetch('https://orare.busify.ro/public/buses_basic.json');
@@ -1202,12 +1233,13 @@ function Map() {
             }
             setUniqueLines(unique.current);
 
-            if (!localStorage.getItem('linii_selectate'))
-                localStorage.setItem('linii_selectate', unique.current);
-            if (!localStorage.getItem('iconite'))
-                localStorage.setItem('iconite', true);
-            if (!localStorage.getItem('sageti'))
-                localStorage.setItem('sageti', true);
+            // OPTIMIZATION: Use cached localStorage access
+            if (!getLocalStorageCached('linii_selectate'))
+                setLocalStorageCached('linii_selectate', unique.current);
+            if (!getLocalStorageCached('iconite'))
+                setLocalStorageCached('iconite', true);
+            if (!getLocalStorageCached('sageti'))
+                setLocalStorageCached('sageti', true);
 
             loadedFirstTime = true;
             setLoaded(true);
@@ -1228,7 +1260,9 @@ function Map() {
             if (undemibusu === 'undemiibusu') {
                 setShowUndemibusu(true);
             } else if (searchParams.get('id')) {
-                const elem = markers.current.find(elem => elem.vehicle.label === searchParams.get('id'));
+                // OPTIMIZATION: O(1) lookup with Map.get() instead of O(n) find()
+                const elem = markers.current.get(searchParams.get('id'));
+                if (!elem) return; // Guard against missing marker
                 const vehicle = elem.vehicle;
                 selectedVehicleRef.current = null;
                 stopMarkers.current.forEach(e => e.marker.remove());
@@ -1384,9 +1418,18 @@ function Map() {
         }
     }
 
+    const mapOptimizationUpdateNotification = () => {
+        if(!localStorage.hasOwnProperty("map_optimization_update_notifiation")){
+            setNotificationTitle("Începem lucrul la optimizări semnificative ale hărții! Modificările vor fi vizibile o perioadă doar celor cu abonament activ.")
+            setShowNotification(true)
+            localStorage.setItem("map_optimization_update_notifiation", "true")
+        }
+    }
+
     useEffect(() => {
         if (loaded && map.current) {
             map.current.resize();
+            resetMarkers();
         }
     }, [loaded]);
 
@@ -1395,6 +1438,7 @@ function Map() {
 
         localStorage.setItem('labels', '');
         generateMap();
+        mapOptimizationUpdateNotification();
         donationNotification();
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -1412,10 +1456,10 @@ function Map() {
             <Badges/>
             <div id='map' className="map-container" style={{ visibility: loaded ? 'visible' : 'hidden' }} />
             <Spinner animation="grow" variant='dark' className='spinner-container' style={{ visibility: !loaded ? 'visible' : 'hidden' }} />
-            <Search 
+            <Search
                 show={showSearch}
                 unique={unique}
-                vehicles={markers.current.map(elem=> elem.vehicle)}
+                vehicles={Array.from(markers.current.values()).map(elem => elem.vehicle)}
                 setUniqueLines={setUniqueLines}
                 setShownVehicles={setShownVehicles}
                 setCheckAllChecked={setCheckAllChecked}

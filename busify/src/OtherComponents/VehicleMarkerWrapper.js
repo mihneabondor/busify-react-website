@@ -2,7 +2,7 @@
 import React, { useImperativeHandle, forwardRef, useState } from 'react';
 import Marker from './Marker';
 
-const VehicleMarkerWrapper = forwardRef(({ initialVehicle }, ref, mapBearing) => {
+const VehicleMarkerWrapper = forwardRef(({ initialVehicle, mapBearing }, ref) => {
     const [vehicle, setVehicle] = useState(initialVehicle);
 
     useImperativeHandle(ref, () => ({

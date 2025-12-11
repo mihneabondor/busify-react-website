@@ -35,10 +35,12 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-window.receiveStatusUpdateFromiOS = (message) => {
+window.receiveStatusUpdateFromiOS = window.receiveStatusUpdateFromAndroid = (message) => {
     try {
-        if(message.status === "success") {
+        if (message.status === "success") {
             localStorage.setItem("active_subscription", JSON.stringify(message));
+        } else {
+            localStorage.removeItem("active_subscription");
         }
     } catch (e) {}
 };

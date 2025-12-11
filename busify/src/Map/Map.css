@@ -31,3 +31,22 @@
     border: none;
     /*outline: none;*/
 }
+
+/* OPTIMIZATION: CSS class for marker visibility instead of inline styles */
+.marker-hidden {
+    display: none !important;
+}
+
+/* OPTIMIZATION: GPU-accelerated marker movement via CSS transitions */
+.marker {
+    will-change: transform;
+}
+
+.mapboxgl-marker {
+    /* No transition by default - prevents jitter during pan/zoom */
+}
+
+/* Only animate markers that are actively moving to new positions */
+.mapboxgl-marker.marker-animating {
+    transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+}
