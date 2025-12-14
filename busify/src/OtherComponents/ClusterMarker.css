@@ -1,0 +1,59 @@
+.cluster-marker-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+/* Horizontal pills row */
+.cluster-pills-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 4px 6px;
+    border-radius: 14px;
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.12),
+        0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Individual line pill */
+.cluster-pill {
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+/* Vehicle type colors */
+.cluster-pill.autobuze {
+    background-color: #905EA8;
+}
+
+.cluster-pill.troleibuze {
+    background-color: #2D8CFF;
+}
+
+.cluster-pill.tramvaie {
+    background-color: #0FBE7E;
+}
+
+/* Count pill */
+.cluster-pill-count {
+    background-color: #666;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.cluster-arrow {
+    z-index: 0;
+}
+

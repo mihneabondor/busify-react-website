@@ -10,40 +10,75 @@ function Marker(props) {
     const [text, setText] = useState(props.name);
     const [iconite, setIconite] = useState(true);
     const badgeRef = useRef(null);
-    const [badgeWidth, setBadgeWidth] = useState(70);
-    const [badgeDims, setBadgeDims] = useState({ width: 70, height: 40 }); // default
+    const [badgeDims, setBadgeDims] = useState({ width: 70, height: 26 }); // default
 
     useLayoutEffect(() => {
         if (badgeRef.current) {
             const { width, height } = badgeRef.current.getBoundingClientRect();
-            setBadgeDims({ width, height });
+            // Only update if we got valid dimensions (element is visible)
+            if (width > 0 && height > 0) {
+                setBadgeDims({ width, height });
+            }
         }
     }, [text, props.name, props.iconite]);
 
+    // Re-check dimensions periodically for markers that started off-screen
+    useEffect(() => {
+        const checkDimensions = () => {
+            if (badgeRef.current) {
+                const { width, height } = badgeRef.current.getBoundingClientRect();
+                if (width > 0 && height > 0) {
+                    setBadgeDims(prev => {
+                        // Only update if dimensions actually changed
+                        if (prev.width !== width || prev.height !== height) {
+                            return { width, height };
+                        }
+                        return prev;
+                    });
+                }
+            }
+        };
 
-    // Bearing helper
+        // Check after a short delay and then periodically
+        const timeoutId = setTimeout(checkDimensions, 100);
+        const intervalId = setInterval(checkDimensions, 1000);
+
+        return () => {
+            clearTimeout(timeoutId);
+            clearInterval(intervalId);
+        };
+    }, []);
+
+
+    // Bearing helper - calculates compass bearing from point 1 to point 2
+    // Returns degrees clockwise from north (0-360)
     function getBearing(lat1, lon1, lat2, lon2) {
         const toRad = deg => deg * Math.PI / 180;
         const toDeg = rad => rad * 180 / Math.PI;
 
+        const lat1Rad = toRad(lat1);
+        const lat2Rad = toRad(lat2);
         const dLon = toRad(lon2 - lon1);
-        const y = Math.sin(dLon) * Math.cos(toRad(lat2));
-        const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
-            Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+
+        const y = Math.sin(dLon) * Math.cos(lat2Rad);
+        const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+            Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+
         const bearing = toDeg(Math.atan2(y, x));
         return (bearing + 360) % 360;
     }
 
-    function getOffsetFromBearing(bearing, distance) {
-        const angleRad = bearing * Math.PI / 180;
-        return {
-            dx: distance * Math.sin(angleRad),
-            dy: -distance * Math.cos(angleRad) // y-axis is inverted in CSS
-        };
-    }
-
     const arrowPosition = useMemo(() => {
         if (props.vehiclePos && props.nextPos) {
+            // Check if points are far enough apart to calculate meaningful bearing
+            const latDiff = Math.abs(props.nextPos.lat - props.vehiclePos.lat);
+            const lngDiff = Math.abs(props.nextPos.lng - props.vehiclePos.lng);
+
+            // If points are too close (less than ~1 meter), don't show arrow
+            if (latDiff < 0.00001 && lngDiff < 0.00001) {
+                return { bearing: 0, dx: 0, dy: 0, valid: false };
+            }
+
             const bearing = getBearing(
                 props.vehiclePos.lat,
                 props.vehiclePos.lng,
@@ -51,19 +86,46 @@ function Marker(props) {
                 props.nextPos.lng
             );
 
-            const horizontalFactor = Math.abs(Math.cos(bearing * Math.PI / 180));
+            const angleRad = bearing * Math.PI / 180;
 
-            // 🔧 Distance is shorter when iconite is false
-            const baseDistance = props.iconite === "false" ? 25 : 30;
-            const extraPadding = props.iconite === "false" ? 6 : 10;
+            // Badge dimensions
+            const halfWidth = badgeDims.width / 2;
+            const halfHeight = badgeDims.height / 2;
+            const arrowRadius = 20.5; // Half of arrow size (41/2)
+            const gap = 3; // Gap between badge edge and arrow
 
-            const dynamicDistance = baseDistance + extraPadding * (1 - horizontalFactor);
-            const { dx, dy } = getOffsetFromBearing(bearing, dynamicDistance);
+            // Direction components (bearing is from north, clockwise)
+            // sin(bearing) = x component, cos(bearing) = y component (but inverted for CSS)
+            const dirX = Math.sin(angleRad);
+            const dirY = -Math.cos(angleRad);
 
-            return { bearing, dx, dy };
+            // Calculate distance to badge edge in this direction
+            // For a rectangle, we need to find where the ray intersects the edge
+            let edgeDistance;
+
+            if (Math.abs(dirX) < 0.001) {
+                // Nearly vertical - use height
+                edgeDistance = halfHeight;
+            } else if (Math.abs(dirY) < 0.001) {
+                // Nearly horizontal - use width
+                edgeDistance = halfWidth;
+            } else {
+                // Calculate intersection with rectangle edges
+                const tX = halfWidth / Math.abs(dirX);
+                const tY = halfHeight / Math.abs(dirY);
+                edgeDistance = Math.min(tX, tY);
+            }
+
+            // Total distance from center to arrow center
+            const totalDistance = edgeDistance + gap + arrowRadius;
+
+            const dx = totalDistance * dirX;
+            const dy = totalDistance * dirY;
+
+            return { bearing, dx, dy, valid: true };
         }
-        return { bearing: 0, dx: 0, dy: 0 };
-    }, [props.vehiclePos, props.nextPos, props.iconite]);
+        return { bearing: 0, dx: 0, dy: 0, valid: false };
+    }, [props.vehiclePos, props.nextPos, badgeDims]);
 
     useEffect(() => {
         if(localStorage.hasOwnProperty("iconite")){
@@ -116,7 +178,7 @@ function Marker(props) {
                 data-dx={arrowPosition.dx}
                 data-dy={arrowPosition.dy}
                 style={{
-                    display: props.vehiclePos && props.nextPos && props.sageti === "true" ? "initial" : "none",
+                    display: arrowPosition.valid && props.sageti === "true" ? "initial" : "none",
                     position: 'absolute',
                     left: `${(badgeDims.width / 2) + arrowPosition.dx - (41 / 2)}px`,
                     top: `${(badgeDims.height / 2) + arrowPosition.dy - (41 / 2)}px`,

@@ -15,11 +15,13 @@ import VehicleHighlight from "../OtherComponents/VehicleHighlight";
 import ReactDOM, {createRoot} from 'react-dom/client';
 import Badges from "../OtherComponents/Badges";
 import VehicleMarkerWrapper from "../OtherComponents/VehicleMarkerWrapper";
+import ClusterMarker from "../OtherComponents/ClusterMarker";
 import debounce from 'lodash.debounce';
 import NotificationToast from "./NotificationToast";
 import {useActivate} from "react-activation";
 import PaywallSheet from "../Paywall/PaywallSheet";
 import { LiaPiggyBankSolid } from "react-icons/lia";
+import Supercluster from 'supercluster';
 
 function Map() {
     var map = useRef();
@@ -33,6 +35,15 @@ function Map() {
     // OPTIMIZATION: Track visible markers in a Set for fast visibility checks
     var visibleMarkers = useRef(new window.Set());
     const [markersState, setMarkersState ] = useState([]);
+
+    // Cluster management refs
+    const clusterIndexes = useRef({
+        N: null, // North-bound vehicles
+        S: null, // South-bound vehicles
+        E: null, // East-bound vehicles
+        W: null  // West-bound vehicles
+    });
+    const clusterMarkers = useRef(new window.Map()); // Map of cluster ID -> {marker, root}
     var stopMarkers = useRef([]);
     let vehicles = useRef([]);
     const [uniqueLines, setUniqueLines] = useState([]);
@@ -161,10 +172,6 @@ function Map() {
 
     // Offset a [lng, lat] point to the right of the direction from start to end by 'distance' meters
     function offsetToRight(start, end, distance = 0.0004) {
-        // Convert to radians
-        const toRad = deg => deg * Math.PI / 180;
-        const toDeg = rad => rad * 180 / Math.PI;
-
         // Calculate direction angle
         const dx = end[0] - start[0];
         const dy = end[1] - start[1];
@@ -180,6 +187,359 @@ function Map() {
         return [start[0] + dLng, start[1] + dLat];
     }
 
+    // Calculate bearing between two points (for clustering)
+    function getBearing(lat1, lon1, lat2, lon2) {
+        const toRad = deg => deg * Math.PI / 180;
+        const toDeg = rad => rad * 180 / Math.PI;
+
+        const dLon = toRad(lon2 - lon1);
+        const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+        const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+            Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+        const bearing = toDeg(Math.atan2(y, x));
+        return (bearing + 360) % 360;
+    }
+
+    // Get cardinal direction from bearing
+    function getCardinalDirection(bearing) {
+        // Divide compass into 4 quadrants:
+        // N: 315-45, E: 45-135, S: 135-225, W: 225-315
+        if (bearing >= 315 || bearing < 45) return 'N';
+        if (bearing >= 45 && bearing < 135) return 'E';
+        if (bearing >= 135 && bearing < 225) return 'S';
+        return 'W';
+    }
+
+    // Calculate bearing for a vehicle based on current and next coords
+    function getVehicleBearing(vehicle) {
+        if (vehicle.currentCoords && vehicle.nextCoords &&
+            vehicle.currentCoords[0] !== undefined && vehicle.nextCoords[0] !== undefined) {
+            return getBearing(
+                vehicle.currentCoords[1], vehicle.currentCoords[0],
+                vehicle.nextCoords[1], vehicle.nextCoords[0]
+            );
+        }
+        return null;
+    }
+
+    // Initialize supercluster indexes for each cardinal direction
+    function initializeClusterIndexes() {
+        ['N', 'S', 'E', 'W'].forEach(dir => {
+            clusterIndexes.current[dir] = new Supercluster({
+                radius: 100,     // Cluster radius in pixels
+                maxZoom: 17,     // Max zoom to cluster at
+                minZoom: 0,
+                minPoints: 2     // Minimum points to form a cluster
+            });
+        });
+    }
+
+    // Update cluster indexes with current vehicles
+    function updateClusterData(vehicleList) {
+        // Group vehicles by cardinal direction
+        const vehiclesByDirection = { N: [], S: [], E: [], W: [] };
+
+        vehicleList.forEach(vehicle => {
+            let bearing = getVehicleBearing(vehicle);
+            let direction;
+
+            if (bearing !== null) {
+                direction = getCardinalDirection(bearing);
+            } else {
+                // Fallback: assign to N if no bearing data available
+                bearing = 0;
+                direction = 'N';
+            }
+
+            vehiclesByDirection[direction].push({
+                type: 'Feature',
+                properties: {
+                    ...vehicle,
+                    bearing: bearing,
+                    direction: direction
+                },
+                geometry: {
+                    type: 'Point',
+                    coordinates: vehicle.lngLat
+                }
+            });
+        });
+
+        // Load data into each direction's cluster index
+        ['N', 'S', 'E', 'W'].forEach(dir => {
+            if (clusterIndexes.current[dir]) {
+                clusterIndexes.current[dir].load(vehiclesByDirection[dir]);
+            }
+        });
+
+        // Mark that cluster data has been loaded
+        clusterDataLoaded.current = true;
+    }
+
+    // Track if cluster data has been loaded
+    const clusterDataLoaded = useRef(false);
+
+    // Get clusters for current map view
+    function getClusters() {
+        if (!map.current || !clusterDataLoaded.current) return [];
+
+        const bounds = map.current.getBounds();
+        const zoom = Math.floor(map.current.getZoom());
+        const bbox = [
+            bounds.getWest(),
+            bounds.getSouth(),
+            bounds.getEast(),
+            bounds.getNorth()
+        ];
+
+        const allClusters = [];
+
+        ['N', 'S', 'E', 'W'].forEach(dir => {
+            if (clusterIndexes.current[dir]) {
+                try {
+                    const clusters = clusterIndexes.current[dir].getClusters(bbox, zoom);
+                    clusters.forEach(cluster => {
+                        cluster.properties.direction = dir;
+                    });
+                    allClusters.push(...clusters);
+                } catch (e) {
+                    // Index not ready yet, skip
+                }
+            }
+        });
+
+        return allClusters;
+    }
+
+    // Get vehicles within a cluster
+    function getClusterVehicles(clusterId, direction) {
+        if (!clusterIndexes.current[direction]) return [];
+
+        const leaves = clusterIndexes.current[direction].getLeaves(clusterId, Infinity);
+        return leaves.map(leaf => leaf.properties);
+    }
+
+    // Calculate average bearing for a list of vehicles
+    function getAverageBearing(vehicles) {
+        if (!vehicles.length) return 0;
+
+        let sumX = 0;
+        let sumY = 0;
+
+        vehicles.forEach(v => {
+            if (v.bearing !== undefined) {
+                const rad = v.bearing * Math.PI / 180;
+                sumX += Math.cos(rad);
+                sumY += Math.sin(rad);
+            }
+        });
+
+        if (sumX === 0 && sumY === 0) return 0;
+
+        const avgRad = Math.atan2(sumY, sumX);
+        return ((avgRad * 180 / Math.PI) + 360) % 360;
+    }
+
+    // Calculate offset position for cluster based on average bearing
+    function getClusterOffsetPosition(coords, vehicles) {
+        const avgBearing = getAverageBearing(vehicles);
+        const avgBearingRad = avgBearing * Math.PI / 180;
+
+        // Create a "next point" in the direction of average bearing for offsetToRight
+        const distance = 0.001; // Small distance to create direction vector
+        const nextCoords = [
+            coords[0] + distance * Math.sin(avgBearingRad),
+            coords[1] + distance * Math.cos(avgBearingRad)
+        ];
+
+        return offsetToRight(coords, nextCoords);
+    }
+
+    // Render cluster markers on the map
+    function renderClusters() {
+        if (!map.current || selectedVehicleRef.current) return; // Don't cluster when a vehicle is selected
+
+        const clusters = getClusters();
+        const currentClusterIds = new window.Set();
+        const vehicleLabelsInClusters = new window.Set();
+
+        clusters.forEach(cluster => {
+            const coords = cluster.geometry.coordinates;
+            const isCluster = cluster.properties.cluster;
+            const clusterId = isCluster
+                ? `cluster-${cluster.properties.direction}-${cluster.id}`
+                : `single-${cluster.properties.label}`;
+
+            currentClusterIds.add(clusterId);
+
+            if (isCluster) {
+                // This is a cluster - render ClusterMarker
+                const clusterVehicles = getClusterVehicles(cluster.id, cluster.properties.direction);
+
+                // Track which vehicle labels are in clusters
+                clusterVehicles.forEach(v => vehicleLabelsInClusters.add(v.label));
+
+                // Calculate offset position based on average bearing
+                const offsetCoords = getClusterOffsetPosition(coords, clusterVehicles);
+
+                // Skip if this cluster marker already exists
+                if (clusterMarkers.current.has(clusterId)) {
+                    // Update position with animation
+                    const existing = clusterMarkers.current.get(clusterId);
+
+                    // Check if position actually changed
+                    const oldLngLat = existing.marker.getLngLat();
+                    const positionChanged = Math.abs(oldLngLat.lng - offsetCoords[0]) > 0.00001 ||
+                                            Math.abs(oldLngLat.lat - offsetCoords[1]) > 0.00001;
+
+                    if (positionChanged) {
+                        const el = existing.marker.getElement();
+                        el.classList.add('marker-animating');
+                        existing.marker.setLngLat(offsetCoords);
+                        setTimeout(() => el.classList.remove('marker-animating'), 850);
+                    }
+                    return;
+                }
+
+                const el = document.createElement('div');
+                el.className = 'marker cluster-marker-el';
+                const root = ReactDOM.createRoot(el);
+
+                root.render(
+                    <ClusterMarker
+                        vehicles={clusterVehicles}
+                        direction={cluster.properties.direction}
+                        mapBearing={map.current.getBearing()}
+                        iconite={localStorage.getItem("iconite")}
+                        sageti={localStorage.getItem("sageti")}
+                    />
+                );
+
+                const mapboxMarker = new mapboxgl.Marker(el)
+                    .setLngLat(offsetCoords)
+                    .addTo(map.current);
+
+                // Store cluster info for click handler
+                const clusterDirection = cluster.properties.direction;
+                const clusterIdNum = cluster.id;
+                const clusterCoords = coords;
+
+                // Click handler to zoom into cluster
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    try {
+                        const expansionZoom = clusterIndexes.current[clusterDirection]
+                            .getClusterExpansionZoom(clusterIdNum);
+                        map.current.easeTo({
+                            center: clusterCoords,
+                            zoom: Math.min(expansionZoom + 1, 18),
+                            duration: 500
+                        });
+                    } catch (err) {
+                        // Fallback: just zoom in a bit
+                        map.current.easeTo({
+                            center: clusterCoords,
+                            zoom: map.current.getZoom() + 2,
+                            duration: 500
+                        });
+                    }
+                });
+
+                clusterMarkers.current.set(clusterId, { marker: mapboxMarker, root, isCluster: true });
+            }
+            // Single points are handled by the regular marker system
+        });
+
+        // Remove old cluster markers that are no longer needed
+        clusterMarkers.current.forEach((value, key) => {
+            if (!currentClusterIds.has(key) && value.isCluster) {
+                value.marker.remove();
+                clusterMarkers.current.delete(key);
+            }
+        });
+
+        // Update individual marker visibility based on cluster membership
+        markers.current.forEach((entry, label) => {
+            const el = entry.marker.getElement();
+            const shouldBeInCluster = vehicleLabelsInClusters.has(label);
+
+            if (shouldBeInCluster && !entry.inCluster) {
+                // Hide marker - it's now part of a cluster
+                entry.inCluster = true;
+                el.classList.add('marker-in-cluster');
+                if (entry.reactRef?.current?.updateVehicle) {
+                    entry.reactRef.current.updateVehicle({
+                        ...entry.vehicle,
+                        hidden: true
+                    });
+                }
+            } else if (!shouldBeInCluster && entry.inCluster) {
+                // Show marker - it's no longer part of a cluster
+                entry.inCluster = false;
+                el.classList.remove('marker-in-cluster');
+                if (entry.reactRef?.current?.updateVehicle) {
+                    entry.reactRef.current.updateVehicle({
+                        ...entry.vehicle,
+                        hidden: hiddenMarkerCondition(entry.vehicle)
+                    });
+                }
+            }
+        });
+    }
+
+    // Clear all cluster markers
+    function clearClusterMarkers() {
+        clusterMarkers.current.forEach((value, key) => {
+            if (value.isCluster) {
+                value.marker.remove();
+            }
+        });
+        clusterMarkers.current.clear();
+    }
+
+    // Debounced cluster update
+    const debouncedRenderClusters = debounce(() => {
+        renderClusters();
+    }, 150);
+
+    // Check if a vehicle is part of a cluster
+    function isVehicleInCluster(vehicle) {
+        if (!map.current || selectedVehicleRef.current || !clusterDataLoaded.current) return false;
+
+        const bearing = getVehicleBearing(vehicle);
+        if (bearing === null) return false;
+
+        const direction = getCardinalDirection(bearing);
+        const clusterIndex = clusterIndexes.current[direction];
+        if (!clusterIndex) return false;
+
+        try {
+            const zoom = Math.floor(map.current.getZoom());
+            const bounds = map.current.getBounds();
+            const bbox = [
+                bounds.getWest(),
+                bounds.getSouth(),
+                bounds.getEast(),
+                bounds.getNorth()
+            ];
+
+            const clusters = clusterIndex.getClusters(bbox, zoom);
+
+            for (const cluster of clusters) {
+                if (cluster.properties.cluster) {
+                    const leaves = clusterIndex.getLeaves(cluster.id, Infinity);
+                    const vehicleInCluster = leaves.some(leaf => leaf.properties.label === vehicle.label);
+                    if (vehicleInCluster) return true;
+                }
+            }
+        } catch (e) {
+            // Cluster index not ready yet
+            return false;
+        }
+
+        return false;
+    }
+
     const addMarker = (vehicle) => {
         // OPTIMIZATION: O(1) lookup with Map instead of O(n) findIndex
         const existing = markers.current.get(vehicle.label);
@@ -193,18 +553,26 @@ function Map() {
 
         const markerComponentRef = createRef();
 
+        // Check if vehicle should be hidden because it's in a cluster
+        const inCluster = isVehicleInCluster(vehicle);
+
         root.render(
             <VehicleMarkerWrapper
                 ref={markerComponentRef}
                 initialVehicle={{
                     ...vehicle,
-                    hidden: hiddenMarkerCondition(vehicle)
+                    hidden: hiddenMarkerCondition(vehicle) || inCluster
                 }}
                 mapBearing={map.current.getBearing()}
             />
         );
 
         el.className = "marker";
+
+        // Hide marker element if it's part of a cluster
+        if (inCluster) {
+            el.classList.add('marker-in-cluster');
+        }
 
         const offsetLngLat = (vehicle.nextCoords && vehicle.nextCoords[0] !== undefined)
             ? offsetToRight(vehicle.lngLat, vehicle.nextCoords)
@@ -222,6 +590,9 @@ function Map() {
             popupOpen.current = false;
             popupIndex.current = 0;
             setShowUndemibusuToast(false);
+
+            // Clear cluster markers when selecting a vehicle
+            clearClusterMarkers();
 
             await getStops(vehicle.tripId);
             addPolyline(vehicle);
@@ -243,7 +614,8 @@ function Map() {
         markers.current.set(vehicle.label, {
             marker: mapboxMarker,
             vehicle,
-            reactRef: markerComponentRef
+            reactRef: markerComponentRef,
+            inCluster: inCluster
         });
 
         // Initialize visibility tracking - assume visible until checkMarkerVisibility runs
@@ -385,7 +757,14 @@ function Map() {
 
                 index += BATCH_SIZE;
                 if (index < entries.length) setTimeout(processNextBatch, 50);
-                else if (!token.cancelled) updateSelectedVehicleAndStops();
+                else if (!token.cancelled) {
+                    updateSelectedVehicleAndStops();
+                    // Update clusters after all markers have been updated
+                    if (!selectedVehicleRef.current) {
+                        updateClusterData(vehicles.current);
+                        debouncedRenderClusters();
+                    }
+                }
             };
 
             processNextBatch();
@@ -424,6 +803,9 @@ function Map() {
     const resetMarkers = () => {
         const BATCH_SIZE = 25;
 
+        // Clear cluster markers first
+        clearClusterMarkers();
+
         // Step 1: Remove existing markers in chunks using Map
         const toRemove = Array.from(markers.current.values());
         markers.current.clear(); // OPTIMIZATION: Use Map.clear() instead of reassignment
@@ -449,6 +831,9 @@ function Map() {
                 unique.current.some(uniqueLine => uniqueLine[0] === elem.line)
             );
 
+            // Update cluster data with eligible vehicles
+            updateClusterData(eligibleVehicles);
+
             let addIndex = 0;
 
             const addNextBatch = () => {
@@ -458,6 +843,11 @@ function Map() {
                 addIndex += BATCH_SIZE;
                 if (addIndex < eligibleVehicles.length) {
                     setTimeout(addNextBatch, 200);
+                } else {
+                    // Render clusters after all markers are added
+                    if (!selectedVehicleRef.current) {
+                        debouncedRenderClusters();
+                    }
                 }
                 checkMarkerVisibility()
             };
@@ -538,6 +928,9 @@ function Map() {
             map.current.addControl(geo);
             addDonationButton();
             map.current.on('load', () => {
+                // Initialize cluster indexes
+                initializeClusterIndexes();
+
                 handleSocketOns();
                 if (refresh)
                     map.current.flyTo({
@@ -586,6 +979,7 @@ function Map() {
             map.current.on('rotate', () => {
                 const mapBearing = map.current.getBearing() * Math.PI / 180; // convert to radians
 
+                // Update individual marker arrows
                 markers.current.forEach(({ marker }) => {
                     const el = marker.getElement();
                     const arrowEl = el.querySelector('.marker-arrow');
@@ -615,6 +1009,31 @@ function Map() {
                         arrowEl.style.top = `${(el.clientHeight / 2) + rotatedDy - (41 / 2)}px`;
                     }
                 });
+
+                // Update cluster marker arrows
+                clusterMarkers.current.forEach(({ marker, isCluster }) => {
+                    if (!isCluster) return;
+                    const el = marker.getElement();
+                    const arrowEl = el.querySelector('.cluster-arrow');
+
+                    if (arrowEl) {
+                        const originalBearing = parseFloat(arrowEl.dataset.bearing) || 0;
+                        const originalDx = parseFloat(arrowEl.dataset.dx) || 0;
+                        const originalDy = parseFloat(arrowEl.dataset.dy) || 0;
+
+                        const newBearing = originalBearing - (map.current.getBearing());
+
+                        const cosB = Math.cos(-mapBearing);
+                        const sinB = Math.sin(-mapBearing);
+
+                        const rotatedDx = originalDx * cosB - originalDy * sinB;
+                        const rotatedDy = originalDx * sinB + originalDy * cosB;
+
+                        arrowEl.style.transform = `rotate(${newBearing}deg)`;
+                        arrowEl.style.left = `calc(50% + ${rotatedDx}px - 20.5px)`;
+                        arrowEl.style.top = `calc(50% + ${rotatedDy}px - 20.5px)`;
+                    }
+                });
             });
             // Debounced version for smooth updates without over-triggering
 
@@ -622,8 +1041,54 @@ function Map() {
 
             const debouncedCheckMarkerVisibility = debounce(checkMarkerVisibility, 200);
             map.current.on('moveend', debouncedCheckMarkerVisibility);
+
+            // Update clusters on zoom changes
+            map.current.on('zoomend', () => {
+                if (!selectedVehicleRef.current) {
+                    updateMarkerClusterVisibility();
+                    debouncedRenderClusters();
+                }
+            });
+
+            // Also update clusters on move (for panning)
+            map.current.on('moveend', () => {
+                if (!selectedVehicleRef.current) {
+                    debouncedRenderClusters();
+                }
+            });
         } catch {
         }
+    }
+
+    // Update which individual markers are visible vs hidden in clusters
+    function updateMarkerClusterVisibility() {
+        markers.current.forEach((entry, label) => {
+            const el = entry.marker.getElement();
+            const wasInCluster = entry.inCluster;
+            const nowInCluster = isVehicleInCluster(entry.vehicle);
+
+            if (wasInCluster !== nowInCluster) {
+                entry.inCluster = nowInCluster;
+
+                if (nowInCluster) {
+                    el.classList.add('marker-in-cluster');
+                    if (entry.reactRef?.current?.updateVehicle) {
+                        entry.reactRef.current.updateVehicle({
+                            ...entry.vehicle,
+                            hidden: true
+                        });
+                    }
+                } else {
+                    el.classList.remove('marker-in-cluster');
+                    if (entry.reactRef?.current?.updateVehicle) {
+                        entry.reactRef.current.updateVehicle({
+                            ...entry.vehicle,
+                            hidden: hiddenMarkerCondition(entry.vehicle)
+                        });
+                    }
+                }
+            }
+        });
     }
 
     const checkMarkerVisibility = () => {
