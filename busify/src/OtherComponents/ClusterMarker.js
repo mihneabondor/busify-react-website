@@ -73,12 +73,22 @@ function ClusterMarker({ vehicles, mapBearing = 0, iconite, sageti }) {
     };
 
     // Calculate arrow position offset - positioned relative to the stack center
+    // Adjusts based on number of displayed elements (pills + count indicator)
     const arrowPosition = useMemo(() => {
         const bearing = avgBearing;
+
+        // Count visible elements to determine cluster width
+        const pillCount = displayVehicles.length;
+        const hasCountIndicator = (totalCount - displayVehicles.length) > 0;
+        const totalElements = pillCount + (hasCountIndicator ? 1 : 0);
+
+        // Base distance is for 2 elements, add offset for each additional element
         const baseDistance = iconite === "false" ? 30 : 35;
+        const perElementOffset = totalElements > 2 ? (totalElements - 2) * 12 : 0;
+
         const horizontalFactor = Math.abs(Math.cos(bearing * Math.PI / 180));
         const extraPadding = iconite === "false" ? 8 : 12;
-        const dynamicDistance = baseDistance + extraPadding * (1 - horizontalFactor);
+        const dynamicDistance = baseDistance + perElementOffset + extraPadding * (1 - horizontalFactor);
 
         const angleRad = bearing * Math.PI / 180;
         return {
@@ -86,7 +96,7 @@ function ClusterMarker({ vehicles, mapBearing = 0, iconite, sageti }) {
             dx: dynamicDistance * Math.sin(angleRad),
             dy: -dynamicDistance * Math.cos(angleRad)
         };
-    }, [avgBearing, iconite]);
+    }, [avgBearing, iconite, displayVehicles.length, totalCount]);
 
     // Get direction label for accessibility
     const getDirectionLabel = () => {

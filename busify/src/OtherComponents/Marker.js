@@ -7,10 +7,14 @@ import {useEffect, useState, useMemo} from "react";
 import {useRef, useLayoutEffect} from "react";
 
 function Marker(props) {
-    const [text, setText] = useState(props.name);
     const [iconite, setIconite] = useState(true);
     const badgeRef = useRef(null);
     const [badgeDims, setBadgeDims] = useState({ width: 70, height: 26 }); // default
+
+    // Use props directly for values that can change
+    const text = props.name;
+    const vehicleType = props.type;
+    const hidden = props.hidden;
 
     useLayoutEffect(() => {
         if (badgeRef.current) {
@@ -131,10 +135,10 @@ function Marker(props) {
 
     return (
         <div className="marker-container"
-             style={{position: 'relative', display: props.hidden ? 'none' : 'inline-block'}}>
+             style={{position: 'relative', display: hidden ? 'none' : 'inline-block'}}>
             <div
                 ref={badgeRef}
-                className={`orare-cell-badge ${props.type}`}
+                className={`orare-cell-badge ${vehicleType}`}
                 style={{
                     width: props.minContent ? "initial" : "70px",
                     display: "flex",
@@ -143,20 +147,12 @@ function Marker(props) {
                     alignItems: 'center',
                     justifyContent: 'center'
                 }}
-                onClick={() => {
-                    if (props.label) {
-                        setText(props.label);
-                        setTimeout(() => {
-                            setText(props.name);
-                        }, 2000);
-                    }
-                }}
             >
                 {props.iconite === "true" || props.iconite === undefined ? (
                     <div className='orare-cell-badge-icon'>
-                        {props.type === 'troleibuze' ? (
+                        {vehicleType === 'troleibuze' ? (
                             <TroleibusIcon style={{maxWidth: "80%"}}/>
-                        ) : props.type === 'autobuze' ? (
+                        ) : vehicleType === 'autobuze' ? (
                             <BusIcon style={{maxWidth: "80%"}}/>
                         ) : (
                             <TramvaiIcon style={{maxWidth: "80%"}}/>
@@ -188,9 +184,9 @@ function Marker(props) {
             >
                 <img
                     src={
-                        props.type === "autobuze"
+                        vehicleType === "autobuze"
                             ? require('../Images/BusArrowIcon.png')
-                            : props.type === "troleibuze"
+                            : vehicleType === "troleibuze"
                                 ? require('../Images/TroleibusArrowIcon.png')
                                 : require('../Images/TramArrowIcon.png')
                     }
