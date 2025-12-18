@@ -226,7 +226,7 @@ function Map() {
     function initializeClusterIndexes() {
         ['N', 'S', 'E', 'W'].forEach(dir => {
             clusterIndexes.current[dir] = new Supercluster({
-                radius: 100,     // Cluster radius in pixels
+                radius: 50,     // Cluster radius in pixels
                 maxZoom: 17,     // Max zoom to cluster at
                 minZoom: 0,
                 minPoints: 2     // Minimum points to form a cluster
@@ -761,7 +761,12 @@ function Map() {
                     updateSelectedVehicleAndStops();
                     // Update clusters after all markers have been updated
                     if (!selectedVehicleRef.current) {
-                        updateClusterData(vehicles.current);
+                        // Only include visible vehicles in clustering (exclude hidden lines)
+                        const visibleVehicles = vehicles.current.filter(vehicle => {
+                            const lineEntry = unique.current.find(elem => elem[0] === vehicle.line);
+                            return lineEntry && lineEntry[1] === true;
+                        });
+                        updateClusterData(visibleVehicles);
                         debouncedRenderClusters();
                     }
                 }
@@ -831,8 +836,14 @@ function Map() {
                 unique.current.some(uniqueLine => uniqueLine[0] === elem.line)
             );
 
-            // Update cluster data with eligible vehicles
-            updateClusterData(eligibleVehicles);
+            // Only include visible vehicles in clustering (exclude hidden lines)
+            const visibleVehicles = eligibleVehicles.filter(vehicle => {
+                const lineEntry = unique.current.find(elem => elem[0] === vehicle.line);
+                return lineEntry && lineEntry[1] === true;
+            });
+
+            // Update cluster data with visible vehicles only
+            updateClusterData(visibleVehicles);
 
             let addIndex = 0;
 
