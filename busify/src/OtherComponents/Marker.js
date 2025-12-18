@@ -50,31 +50,27 @@ function Marker(props) {
     }, []);
 
 
-    // Bearing helper - calculates compass bearing from point 1 to point 2
-    // Returns degrees clockwise from north (0-360)
     function getBearing(lat1, lon1, lat2, lon2) {
         const toRad = deg => deg * Math.PI / 180;
         const toDeg = rad => rad * 180 / Math.PI;
 
-        const lat1Rad = toRad(lat1);
-        const lat2Rad = toRad(lat2);
-        const dLon = toRad(lon2 - lon1);
+        const lat1Rad = toRad(lat1)
+        const lat2Rad = toRad(lat2)
+        const dLon = toRad(lon2 - lon1)
 
-        const y = Math.sin(dLon) * Math.cos(lat2Rad);
+        const y = Math.sin(dLon) * Math.cos(lat2Rad)
         const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
-            Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+            Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon)
 
-        const bearing = toDeg(Math.atan2(y, x));
-        return (bearing + 360) % 360;
+        const bearing = toDeg(Math.atan2(y, x))
+        return (bearing + 360) % 360
     }
 
     const arrowPosition = useMemo(() => {
         if (props.vehiclePos && props.nextPos) {
-            // Check if points are far enough apart to calculate meaningful bearing
             const latDiff = Math.abs(props.nextPos.lat - props.vehiclePos.lat);
             const lngDiff = Math.abs(props.nextPos.lng - props.vehiclePos.lng);
 
-            // If points are too close (less than ~1 meter), don't show arrow
             if (latDiff < 0.00001 && lngDiff < 0.00001) {
                 return { bearing: 0, dx: 0, dy: 0, valid: false };
             }
@@ -92,7 +88,7 @@ function Marker(props) {
             const halfWidth = badgeDims.width / 2;
             const halfHeight = badgeDims.height / 2;
             const arrowRadius = 20.5; // Half of arrow size (41/2)
-            const gap = 3; // Gap between badge edge and arrow
+            const gap = -2; // Small negative gap to bring arrow closer without overlapping
 
             // Direction components (bearing is from north, clockwise)
             // sin(bearing) = x component, cos(bearing) = y component (but inverted for CSS)

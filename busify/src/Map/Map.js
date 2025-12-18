@@ -355,9 +355,15 @@ function Map() {
         return offsetToRight(coords, nextCoords);
     }
 
-    // Render cluster markers on the map
+    // Generate a stable cluster ID based on the vehicle labels it contains
+    // This ensures the same group of vehicles always maps to the same cluster ID
+    function getStableClusterId(clusterVehicles, direction) {
+        const labels = clusterVehicles.map(v => v.label).sort().join(',');
+        return `cluster-${direction}-${labels}`;
+    }
+
     function renderClusters() {
-        if (!map.current || selectedVehicleRef.current) return; // Don't cluster when a vehicle is selected
+        if (!map.current || selectedVehicleRef.current) return;
 
         const clusters = getClusters();
         const currentClusterIds = new window.Set();
@@ -366,11 +372,6 @@ function Map() {
         clusters.forEach(cluster => {
             const coords = cluster.geometry.coordinates;
             const isCluster = cluster.properties.cluster;
-            const clusterId = isCluster
-                ? `cluster-${cluster.properties.direction}-${cluster.id}`
-                : `single-${cluster.properties.label}`;
-
-            currentClusterIds.add(clusterId);
 
             if (isCluster) {
                 // This is a cluster - render ClusterMarker
@@ -382,25 +383,44 @@ function Map() {
                 // Calculate offset position based on average bearing
                 const offsetCoords = getClusterOffsetPosition(coords, clusterVehicles);
 
-                // Skip if this cluster marker already exists
-                if (clusterMarkers.current.has(clusterId)) {
-                    // Update position with animation
-                    const existing = clusterMarkers.current.get(clusterId);
+                // Use stable ID based on vehicle labels, not Supercluster's internal ID
+                const stableClusterId = getStableClusterId(clusterVehicles, cluster.properties.direction);
+                currentClusterIds.add(stableClusterId);
+
+                // Check if this cluster already exists
+                if (clusterMarkers.current.has(stableClusterId)) {
+                    const existingEntry = clusterMarkers.current.get(stableClusterId);
 
                     // Check if position actually changed
-                    const oldLngLat = existing.marker.getLngLat();
+                    const oldLngLat = existingEntry.marker.getLngLat();
                     const positionChanged = Math.abs(oldLngLat.lng - offsetCoords[0]) > 0.00001 ||
                                             Math.abs(oldLngLat.lat - offsetCoords[1]) > 0.00001;
 
                     if (positionChanged) {
-                        const el = existing.marker.getElement();
+                        // Add animating class to trigger CSS transition
+                        const el = existingEntry.marker.getElement();
                         el.classList.add('marker-animating');
-                        existing.marker.setLngLat(offsetCoords);
+                        existingEntry.marker.setLngLat(offsetCoords);
                         setTimeout(() => el.classList.remove('marker-animating'), 850);
                     }
+
+                    // Update the stored Supercluster ID for click handler
+                    existingEntry.superclusterId = cluster.id;
+
+                    // Re-render the React component with updated vehicles
+                    existingEntry.root.render(
+                        <ClusterMarker
+                            vehicles={clusterVehicles}
+                            direction={cluster.properties.direction}
+                            mapBearing={map.current.getBearing()}
+                            iconite={localStorage.getItem("iconite")}
+                            sageti={localStorage.getItem("sageti")}
+                        />
+                    );
                     return;
                 }
 
+                // Create new cluster marker
                 const el = document.createElement('div');
                 el.className = 'marker cluster-marker-el';
                 const root = ReactDOM.createRoot(el);
@@ -419,33 +439,41 @@ function Map() {
                     .setLngLat(offsetCoords)
                     .addTo(map.current);
 
-                // Store cluster info for click handler
+                // Store info for click handler
                 const clusterDirection = cluster.properties.direction;
-                const clusterIdNum = cluster.id;
-                const clusterCoords = coords;
 
                 // Click handler to zoom into cluster
                 el.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    // Use the stored (potentially updated) Supercluster ID
+                    const entry = clusterMarkers.current.get(stableClusterId);
+                    const currentSuperclusterId = entry?.superclusterId ?? cluster.id;
+
                     try {
                         const expansionZoom = clusterIndexes.current[clusterDirection]
-                            .getClusterExpansionZoom(clusterIdNum);
+                            .getClusterExpansionZoom(currentSuperclusterId);
                         map.current.easeTo({
-                            center: clusterCoords,
+                            center: coords,
                             zoom: Math.min(expansionZoom + 1, 18),
                             duration: 500
                         });
                     } catch (err) {
                         // Fallback: just zoom in a bit
                         map.current.easeTo({
-                            center: clusterCoords,
+                            center: coords,
                             zoom: map.current.getZoom() + 2,
                             duration: 500
                         });
                     }
                 });
 
-                clusterMarkers.current.set(clusterId, { marker: mapboxMarker, root, isCluster: true });
+                clusterMarkers.current.set(stableClusterId, {
+                    marker: mapboxMarker,
+                    root,
+                    isCluster: true,
+                    superclusterId: cluster.id,
+                    direction: cluster.properties.direction
+                });
             }
             // Single points are handled by the regular marker system
         });
