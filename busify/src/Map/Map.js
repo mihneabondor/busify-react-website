@@ -397,11 +397,17 @@ function Map() {
                                             Math.abs(oldLngLat.lat - offsetCoords[1]) > 0.00001;
 
                     if (positionChanged) {
-                        // Add animating class to trigger CSS transition
                         const el = existingEntry.marker.getElement();
-                        el.classList.add('marker-animating');
-                        existingEntry.marker.setLngLat(offsetCoords);
-                        setTimeout(() => el.classList.remove('marker-animating'), 850);
+                        // Skip animation if map is being moved to prevent clusters from
+                        // animating from wrong screen positions
+                        if (!isMapMoving.current) {
+                            el.classList.add('marker-animating');
+                            existingEntry.marker.setLngLat(offsetCoords);
+                            setTimeout(() => el.classList.remove('marker-animating'), 850);
+                        } else {
+                            // Update position instantly without animation
+                            existingEntry.marker.setLngLat(offsetCoords);
+                        }
                     }
 
                     // Update the stored Supercluster ID for click handler
@@ -650,6 +656,9 @@ function Map() {
         visibleMarkers.current.add(vehicle.label);
     };
 
+    // Track if map is currently being moved/dragged
+    const isMapMoving = useRef(false);
+
     // store timeout across renders
     const updateMarkerTimeout = useRef(null);
 
@@ -767,11 +776,16 @@ function Map() {
                     const el = entry.marker.getElement();
 
                     if (positionChanged) {
-                        // Add animating class before position change
-                        el.classList.add('marker-animating');
-                        entry.marker.setLngLat(end);
-                        // Remove class after animation completes
-                        setTimeout(() => el.classList.remove('marker-animating'), 850);
+                        // Skip animation if map is being moved to prevent markers from
+                        // animating from wrong screen positions
+                        if (!isMapMoving.current) {
+                            el.classList.add('marker-animating');
+                            entry.marker.setLngLat(end);
+                            setTimeout(() => el.classList.remove('marker-animating'), 850);
+                        } else {
+                            // Update position instantly without animation
+                            entry.marker.setLngLat(end);
+                        }
                     }
 
                     entry.vehicle.lngLat = vehi.lngLat;
@@ -965,7 +979,9 @@ function Map() {
             })
             addSearchButton();
             map.current.addControl(geo);
-            addDonationButton();
+            if(!localStorage.hasOwnProperty("active_subscription")) {
+                addDonationButton();
+            }
             map.current.on('load', () => {
                 // Initialize cluster indexes
                 initializeClusterIndexes();
@@ -1014,6 +1030,14 @@ function Map() {
                 lastCoords.current = map.current.getCenter().toArray();
                 lastZoom.current = map.current.getZoom();
             })
+
+            // Track map movement state to prevent marker animation glitches
+            map.current.on('movestart', () => {
+                isMapMoving.current = true;
+            });
+            map.current.on('moveend', () => {
+                isMapMoving.current = false;
+            });
 
             map.current.on('rotate', () => {
                 const mapBearing = map.current.getBearing() * Math.PI / 180; // convert to radians
@@ -1909,16 +1933,23 @@ function Map() {
     }
 
     const donationNotification = () => {
+        if (localStorage.hasOwnProperty("active_subscription")) {
+            return;
+        }
+
         const setNextDate = (days) => {
             const nextDate = new Date();
             nextDate.setDate(nextDate.getDate() + days);
             localStorage.setItem("donation_popup_next_date", nextDate.toISOString());
         }
-        if(!localStorage.hasOwnProperty("donation_popup_next_date")){
-            setNextDate(1);
-        } else if(!localStorage.hasOwnProperty("donation_shown_once") && new Date() > new Date(localStorage.getItem("donation_popup_next_date"))) {
-            setShowDonationPopup(true)
-            localStorage.setItem("donation_shown_once", "true")
+
+        if (!localStorage.hasOwnProperty("donation_popup_next_date")) {
+            // First time user: set reminder for 3 days from now
+            setNextDate(3);
+        } else if (new Date() > new Date(localStorage.getItem("donation_popup_next_date"))) {
+            // Time has passed, show the popup and schedule next one in 30 days
+            setShowDonationPopup(true);
+            setNextDate(30);
         }
     }
 
@@ -1942,7 +1973,6 @@ function Map() {
 
         localStorage.setItem('labels', '');
         generateMap();
-        mapOptimizationUpdateNotification();
         donationNotification();
         document.addEventListener('visibilitychange', handleVisibilityChange);
 

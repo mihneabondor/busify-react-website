@@ -2,11 +2,13 @@ import Badge from "react-bootstrap/Badge";
 import React, {useEffect, useRef, useState} from "react";
 import {useNavigate} from "react-router";
 import {ReactComponent as VinereaVerdeIcon} from '../Images/VinereaVerdeIcon.svg';
+import { IoWarning } from "react-icons/io5";
 
 function Badges() {
     const expandedLinesRef = useRef([])
     const vineriRef = useRef(false)
     const [anuntState, setAnunt] = useState([]);
+    const [isExpanded, setIsExpanded] = useState(true);
 
     const nav = useNavigate();
 
@@ -59,35 +61,81 @@ function Badges() {
         const d = new Date();
         if(d.getDay() === 5)
             vineriRef.current = true
+
+        // Auto-collapse badges after 3 seconds
+        const timer = setTimeout(() => {
+            setIsExpanded(false);
+        }, 3000);
+
+        return () => clearTimeout(timer);
     }, [])
 
     return (
-        <div style={{display: 'flex', flexDirection: 'column', position: "absolute", zIndex: 100, margin: "10px"}}>
+        <div style={{display: 'flex', flexDirection: 'row', position: "absolute", zIndex: 100, margin: "10px", gap: '8px'}}>
             <Badge style={{
-                display: vineriRef.current ? "initial" : "none",
-                marginBottom: 5,
-                background: '#0CBE7E',
-                padding: '10px',
-                outline: '2px solid white'
-            }} bg='undefined'>
-                <div style={{display: 'flex', justifyContent: "center", alignItems: 'center', textAlign: 'center'}}>
+                display: vineriRef.current ? "flex" : "none",
+                justifyContent: 'center',
+                alignItems: 'center',
+                background: '#00A86B',
+                padding: '10px 14px',
+                outline: '2px solid white',
+                borderRadius: '50px',
+                transition: 'all 0.3s ease-in-out',
+                cursor: 'pointer',
+            }} bg='undefined' onClick={() => setIsExpanded(!isExpanded)}>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: "center",
+                    alignItems: 'center',
+                    textAlign: 'center',
+                }}>
                     <VinereaVerdeIcon
                         style={{
-                            marginRight: 5,
                             scale: 2,
+                            flexShrink: 0,
                         }}
                     />
-                    Vinerea Verde
+                    <span style={{
+                        marginLeft: isExpanded ? 10 : 0,
+                        maxWidth: isExpanded ? '200px' : '0',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        transition: 'max-width 0.3s ease-in-out, margin-left 0.3s ease-in-out, opacity 0.2s ease-in-out',
+                        opacity: isExpanded ? 1 : 0,
+                    }}>
+                        Vinerea Verde
+                    </span>
                 </div>
             </Badge>
             <Badge style={{
-                display: anuntState.anunt ? "initial" : "none",
-                padding: '10px',
+                display: anuntState.anunt ? "flex" : "none",
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '10px 14px',
                 outline: '2px solid white',
-                background: '#E05757'
+                background: '#E05757',
+                borderRadius: '50px',
+                transition: 'all 0.3s ease-in-out',
+                cursor: 'pointer',
             }} bg='undefined' onClick={() => {
-                nav('/orare')
-            }}>Orar modificat</Badge>
+                if (!isExpanded) {
+                    setIsExpanded(true);
+                } else {
+                    nav('/orare');
+                }
+            }}>
+                <IoWarning style={{ fontSize: '18px', flexShrink: 0 }} />
+                <span style={{
+                    marginLeft: isExpanded ? 8 : 0,
+                    maxWidth: isExpanded ? '200px' : '0',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    transition: 'max-width 0.3s ease-in-out, margin-left 0.3s ease-in-out, opacity 0.2s ease-in-out',
+                    opacity: isExpanded ? 1 : 0,
+                }}>
+                    Orar modificat
+                </span>
+            </Badge>
         </div>
     )
 }
