@@ -951,15 +951,25 @@ function Map() {
         map.current.addControl(button, "top-right");
     }
 
+    // Ref to store prefetched buses data
+    const prefetchedBusesRef = useRef(null);
+
     const generateMap = async (refresh = false) => {
         try {
-            const request = await fetch('https://busifyserver.onrender.com/mapbox');
-            const data = await request.json();
-            mapboxgl.accessToken = data.accessToken;
+            // Parallelize: fetch Mapbox config and buses_basic.json simultaneously
+            const [mapboxData, busesBasic] = await Promise.all([
+                fetch('https://busifyserver.onrender.com/mapbox').then(r => r.json()),
+                fetch('https://orare.busify.ro/public/buses_basic.json').then(r => r.json()).catch(() => null)
+            ]);
+
+            // Store buses data for later use in socketData
+            prefetchedBusesRef.current = busesBasic;
+
+            mapboxgl.accessToken = mapboxData.accessToken;
             map.current = new mapboxgl.Map({
                 container: 'map',
                 center: [defLng, defLat],
-                style: data.style,
+                style: mapboxData.style,
                 zoom: 13,
                 attributionControl: false
             });
@@ -1733,9 +1743,9 @@ function Map() {
             if (cachedLinii)
                 s = cachedLinii.split(',');
 
-            try {
-                const resp = await fetch('https://orare.busify.ro/public/buses_basic.json');
-                const buses_basic = await resp.json();
+            // Use prefetched buses data instead of fetching again
+            const buses_basic = prefetchedBusesRef.current;
+            if (buses_basic) {
                 const joinArray = (arr) => {
                     arr.forEach(elem => unique.current.push([elem.name, true]));
                 };
@@ -1743,8 +1753,6 @@ function Map() {
                 joinArray(buses_basic.metropolitane);
                 joinArray(buses_basic.market);
                 joinArray(buses_basic.noapte);
-            } catch (err) {
-                console.log(err);
             }
 
             let saved = [];
