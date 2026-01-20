@@ -18,6 +18,7 @@ import VehicleMarkerWrapper from "../OtherComponents/VehicleMarkerWrapper";
 import ClusterMarker from "../OtherComponents/ClusterMarker";
 import debounce from 'lodash.debounce';
 import NotificationToast from "./NotificationToast";
+import InStationToast from "../OtherComponents/InStationToast";
 import {useActivate} from "react-activation";
 import PaywallSheet from "../Paywall/PaywallSheet";
 import { LiaPiggyBankSolid } from "react-icons/lia";
@@ -97,6 +98,13 @@ function Map() {
     const updateCancelToken = useRef({ cancelled: false });
 
     const [showDonationPopup, setShowDonationPopup] = useState(false);
+
+    // In-station toast state
+    const allStopsRef = useRef([]);
+    const allStopTimesRef = useRef([]);
+    const [nearbyStop, setNearbyStop] = useState(null);
+    const dismissedStopsRef = useRef(new Set());
+    const filteredStopRef = useRef(null); // Track the stop being filtered for live updates
 
     const nav = useNavigate();
 
@@ -688,6 +696,11 @@ function Map() {
         updateCancelToken.current = { cancelled: false };
         const token = updateCancelToken.current;
 
+        // If a stop filter is active, re-run the filter with updated vehicle positions
+        if (filteredStopRef.current && allStopTimesRef.current.length > 0) {
+            foundLabelsRef.current = filterVehiclesByStop(filteredStopRef.current);
+        }
+
         const currentVehicles = vehicles.current;
         // OPTIMIZATION: Use Set for O(1) lookups instead of Array.includes()
         // Note: Using window.Set/Map because component is named "Map" which shadows the built-in
@@ -803,8 +816,13 @@ function Map() {
                     updateSelectedVehicleAndStops();
                     // Update clusters after all markers have been updated
                     if (!selectedVehicleRef.current) {
-                        // Only include visible vehicles in clustering (exclude hidden lines)
+                        // Only include visible vehicles in clustering (exclude hidden lines and filtered vehicles)
                         const visibleVehicles = vehicles.current.filter(vehicle => {
+                            // If foundLabelsRef has entries, only include vehicles in that list
+                            if (foundLabelsRef.current.length > 0) {
+                                return foundLabelsRef.current.includes(vehicle.label);
+                            }
+                            // Otherwise, check line visibility
                             const lineEntry = unique.current.find(elem => elem[0] === vehicle.line);
                             return lineEntry && lineEntry[1] === true;
                         });
@@ -878,8 +896,13 @@ function Map() {
                 unique.current.some(uniqueLine => uniqueLine[0] === elem.line)
             );
 
-            // Only include visible vehicles in clustering (exclude hidden lines)
+            // Only include visible vehicles in clustering (exclude hidden lines and filtered vehicles)
             const visibleVehicles = eligibleVehicles.filter(vehicle => {
+                // If foundLabelsRef has entries, only include vehicles in that list
+                if (foundLabelsRef.current.length > 0) {
+                    return foundLabelsRef.current.includes(vehicle.label);
+                }
+                // Otherwise, check line visibility
                 const lineEntry = unique.current.find(elem => elem[0] === vehicle.line);
                 return lineEntry && lineEntry[1] === true;
             });
@@ -1993,6 +2016,115 @@ function Map() {
         };
     }, []);
 
+    // Fetch all stops and stop times for in-station detection
+    useEffect(() => {
+        const fetchAllStops = async () => {
+            try {
+                const [stopsRes, stopTimesRes] = await Promise.all([
+                    fetch('https://busifyserver.onrender.com/stops'),
+                    fetch('https://busifyserver.onrender.com/stoptimes')
+                ]);
+                allStopsRef.current = await stopsRes.json();
+                allStopTimesRef.current = await stopTimesRes.json();
+            } catch (e) {
+                console.error('Error fetching stops for in-station detection:', e);
+            }
+        };
+        fetchAllStops();
+    }, []);
+
+    // In-station proximity detection - check every 3 seconds
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            if (!map.current?._controls?.[2]?._lastKnownPosition) return;
+            if (allStopsRef.current.length === 0) return;
+
+            const userLat = map.current._controls[2]._lastKnownPosition.coords.latitude;
+            const userLng = map.current._controls[2]._lastKnownPosition.coords.longitude;
+
+            // Find nearest stop within 10m (0.01km)
+            let nearestStop = null;
+            let minDistance = Infinity;
+
+            allStopsRef.current.forEach(stop => {
+                const dist = Math.abs(calculateDistance(userLat, userLng, stop.stop_lat, stop.stop_lon));
+                if (dist < 0.01 && dist < minDistance && !dismissedStopsRef.current.has(stop.stop_id)) {
+                    minDistance = dist;
+                    nearestStop = stop;
+                }
+            });
+
+            if (nearestStop && nearbyStop?.stop_id !== nearestStop.stop_id) {
+                setNearbyStop(nearestStop);
+            } else if (!nearestStop && nearbyStop) {
+                // User left the stop area - clear the toast but don't add to dismissed
+                setNearbyStop(null);
+            }
+        }, 3000);
+
+        return () => clearInterval(intervalId);
+    }, [nearbyStop]);
+
+    // Filter vehicles that will pass through a specific stop
+    const filterVehiclesByStop = (stop) => {
+        // Get all trip_ids that pass through this stop, with their stop_sequence
+        // Trip IDs have format: {route_id}_0 or {route_id}_1 where suffix indicates direction
+        // Use == for comparison to handle potential string/number type mismatch
+        const tripsWithStop = allStopTimesRef.current
+            .filter(st => st.stop_id == stop.stop_id)
+            .map(st => ({ tripId: st.trip_id, stopSequence: st.stop_sequence }));
+
+        // Create a Set of valid trip IDs for O(1) lookup
+        const validTripIds = new Set(tripsWithStop.map(t => t.tripId));
+
+        const matchingLabels = [];
+
+        vehicles.current.forEach(vehicle => {
+            // The vehicle's tripId must exactly match one of the valid trip IDs for this stop
+            // This ensures direction matching: if stop is on route_0, vehicles on route_1 won't match
+            if (!validTripIds.has(vehicle.tripId)) return;
+
+            // Find the stop sequence for this specific trip
+            const tripMatch = tripsWithStop.find(t => t.tripId === vehicle.tripId);
+            if (!tripMatch) return;
+
+            // Get the stop sequence where the user is waiting
+            const userStopSequence = tripMatch.stopSequence;
+
+            // Get all stops for this vehicle's trip, sorted by sequence
+            const vehicleStopsInTrip = allStopTimesRef.current
+                .filter(st => st.trip_id === vehicle.tripId)
+                .sort((a, b) => a.stop_sequence - b.stop_sequence);
+
+            if (vehicleStopsInTrip.length === 0) return;
+
+            // Find the closest stop to the vehicle to determine its position on the route
+            let closestStops = [];
+            for (const st of vehicleStopsInTrip) {
+                const stopData = allStopsRef.current.find(s => s.stop_id == st.stop_id);
+                if (!stopData) continue;
+                const dist = Math.abs(calculateDistance(
+                    vehicle.lngLat[1], vehicle.lngLat[0],
+                    stopData.stop_lat, stopData.stop_lon
+                ));
+                closestStops.push({ ...st, dist, stopData });
+            }
+            closestStops.sort((a, b) => a.dist - b.dist);
+
+            if (closestStops.length === 0) return;
+
+            const nearestStop = closestStops[0];
+            const vehicleStopSequence = nearestStop.stop_sequence;
+
+            // Vehicle will pass through this stop if it hasn't passed it yet (include vehicles currently at the stop)
+            if (vehicleStopSequence <= userStopSequence) {
+                matchingLabels.push(vehicle.label);
+            }
+        });
+
+        return matchingLabels;
+    };
+
     return (
         <div className='body'>
             <Badges/>
@@ -2021,6 +2153,23 @@ function Map() {
                 show={showNotification}
                 onHide={()=>{setShowNotification(false)}}
                 title={notificationTitle}
+            />
+            <InStationToast
+                nearbyStop={nearbyStop}
+                onFilter={(stop) => {
+                    foundLabelsRef.current = filterVehiclesByStop(stop);
+                    // Store the stop for live updates when new vehicle data arrives
+                    filteredStopRef.current = stop;
+                    // Add to dismissed so toast won't reappear while user is still at the stop
+                    dismissedStopsRef.current.add(stop.stop_id);
+                    setNearbyStop(null);
+                    resetMarkers();
+                    setShowUndemibusuToast(true);
+                }}
+                onDismiss={(stopId) => {
+                    dismissedStopsRef.current.add(stopId);
+                    setNearbyStop(null);
+                }}
             />
             <PaywallSheet
                 show={showDonationPopup}
@@ -2067,6 +2216,7 @@ function Map() {
                     setShowUndemibusuToast(false)
                     setUniqueLines(unique.current)
                     foundLabelsRef.current = []
+                    filteredStopRef.current = null; // Clear stop filter for live updates
                     resetMarkers();
                     setUndemibusuBack(true)
                 }} />
