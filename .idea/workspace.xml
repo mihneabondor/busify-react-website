@@ -5,10 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/busify/src/OtherComponents/InStationToast.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -156,6 +153,7 @@
       <workItem from="1768661739134" duration="2488000" />
       <workItem from="1768907839054" duration="1414000" />
       <workItem from="1768916947449" duration="2150000" />
+      <workItem from="1769092070078" duration="969000" />
     </task>
     <servers />
   </component>

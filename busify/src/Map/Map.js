@@ -2033,7 +2033,6 @@ function Map() {
         fetchAllStops();
     }, []);
 
-    // In-station proximity detection - check every 3 seconds
     useEffect(() => {
         const intervalId = setInterval(() => {
             if (!map.current?._controls?.[2]?._lastKnownPosition) return;
@@ -2042,13 +2041,13 @@ function Map() {
             const userLat = map.current._controls[2]._lastKnownPosition.coords.latitude;
             const userLng = map.current._controls[2]._lastKnownPosition.coords.longitude;
 
-            // Find nearest stop within 10m (0.01km)
+            // Find nearest stop within 20m (0.02km)
             let nearestStop = null;
             let minDistance = Infinity;
 
             allStopsRef.current.forEach(stop => {
                 const dist = Math.abs(calculateDistance(userLat, userLng, stop.stop_lat, stop.stop_lon));
-                if (dist < 0.01 && dist < minDistance && !dismissedStopsRef.current.has(stop.stop_id)) {
+                if (dist < 0.02 && dist < minDistance && !dismissedStopsRef.current.has(stop.stop_id)) {
                     minDistance = dist;
                     nearestStop = stop;
                 }
