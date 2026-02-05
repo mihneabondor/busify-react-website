@@ -9,6 +9,7 @@ import {ReactComponent as TroleibusIcon} from '../Images/troleibusIcon.svg'
 import {ReactComponent as TramvaiIcon} from '../Images/tramvaiIcon.svg'
 import Marker from "../OtherComponents/Marker";
 import Anunt from "./Anunt";
+import {useSheet} from "../Contexts/SheetContext";
 
 function Favorite() {
     const searchValueRef = useRef();
@@ -23,10 +24,13 @@ function Favorite() {
 
     const [favorite, setFavorite] = useState([]);
 
+    const {sheetOpen, setSheetOpen} = useSheet();
+
     const search = (e) => {
         e.preventDefault();
         if (linesRef.current.find(elem => elem.name === searchValueRef.current.value.toUpperCase())) {
-            let url = '/orare/' + searchValueRef.current.value.toUpperCase();
+            let url = '/favorite/' + searchValueRef.current.value.toUpperCase();
+            setSheetOpen(false);
             console.log(url)
             nav(url);
         } else alert('Linia pe care ai introdus-o nu exista!')
@@ -163,8 +167,10 @@ function Favorite() {
                 <Anunt/>
                 <Form style={{width: '90vw'}} onSubmit={(e) =>{
                     e.preventDefault();
-                    if(lines.filter(elem => elem.name === searchValue).length > 0 && localStorage.getItem('linii_favorite').split(" ").includes(`${searchValue}`))
+                    if(lines.filter(elem => elem.name === searchValue).length > 0 && localStorage.getItem('linii_favorite').split(" ").includes(`${searchValue}`)) {
+                        setSheetOpen(false);
                         nav(`/favorite/${searchValue}`)
+                    }
                     else
                         alert("Linie invalida")
                 }}>

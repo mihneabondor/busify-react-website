@@ -6,6 +6,7 @@ import BottomBar from '../OtherComponents/BottomBar';
 import {ReactComponent as OrarIcon} from '../Images/orarIcon.svg'
 import Marker from '../OtherComponents/Marker'
 import Anunt from "./Anunt";
+import {useSheet} from "../Contexts/SheetContext";
 
 function Orare() {
     const searchValueRef = useRef();
@@ -19,6 +20,7 @@ function Orare() {
     const [activeFilter, setActiveFilter] = useState('toate');
     const [anunt, setAnunt] = useState(null);
     const [modificare, setModificare] = useState(null);
+    const {sheetOpen, setSheetOpen} = useSheet();
 
     const search = (e) => {
         e.preventDefault();
@@ -62,8 +64,10 @@ function Orare() {
                 <Anunt/>
                 <Form style={{width: '90vw'}} onSubmit={(e) => {
                     e.preventDefault();
-                    if (lines.filter(elem => elem.name === searchValue).length > 0)
+                    if (lines.filter(elem => elem.name === searchValue).length > 0) {
+                        setSheetOpen(false);
                         nav(`/orare/${searchValue}`)
+                    }
                     else
                         alert("Linie invalida")
                 }}>
@@ -115,6 +119,7 @@ function Orare() {
                     <div className='orare-cell'
                          style={{display: (activeFilter.toLowerCase() === line.type || activeFilter.toLowerCase() === "toate") && (searchValue === '' || line.name.toLowerCase().includes(searchValue.toLowerCase())) ? 'flex' : 'none'}}
                          onClick={() => {
+                             setSheetOpen(false);
                              let url = `/orare/${line.name}`
                              nav(url)
                          }}>

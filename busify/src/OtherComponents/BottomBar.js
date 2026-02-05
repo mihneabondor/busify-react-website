@@ -35,6 +35,11 @@ function BottomBar() {
         return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
     };
 
+    // Reset keyboard visibility when route changes
+    useEffect(() => {
+        setKeyboardVisible(false);
+    }, [location.pathname]);
+
     useEffect(() => {
         if (!isMobileDevice()) return;
 

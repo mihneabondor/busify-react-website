@@ -5,8 +5,7 @@ console.log('[SW] starting');
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
 if (workbox) {
-    console.log('[SW] Workbox is loaded');
-    workbox.setConfig({ debug: true });
+    workbox.setConfig({ debug: false });
 
     workbox.routing.registerRoute(
         ({ url }) =>

@@ -37,6 +37,9 @@ function Map() {
     var visibleMarkers = useRef(new window.Set());
     const [markersState, setMarkersState ] = useState([]);
 
+    // Counter to trigger re-renders when vehicles update
+    const [vehicleUpdateCounter, setVehicleUpdateCounter] = useState(0);
+
     // Cluster management refs
     const clusterIndexes = useRef({
         N: null, // North-bound vehicles
@@ -104,7 +107,11 @@ function Map() {
     const allStopTimesRef = useRef([]);
     const [nearbyStop, setNearbyStop] = useState(null);
     const dismissedStopsRef = useRef(new Set());
-    const filteredStopRef = useRef(null); // Track the stop being filtered for live updates
+
+    // Position history for improved bus stop detection
+    // Stores {lat, lng, timestamp, nearestStopId} for voting-based detection
+    const positionHistoryRef = useRef([]);
+    const POSITION_HISTORY_SIZE = 10; // Keep last 10 positions (~10 seconds at 1s interval)
 
     const nav = useNavigate();
 
@@ -167,15 +174,130 @@ function Map() {
         setStopMarkersState(stopMarkers.current);
     };
 
+    // Track the stop used for filtering (to restore after closing vehicle highlight)
+    const filteringByStopRef = useRef(null);
+
+    // Helper to calculate distance between two points
+    const calcDistance = (lat1, lon1, lat2, lon2) => {
+        const toRad = deg => deg * Math.PI / 180;
+        const R = 6371;
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    };
+
+    // Check if a vehicle has already passed a stop
+    const hasVehiclePassedStop = (vehicle, targetStop) => {
+        // Get all stop times for this vehicle's trip (in order)
+        const tripStopTimes = allStopTimesRef.current.filter(st => st.trip_id === vehicle.tripId);
+        if (tripStopTimes.length === 0) return false;
+
+        // Find the index of the target stop in the trip
+        const targetStopIndex = tripStopTimes.findIndex(st => st.stop_id == targetStop.stop_id);
+        if (targetStopIndex === -1) return true; // Stop not on this trip
+
+        // Get the target stop coordinates
+        const targetStopData = allStopsRef.current.find(s => s.stop_id === targetStop.stop_id);
+        if (!targetStopData) return false;
+
+        // Calculate distance from vehicle to target stop
+        const distToTarget = calcDistance(
+            vehicle.lngLat[1], vehicle.lngLat[0],
+            targetStopData.stop_lat, targetStopData.stop_lon
+        );
+
+        // If vehicle is very close to target stop (within 50m), it hasn't passed yet
+        if (distToTarget < 0.05) return false;
+
+        // Find the nearest stop to the vehicle's current position
+        let nearestStopIndex = 0;
+        let minDistance = Infinity;
+        let secondNearestStopIndex = 0;
+        let secondMinDistance = Infinity;
+
+        tripStopTimes.forEach((st, index) => {
+            const stop = allStopsRef.current.find(s => s.stop_id === st.stop_id);
+            if (stop) {
+                const dist = calcDistance(vehicle.lngLat[1], vehicle.lngLat[0], stop.stop_lat, stop.stop_lon);
+                if (dist < minDistance) {
+                    secondMinDistance = minDistance;
+                    secondNearestStopIndex = nearestStopIndex;
+                    minDistance = dist;
+                    nearestStopIndex = index;
+                } else if (dist < secondMinDistance) {
+                    secondMinDistance = dist;
+                    secondNearestStopIndex = index;
+                }
+            }
+        });
+
+        // If vehicle is between two stops, check if it's heading away from target
+        // Vehicle has passed if:
+        // 1. Its nearest stop is after the target stop, OR
+        // 2. Its nearest stop IS the target stop but it's closer to the NEXT stop (moving away)
+        if (nearestStopIndex > targetStopIndex) {
+            return true;
+        }
+
+        // If nearest stop is the target stop, check if vehicle is moving past it
+        if (nearestStopIndex === targetStopIndex && targetStopIndex < tripStopTimes.length - 1) {
+            // Get the next stop after target
+            const nextStopTime = tripStopTimes[targetStopIndex + 1];
+            const nextStop = allStopsRef.current.find(s => s.stop_id === nextStopTime.stop_id);
+
+            if (nextStop) {
+                const distToNext = calcDistance(
+                    vehicle.lngLat[1], vehicle.lngLat[0],
+                    nextStop.stop_lat, nextStop.stop_lon
+                );
+
+                // If vehicle is closer to the next stop than to the target, it has passed
+                if (distToNext < distToTarget) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    };
+
     const hiddenMarkerCondition = (vehicle) => {
+        // If a vehicle is selected, only show that vehicle (highest priority)
+        if (selectedVehicleRef.current) {
+            return selectedVehicleRef.current.vehicle.label !== vehicle.label;
+        }
+
+        // If filtering by stop, dynamically check if vehicle should be shown
+        if (filteringByStopRef.current) {
+            // Get trip_ids that pass through this stop
+            const tripIdsAtStop = new Set(
+                allStopTimesRef.current
+                    .filter(st => st.stop_id == filteringByStopRef.current.stop_id)
+                    .map(st => st.trip_id)
+            );
+
+            // Hide if vehicle's trip doesn't pass through this stop
+            if (!tripIdsAtStop.has(vehicle.tripId)) {
+                return true;
+            }
+
+            // Hide if vehicle has already passed the stop
+            if (hasVehiclePassedStop(vehicle, filteringByStopRef.current)) {
+                return true;
+            }
+
+            return false;
+        }
+
         if (foundLabelsRef.current.length > 0) {
             // Only show vehicles whose label is in foundLabels
             return !foundLabelsRef.current.includes(vehicle.label);
         }
-        return (
-            (selectedVehicleRef.current && selectedVehicleRef.current.vehicle.label !== vehicle.label) ||
-            (unique.current.find(elem => elem[0] === vehicle.line)[1] === false && selectedVehicleRef.current?.vehicle?.line !== vehicle.line)
-        );
+        return unique.current.find(elem => elem[0] === vehicle.line)[1] === false;
     }
 
     // Offset a [lng, lat] point to the right of the direction from start to end by 'distance' meters
@@ -696,11 +818,6 @@ function Map() {
         updateCancelToken.current = { cancelled: false };
         const token = updateCancelToken.current;
 
-        // If a stop filter is active, re-run the filter with updated vehicle positions
-        if (filteredStopRef.current && allStopTimesRef.current.length > 0) {
-            foundLabelsRef.current = filterVehiclesByStop(filteredStopRef.current);
-        }
-
         const currentVehicles = vehicles.current;
         // OPTIMIZATION: Use Set for O(1) lookups instead of Array.includes()
         // Note: Using window.Set/Map because component is named "Map" which shadows the built-in
@@ -818,6 +935,15 @@ function Map() {
                     if (!selectedVehicleRef.current) {
                         // Only include visible vehicles in clustering (exclude hidden lines and filtered vehicles)
                         const visibleVehicles = vehicles.current.filter(vehicle => {
+                            // If filtering by stop, use dynamic filtering
+                            if (filteringByStopRef.current) {
+                                const tripIdsAtStop = new Set(
+                                    allStopTimesRef.current
+                                        .filter(st => st.stop_id == filteringByStopRef.current.stop_id)
+                                        .map(st => st.trip_id)
+                                );
+                                return tripIdsAtStop.has(vehicle.tripId) && !hasVehiclePassedStop(vehicle, filteringByStopRef.current);
+                            }
                             // If foundLabelsRef has entries, only include vehicles in that list
                             if (foundLabelsRef.current.length > 0) {
                                 return foundLabelsRef.current.includes(vehicle.label);
@@ -898,6 +1024,15 @@ function Map() {
 
             // Only include visible vehicles in clustering (exclude hidden lines and filtered vehicles)
             const visibleVehicles = eligibleVehicles.filter(vehicle => {
+                // If filtering by stop, use dynamic filtering
+                if (filteringByStopRef.current) {
+                    const tripIdsAtStop = new Set(
+                        allStopTimesRef.current
+                            .filter(st => st.stop_id == filteringByStopRef.current.stop_id)
+                            .map(st => st.trip_id)
+                    );
+                    return tripIdsAtStop.has(vehicle.tripId) && !hasVehiclePassedStop(vehicle, filteringByStopRef.current);
+                }
                 // If foundLabelsRef has entries, only include vehicles in that list
                 if (foundLabelsRef.current.length > 0) {
                     return foundLabelsRef.current.includes(vehicle.label);
@@ -976,17 +1111,29 @@ function Map() {
 
     // Ref to store prefetched buses data
     const prefetchedBusesRef = useRef(null);
+    // Ref to store prefetched vehicle data for initial render
+    const prefetchedVehicleDataRef = useRef(null);
 
     const generateMap = async (refresh = false) => {
         try {
-            // Parallelize: fetch Mapbox config and buses_basic.json simultaneously
-            const [mapboxData, busesBasic] = await Promise.all([
+            // Parallelize: fetch all initial data simultaneously
+            const [mapboxData, busesBasic, stopsData, stopTimesData, initialVehicleData] = await Promise.all([
                 fetch('https://busifyserver.onrender.com/mapbox').then(r => r.json()),
-                fetch('https://orare.busify.ro/public/buses_basic.json').then(r => r.json()).catch(() => null)
+                fetch('https://orare.busify.ro/public/buses_basic.json').then(r => r.json()).catch(() => null),
+                fetch('https://busifyserver.onrender.com/stops').then(r => r.json()).catch(() => []),
+                fetch('https://busifyserver.onrender.com/stoptimes').then(r => r.json()).catch(() => []),
+                fetch('https://busifyserver.onrender.com/allVehicleData').then(r => r.json()).catch(() => [])
             ]);
 
             // Store buses data for later use in socketData
             prefetchedBusesRef.current = busesBasic;
+
+            // Store initial vehicle data for processing when map is ready
+            prefetchedVehicleDataRef.current = initialVehicleData;
+
+            // Store stops and stoptimes immediately (no need to fetch later)
+            allStopsRef.current = stopsData;
+            allStopTimesRef.current = stopTimesData;
 
             mapboxgl.accessToken = mapboxData.accessToken;
             map.current = new mapboxgl.Map({
@@ -1002,6 +1149,8 @@ function Map() {
                 [24.0000, 47.0000]  // Northeast corner
             ]);
 
+            // Note: Socket connection now starts in onMapReady() after initial data is rendered
+            // Initial vehicle data is prefetched via REST endpoint for faster startup
 
             const geo = new mapboxgl.GeolocateControl({
                 positionOptions: {
@@ -1019,7 +1168,8 @@ function Map() {
                 // Initialize cluster indexes
                 initializeClusterIndexes();
 
-                handleSocketOns();
+                // Map is now ready to process vehicle data
+                onMapReady();
                 if (refresh)
                     map.current.flyTo({
                         center: lastCoords.current,
@@ -1872,6 +2022,8 @@ function Map() {
                 vehicles.current = newVehicles;
                 lastVehiclesRef.current = newVehicles;
                 debouncedUpdateMarker();
+                // Trigger re-render in UndemibusuToast
+                setVehicleUpdateCounter(c => c + 1);
             }
         }
     }, []);
@@ -1886,32 +2038,55 @@ function Map() {
         }
     })
 
-    const handleSocketOns = (visChange = false) => {
-        socket.current = io('https://busifyserver.onrender.com')
+    // Track if initial data has been loaded (to avoid processing socket data as "first load")
+    const initialDataLoadedRef = useRef(false);
+
+    const connectSocket = (visChange = false) => {
+        if (socket.current) return; // Already connected
+
+        socket.current = io('https://busifyserver.onrender.com');
         // socket.current = io('http://192.168.0.221:3001')
+
         socket.current.on('allVehicleData', data => {
-            console.log("new data")
-            socketData(data)
+            console.log("socket update received");
+            // Socket now only handles updates, not initial load
+            socketData(data);
             setTimeout(() => {
-                checkMarkerVisibility()
-                if(selectedVehicleRef.current && visChange) {
-                    map.current.flyTo({
-                        center: selectedVehicleRef.current.vehicle.lngLat,
-                        duration: 1000,
-                        // zoom: 13,
-                        essential: true
-                    });
-                    lastCoords.current = selectedVehicleRef.current.vehicle.lngLat;
-                    // lastZoom.current = 13
-                }
-                visChange = false
-            }, 1500)
-        })
+                checkMarkerVisibility();
+            }, 1500);
+        });
+
         socket.current.on('notifications', data => {
-            let notificariRamase = JSON.parse(data)
-            notificariRamase = notificariRamase.filter(elem => elem.userId === searchParams.get('notificationUserId'))
-            localStorage.setItem('scheduledNotifications', JSON.stringify(notificariRamase))
-        })
+            let notificariRamase = JSON.parse(data);
+            notificariRamase = notificariRamase.filter(elem => elem.userId === searchParams.get('notificationUserId'));
+            localStorage.setItem('scheduledNotifications', JSON.stringify(notificariRamase));
+        });
+    };
+
+    const handleSocketOns = (visChange = false) => {
+        // Disconnect existing socket if reconnecting after visibility change
+        if (visChange && socket.current) {
+            socket.current.disconnect();
+            socket.current = null;
+        }
+        connectSocket(visChange);
+    };
+
+    // Called when map is ready - process prefetched vehicle data immediately
+    const onMapReady = () => {
+        // Process prefetched vehicle data from REST endpoint
+        if (prefetchedVehicleDataRef.current && prefetchedVehicleDataRef.current.length > 0) {
+            console.log("Processing prefetched vehicle data:", prefetchedVehicleDataRef.current.length, "vehicles");
+            socketData(prefetchedVehicleDataRef.current);
+            prefetchedVehicleDataRef.current = null; // Clear after processing
+            initialDataLoadedRef.current = true;
+            setTimeout(() => {
+                checkMarkerVisibility();
+            }, 1500);
+        }
+
+        // Connect socket for live updates (after initial data is rendered)
+        connectSocket();
     }
 
     const handleVisibilityChange = () => {
@@ -2016,112 +2191,146 @@ function Map() {
         };
     }, []);
 
-    // Fetch all stops and stop times for in-station detection
-    useEffect(() => {
-        const fetchAllStops = async () => {
-            try {
-                const [stopsRes, stopTimesRes] = await Promise.all([
-                    fetch('https://busifyserver.onrender.com/stops'),
-                    fetch('https://busifyserver.onrender.com/stoptimes')
-                ]);
-                allStopsRef.current = await stopsRes.json();
-                allStopTimesRef.current = await stopTimesRes.json();
-            } catch (e) {
-                console.error('Error fetching stops for in-station detection:', e);
-            }
-        };
-        fetchAllStops();
-    }, []);
+    // Note: stops and stoptimes are now prefetched in generateMap() for faster startup
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            if (!map.current?._controls?.[2]?._lastKnownPosition) return;
+            // if (!map.current?._controls?.[2]?._lastKnownPosition) return;
             if (allStopsRef.current.length === 0) return;
 
-            const userLat = map.current._controls[2]._lastKnownPosition.coords.latitude;
-            const userLng = map.current._controls[2]._lastKnownPosition.coords.longitude;
+            // const userLat = map.current._controls[2]._lastKnownPosition.coords.latitude;
+            // const userLng = map.current._controls[2]._lastKnownPosition.coords.longitude;
+            // const userAccuracy = map.current._controls[2]._lastKnownPosition.coords.accuracy;
 
-            // Find nearest stop within 20m (0.02km)
-            let nearestStop = null;
+            //Gradini manastur
+            // const userLat = 46.760904688864564;
+            // const userLng = 23.56411394738028;
+            // const userAccuracy = 10
+
+            //Calea manastur
+            const userLat = 46.76074299459698;
+            const userLng = 23.564433130245096
+            const userAccuracy = 5;
+
+            // Only process if GPS accuracy is better than 20m
+            if (userAccuracy > 20) return;
+
+            // Use a tighter threshold when accuracy is good (min 15m, scales with accuracy)
+            const proximityThreshold = Math.max(0.015, userAccuracy / 1000);
+
+            // Find the nearest stop for this position snapshot
+            let nearestStopForPosition = null;
             let minDistance = Infinity;
 
             allStopsRef.current.forEach(stop => {
                 const dist = Math.abs(calculateDistance(userLat, userLng, stop.stop_lat, stop.stop_lon));
-                if (dist < 0.02 && dist < minDistance && !dismissedStopsRef.current.has(stop.stop_id)) {
+                if (dist < proximityThreshold && dist < minDistance) {
                     minDistance = dist;
-                    nearestStop = stop;
+                    nearestStopForPosition = stop;
                 }
             });
 
-            if (nearestStop && nearbyStop?.stop_id !== nearestStop.stop_id) {
-                setNearbyStop(nearestStop);
-            } else if (!nearestStop && nearbyStop) {
-                // User left the stop area - clear the toast but don't add to dismissed
-                setNearbyStop(null);
+            // Add this position to history
+            const now = Date.now();
+            positionHistoryRef.current.push({
+                lat: userLat,
+                lng: userLng,
+                timestamp: now,
+                nearestStopId: nearestStopForPosition?.stop_id || null,
+                distance: minDistance
+            });
+
+            // Keep only the last POSITION_HISTORY_SIZE entries
+            if (positionHistoryRef.current.length > POSITION_HISTORY_SIZE) {
+                positionHistoryRef.current = positionHistoryRef.current.slice(-POSITION_HISTORY_SIZE);
             }
-        }, 3000);
+
+            // Need at least 3 positions before making a decision (about 4.5 seconds)
+            if (positionHistoryRef.current.length < 3) return;
+
+            // Count votes for each stop with recency weighting
+            // More recent positions get higher weight
+            const votesByStop = new window.Map();
+            const historyLength = positionHistoryRef.current.length;
+
+            positionHistoryRef.current.forEach((pos, index) => {
+                if (pos.nearestStopId === null) return;
+
+                // Weight: older positions get weight 1, newest gets weight equal to history length
+                // This makes recent positions count more
+                const weight = index + 1;
+
+                const currentVotes = votesByStop.get(pos.nearestStopId) || { count: 0, weight: 0, avgDistance: 0, distances: [] };
+                currentVotes.count += 1;
+                currentVotes.weight += weight;
+                currentVotes.distances.push(pos.distance);
+                votesByStop.set(pos.nearestStopId, currentVotes);
+            });
+
+            // Calculate average distance for each stop
+            votesByStop.forEach((votes, stopId) => {
+                votes.avgDistance = votes.distances.reduce((a, b) => a + b, 0) / votes.distances.length;
+            });
+
+            // Find the stop with the highest weighted votes
+            let winningStopId = null;
+            let maxWeight = 0;
+            let winningVoteCount = 0;
+
+            votesByStop.forEach((votes, stopId) => {
+                // Don't consider dismissed stops
+                if (dismissedStopsRef.current.has(stopId)) return;
+
+                if (votes.weight > maxWeight) {
+                    maxWeight = votes.weight;
+                    winningStopId = stopId;
+                    winningVoteCount = votes.count;
+                }
+            });
+
+            // Require at least 50% of positions to vote for this stop (majority rule)
+            // This prevents flickering between nearby stops
+            const majorityThreshold = Math.ceil(historyLength * 0.5);
+
+            if (winningStopId && winningVoteCount >= majorityThreshold) {
+                const winningStop = allStopsRef.current.find(s => s.stop_id === winningStopId);
+
+                if (winningStop && nearbyStop?.stop_id !== winningStopId) {
+                    setNearbyStop(winningStop);
+                }
+            } else if (!winningStopId || winningVoteCount < majorityThreshold) {
+                // No clear winner or user left all stop areas
+                if (nearbyStop) {
+                    setNearbyStop(null);
+                }
+            }
+        }, 1500);
 
         return () => clearInterval(intervalId);
     }, [nearbyStop]);
 
-    // Filter vehicles that will pass through a specific stop
+    // Filter vehicles that will pass through a specific stop (direction-aware)
     const filterVehiclesByStop = (stop) => {
-        // Get all trip_ids that pass through this stop, with their stop_sequence
+        // Get all trip_ids that pass through this stop
         // Trip IDs have format: {route_id}_0 or {route_id}_1 where suffix indicates direction
-        // Use == for comparison to handle potential string/number type mismatch
-        const tripsWithStop = allStopTimesRef.current
-            .filter(st => st.stop_id == stop.stop_id)
-            .map(st => ({ tripId: st.trip_id, stopSequence: st.stop_sequence }));
+        const tripIdsAtStop = new Set(
+            allStopTimesRef.current
+                .filter(st => st.stop_id == stop.stop_id)
+                .map(st => st.trip_id)
+        );
 
-        // Create a Set of valid trip IDs for O(1) lookup
-        const validTripIds = new Set(tripsWithStop.map(t => t.tripId));
-
+        // Find all vehicle labels that have matching trip IDs (direction-aware)
+        // and haven't passed the stop yet
         const matchingLabels = [];
-
+        const matchingLines = new Set();
         vehicles.current.forEach(vehicle => {
-            // The vehicle's tripId must exactly match one of the valid trip IDs for this stop
-            // This ensures direction matching: if stop is on route_0, vehicles on route_1 won't match
-            if (!validTripIds.has(vehicle.tripId)) return;
-
-            // Find the stop sequence for this specific trip
-            const tripMatch = tripsWithStop.find(t => t.tripId === vehicle.tripId);
-            if (!tripMatch) return;
-
-            // Get the stop sequence where the user is waiting
-            const userStopSequence = tripMatch.stopSequence;
-
-            // Get all stops for this vehicle's trip, sorted by sequence
-            const vehicleStopsInTrip = allStopTimesRef.current
-                .filter(st => st.trip_id === vehicle.tripId)
-                .sort((a, b) => a.stop_sequence - b.stop_sequence);
-
-            if (vehicleStopsInTrip.length === 0) return;
-
-            // Find the closest stop to the vehicle to determine its position on the route
-            let closestStops = [];
-            for (const st of vehicleStopsInTrip) {
-                const stopData = allStopsRef.current.find(s => s.stop_id == st.stop_id);
-                if (!stopData) continue;
-                const dist = Math.abs(calculateDistance(
-                    vehicle.lngLat[1], vehicle.lngLat[0],
-                    stopData.stop_lat, stopData.stop_lon
-                ));
-                closestStops.push({ ...st, dist, stopData });
-            }
-            closestStops.sort((a, b) => a.dist - b.dist);
-
-            if (closestStops.length === 0) return;
-
-            const nearestStop = closestStops[0];
-            const vehicleStopSequence = nearestStop.stop_sequence;
-
-            // Vehicle will pass through this stop if it hasn't passed it yet (include vehicles currently at the stop)
-            if (vehicleStopSequence <= userStopSequence) {
+            if (tripIdsAtStop.has(vehicle.tripId) && !hasVehiclePassedStop(vehicle, stop)) {
                 matchingLabels.push(vehicle.label);
+                matchingLines.add(vehicle.line);
             }
         });
 
-        return matchingLabels;
+        return { matchingLabels, matchingLines };
     };
 
     return (
@@ -2156,9 +2365,19 @@ function Map() {
             <InStationToast
                 nearbyStop={nearbyStop}
                 onFilter={(stop) => {
-                    foundLabelsRef.current = filterVehiclesByStop(stop);
-                    // Store the stop for live updates when new vehicle data arrives
-                    filteredStopRef.current = stop;
+                    const { matchingLines } = filterVehiclesByStop(stop);
+
+                    // Update unique.current for line-based UI display
+                    unique.current = unique.current.map(elem =>
+                        [elem[0], matchingLines.has(elem[0])]
+                    );
+
+                    setUniqueLines(unique.current);
+                    setCheckAllChecked(false);
+
+                    // Store the stop for dynamic filtering in hiddenMarkerCondition
+                    filteringByStopRef.current = stop;
+
                     // Add to dismissed so toast won't reappear while user is still at the stop
                     dismissedStopsRef.current.add(stop.stop_id);
                     setNearbyStop(null);
@@ -2210,19 +2429,67 @@ function Map() {
                 markersState={markersState}
                 foundLabelsRef={foundLabelsRef}
                 unique={unique}
+                filteringStop={filteringByStopRef.current}
+                allStopTimesRef={allStopTimesRef}
+                allStopsRef={allStopsRef}
+                vehiclesRef={vehicles}
+                vehicleUpdateCounter={vehicleUpdateCounter}
+                onSelectVehicle={async (entry) => {
+                    const vehicle = entry.vehicle;
+                    // Find the marker for this vehicle
+                    const markerEntry = markers.current.get(vehicle.label);
+                    const mapboxMarker = markerEntry?.marker;
+
+                    selectedVehicleRef.current = null;
+                    stopMarkers.current.forEach(e => e.marker.remove());
+                    stopMarkers.current = [];
+                    removePolyline();
+                    popupOpen.current = false;
+                    popupIndex.current = 0;
+                    setShowUndemibusuToast(false);
+
+                    clearClusterMarkers();
+
+                    await getStops(vehicle.tripId);
+                    addPolyline(vehicle);
+
+                    popupOpen.current = true;
+                    popupIndex.current = vehicle.label;
+
+                    setSelectedVehicle({ marker: mapboxMarker, vehicle });
+                    selectedVehicleRef.current = { marker: mapboxMarker, vehicle };
+
+                    resetMarkers();
+
+                    setTimeout(() => {
+                        updateSelectedVehicleAndStops();
+                    }, 1000);
+                }}
                 onHide={() => {
                     setShownVehicles();
                     setShowUndemibusuToast(false)
                     setUniqueLines(unique.current)
                     foundLabelsRef.current = []
-                    filteredStopRef.current = null; // Clear stop filter for live updates
+                    filteringByStopRef.current = null;
                     resetMarkers();
                     setUndemibusuBack(true)
                 }} />
             <VehicleHighlight
                 show={selectedVehicle}
                 onHide={() => {
-                    setShownVehicles()
+                    // Check if we were filtering by a bus stop before selecting this vehicle
+                    if (filteringByStopRef.current) {
+                        // Restore stop-based filtering (direction-aware)
+                        // filteringByStopRef is still set, so hiddenMarkerCondition will handle dynamic filtering
+                        const { matchingLines } = filterVehiclesByStop(filteringByStopRef.current);
+                        unique.current = unique.current.map(elem =>
+                            [elem[0], matchingLines.has(elem[0])]
+                        );
+                        setUniqueLines(unique.current);
+                        setCheckAllChecked(false);
+                    } else {
+                        setShownVehicles()
+                    }
                     setSelectedVehicle(null)
                     selectedVehicleRef.current = null
                     setTimeout(() => {
@@ -2234,7 +2501,10 @@ function Map() {
                     popupIndex.current = 0
                     resetMarkers()
 
-                    if(!undemibusuBack) {
+                    // Show the undemibusu toast if we were filtering by stop
+                    if (filteringByStopRef.current) {
+                        setShowUndemibusuToast(true)
+                    } else if(!undemibusuBack) {
                         let exista = false;
                         unique.current.forEach(elem => {
                             if (elem[0] === undemibusu)

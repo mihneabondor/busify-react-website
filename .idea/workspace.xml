@@ -6,7 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/public/sw.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/public/sw.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Map/UndemibusuToast.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/UndemibusuToast.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Orare/Favorite.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Orare/Favorite.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Orare/Orare.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Orare/Orare.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -154,6 +159,14 @@
       <workItem from="1768907839054" duration="1414000" />
       <workItem from="1768916947449" duration="2150000" />
       <workItem from="1769092070078" duration="969000" />
+      <workItem from="1769100643813" duration="1709000" />
+      <workItem from="1769176319752" duration="59000" />
+      <workItem from="1769250298974" duration="598000" />
+      <workItem from="1769250972925" duration="214000" />
+      <workItem from="1769343808276" duration="840000" />
+      <workItem from="1769702667458" duration="3198000" />
+      <workItem from="1770054430226" duration="932000" />
+      <workItem from="1770298017113" duration="5515000" />
     </task>
     <servers />
   </component>
