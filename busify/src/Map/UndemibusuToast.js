@@ -203,8 +203,8 @@ function UndemibusuToast(props) {
                     paddingBottom: '10px',
                     borderBottom: '1px solid #eee'
                 }}>
-                    <div style={{fontWeight: 'bold', fontSize: '14px'}}>
-                        Stația {props.filteringStop.stop_name}
+                    <div>
+                        <b>Stația {props.filteringStop.stop_name}</b>
                     </div>
                     <CloseButton style={{marginLeft: 'auto'}}
                                  onClick={() => {
@@ -302,7 +302,7 @@ function UndemibusuToast(props) {
             scrollLocking={false}
             blocking={false}
             snapPoints={useExpandableSheet
-                ? ({maxHeight}) => [maxHeight * 0.25, maxHeight * 0.5, maxHeight * 0.75]
+                ? ({maxHeight}) => [maxHeight * 0.25, maxHeight * 0.85]
                 : ({minHeight}) => [minHeight]
             }
             defaultSnap={useExpandableSheet

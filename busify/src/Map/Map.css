@@ -11,6 +11,16 @@
     height: calc(100dvh - 60px);
 }
 
+.vehicle-marker-teste {
+    background: #1976d2;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
 .spinner-container {
     position: absolute; 
     left: 0;

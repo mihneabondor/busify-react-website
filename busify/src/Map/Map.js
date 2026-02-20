@@ -2195,28 +2195,28 @@ function Map() {
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            // if (!map.current?._controls?.[2]?._lastKnownPosition) return;
+            if (!map.current?._controls?.[2]?._lastKnownPosition) return;
             if (allStopsRef.current.length === 0) return;
 
-            // const userLat = map.current._controls[2]._lastKnownPosition.coords.latitude;
-            // const userLng = map.current._controls[2]._lastKnownPosition.coords.longitude;
-            // const userAccuracy = map.current._controls[2]._lastKnownPosition.coords.accuracy;
+            const userLat = map.current._controls[2]._lastKnownPosition.coords.latitude;
+            const userLng = map.current._controls[2]._lastKnownPosition.coords.longitude;
+            const userAccuracy = map.current._controls[2]._lastKnownPosition.coords.accuracy;
 
-            //Gradini manastur
+            // // Gradini manastur
             // const userLat = 46.760904688864564;
             // const userLng = 23.56411394738028;
             // const userAccuracy = 10
 
             //Calea manastur
-            const userLat = 46.76074299459698;
-            const userLng = 23.564433130245096
-            const userAccuracy = 5;
+            // const userLat = 46.76074299459698;
+            // const userLng = 23.564433130245096
+            // const userAccuracy = 5;
 
             // Only process if GPS accuracy is better than 20m
             if (userAccuracy > 20) return;
 
-            // Use a tighter threshold when accuracy is good (min 15m, scales with accuracy)
-            const proximityThreshold = Math.max(0.015, userAccuracy / 1000);
+            // Use a tighter threshold when accuracy is good (min 35m, scales with accuracy)
+            const proximityThreshold = Math.max(0.035, userAccuracy / 1000);
 
             // Find the nearest stop for this position snapshot
             let nearestStopForPosition = null;

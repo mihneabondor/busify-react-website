@@ -27,9 +27,9 @@ function InStationToast({ nearbyStop, onFilter, onDismiss }) {
                             <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
                                 Stația {nearbyStop.stop_name}
                             </div>
-                            <div style={{ fontSize: '0.85em', opacity: 0.7 }}>
-                                Apasă pentru a filtra vehiculele
-                            </div>
+                            <small style={{ opacity: 0.7 }}>
+                                Filtrează harta sau X pentru altă stație
+                            </small>
                         </div>
                         <CloseButton
                             onClick={(e) => {
@@ -41,7 +41,6 @@ function InStationToast({ nearbyStop, onFilter, onDismiss }) {
                             style={{
                                 border: 'none',
                                 cursor: 'pointer',
-                                padding: '4px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',

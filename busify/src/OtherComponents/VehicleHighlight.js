@@ -275,7 +275,7 @@ function VehicleHighlight(props) {
                             })
                         }}>
                             <LocationIcon
-                                style={{filter: "brightness(0) saturate(100%)", scale: "0.9", marginRight: '10px'}}/>
+                                style={{filter: "brightness(0) saturate(100%)", scale: "0.9", marginRight: '5px'}}/>
                             Urmărește
                         </Button>
                         <Button
@@ -304,7 +304,7 @@ function VehicleHighlight(props) {
                                 }
                             }}
                         >
-                            <BiletIcon style={{ marginRight: '10px' }} />
+                            <BiletIcon style={{ marginRight: '5px' }} />
                             Bilet
                         </Button>
 
@@ -318,9 +318,9 @@ function VehicleHighlight(props) {
                             justifyContent: 'center',
                             outline: 'none'
                         }} onClick={() => {
-                            navigator.clipboard.writeText(`https://nou.busify.ro/map?id=${props.vehicle.label}`).then(props.copyLinkNotification)
+                            navigator.clipboard.writeText(`https://app.busify.ro/map?id=${props.vehicle.label}`).then(props.copyLinkNotification)
                         }}>
-                            <ShareIcon style={{marginRight: '10px'}}/>
+                            <ShareIcon style={{marginRight: '5px'}}/>
                             Distribuie
                         </Button>
                     </div>
