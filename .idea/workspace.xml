@@ -5,14 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/busify/src/Map/Teste.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Map/UndemibusuToast.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/UndemibusuToast.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/InStationToast.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/InStationToast.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/VehicleHighlight.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/VehicleHighlight.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/index.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -84,8 +78,8 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="npm.start" />
       <item itemvalue="npm.start (1)" />
+      <item itemvalue="npm.start" />
     </list>
     <recent_temporary>
       <list>
@@ -173,7 +167,8 @@
       <workItem from="1770976118562" duration="389000" />
       <workItem from="1771156216364" duration="800000" />
       <workItem from="1771263006333" duration="389000" />
-      <workItem from="1771584470954" duration="6256000" />
+      <workItem from="1771584470954" duration="6406000" />
+      <workItem from="1771844742147" duration="1634000" />
     </task>
     <servers />
   </component>

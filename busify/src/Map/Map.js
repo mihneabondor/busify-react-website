@@ -2191,119 +2191,141 @@ function Map() {
         };
     }, []);
 
+    // Add a ref to store compass heading
+    const compassHeadingRef = useRef(null);
+
+    useEffect(() => {
+        const handleOrientation = (e) => {
+            // webkitCompassHeading is iOS specific, alpha is standard (but needs normalization)
+            const heading = e.webkitCompassHeading || (360 - e.alpha);
+            compassHeadingRef.current = heading;
+        };
+
+        window.addEventListener('deviceorientation', handleOrientation);
+        return () => window.removeEventListener('deviceorientation', handleOrientation);
+    }, []);
+
+    const calculateBearing = (lat1, lon1, lat2, lon2) => {
+        // Convert degrees to radians
+        const toRad = (deg) => (deg * Math.PI) / 180;
+        const toDeg = (rad) => (rad * 180) / Math.PI;
+
+        const φ1 = toRad(lat1);
+        const φ2 = toRad(lat2);
+        const Δλ = toRad(lon2 - lon1);
+
+        const y = Math.sin(Δλ) * Math.cos(φ2);
+        const x = Math.cos(φ1) * Math.sin(φ2) -
+            Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+
+        const θ = Math.atan2(y, x);
+
+        // Normalize to 0-360 degrees
+        return (toDeg(θ) + 360) % 360;
+    };
+
     // Note: stops and stoptimes are now prefetched in generateMap() for faster startup
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            if (!map.current?._controls?.[2]?._lastKnownPosition) return;
-            if (allStopsRef.current.length === 0) return;
+            const coords = map.current?._controls?.[2]?._lastKnownPosition?.coords;
+            if (!coords || allStopsRef.current.length === 0) return;
 
-            const userLat = map.current._controls[2]._lastKnownPosition.coords.latitude;
-            const userLng = map.current._controls[2]._lastKnownPosition.coords.longitude;
-            const userAccuracy = map.current._controls[2]._lastKnownPosition.coords.accuracy;
+            const { latitude: userLat, longitude: userLng, accuracy: userAccuracy, heading: gpsHeading } = coords;
 
-            // // Gradini manastur
-            // const userLat = 46.760904688864564;
-            // const userLng = 23.56411394738028;
-            // const userAccuracy = 10
+            // Use Device Orientation if GPS heading is null (user is standing still)
+            // Note: You'll need to capture this from a window 'deviceorientation' listener
+            const userHeading = gpsHeading ?? window._currentCompassHeading;
 
-            //Calea manastur
-            // const userLat = 46.76074299459698;
-            // const userLng = 23.564433130245096
-            // const userAccuracy = 5;
-
-            // Only process if GPS accuracy is better than 20m
             if (userAccuracy > 20) return;
 
-            // Use a tighter threshold when accuracy is good (min 35m, scales with accuracy)
             const proximityThreshold = Math.max(0.035, userAccuracy / 1000);
 
-            // Find the nearest stop for this position snapshot
-            let nearestStopForPosition = null;
-            let minDistance = Infinity;
+            // 1. Find ALL candidate stops within range for this specific tick
+            const candidatesForThisTick = allStopsRef.current
+                .map(stop => ({
+                    stop,
+                    dist: Math.abs(calculateDistance(userLat, userLng, stop.stop_lat, stop.stop_lon))
+                }))
+                .filter(c => c.dist < proximityThreshold);
 
-            allStopsRef.current.forEach(stop => {
-                const dist = Math.abs(calculateDistance(userLat, userLng, stop.stop_lat, stop.stop_lon));
-                if (dist < proximityThreshold && dist < minDistance) {
-                    minDistance = dist;
-                    nearestStopForPosition = stop;
-                }
-            });
-
-            // Add this position to history
-            const now = Date.now();
+            // 2. Add current state to history
             positionHistoryRef.current.push({
-                lat: userLat,
-                lng: userLng,
-                timestamp: now,
-                nearestStopId: nearestStopForPosition?.stop_id || null,
-                distance: minDistance
+                candidates: candidatesForThisTick,
+                userLat,
+                userLng,
+                userHeading,
+                timestamp: Date.now()
             });
 
-            // Keep only the last POSITION_HISTORY_SIZE entries
             if (positionHistoryRef.current.length > POSITION_HISTORY_SIZE) {
-                positionHistoryRef.current = positionHistoryRef.current.slice(-POSITION_HISTORY_SIZE);
+                positionHistoryRef.current.shift();
             }
 
-            // Need at least 3 positions before making a decision (about 4.5 seconds)
             if (positionHistoryRef.current.length < 3) return;
 
-            // Count votes for each stop with recency weighting
-            // More recent positions get higher weight
+            // 3. Aggregate Weighted Votes
             const votesByStop = new window.Map();
             const historyLength = positionHistoryRef.current.length;
 
             positionHistoryRef.current.forEach((pos, index) => {
-                if (pos.nearestStopId === null) return;
+                const recencyWeight = index + 1;
 
-                // Weight: older positions get weight 1, newest gets weight equal to history length
-                // This makes recent positions count more
-                const weight = index + 1;
+                pos.candidates.forEach(({ stop, dist }) => {
+                    let finalWeight = recencyWeight;
 
-                const currentVotes = votesByStop.get(pos.nearestStopId) || { count: 0, weight: 0, avgDistance: 0, distances: [] };
-                currentVotes.count += 1;
-                currentVotes.weight += weight;
-                currentVotes.distances.push(pos.distance);
-                votesByStop.set(pos.nearestStopId, currentVotes);
+                    if (pos.userHeading !== null && pos.userHeading !== undefined) {
+                        const bearingToStop = calculateBearing(pos.userLat, pos.userLng, stop.stop_lat, stop.stop_lon);
+                        const diff = Math.abs((pos.userHeading - bearingToStop + 180 + 360) % 360 - 180);
+
+                        /**
+                         * THE TIE-BREAKER LOGIC (Looking toward road)
+                         */
+                        if (diff < 60) {
+                            // User is facing TOWARD the stop (likely the one across the street)
+                            finalWeight *= 0.1;
+                        } else if (diff > 75 && diff < 105) {
+                            // SIDEWAYS LOOK (Perpendicular to the road/stop)
+                            // Common waiting posture, give a slight boost
+                            finalWeight *= 1.2;
+                        } else if (diff > 135) {
+                            // BACK TO STOP (User facing the road, stop is behind them)
+                            // High confidence this is their current stop
+                            finalWeight *= 2.0;
+                        }
+                    }
+
+                    const current = votesByStop.get(stop.stop_id) || { weight: 0, count: 0, stop };
+                    votesByStop.set(stop.stop_id, {
+                        weight: current.weight + finalWeight,
+                        count: current.count + 1,
+                        stop: stop
+                    });
+                });
             });
 
-            // Calculate average distance for each stop
-            votesByStop.forEach((votes, stopId) => {
-                votes.avgDistance = votes.distances.reduce((a, b) => a + b, 0) / votes.distances.length;
-            });
-
-            // Find the stop with the highest weighted votes
-            let winningStopId = null;
+            // 4. Determine Winner
+            let winningStop = null;
             let maxWeight = 0;
-            let winningVoteCount = 0;
-
-            votesByStop.forEach((votes, stopId) => {
-                // Don't consider dismissed stops
-                if (dismissedStopsRef.current.has(stopId)) return;
-
-                if (votes.weight > maxWeight) {
-                    maxWeight = votes.weight;
-                    winningStopId = stopId;
-                    winningVoteCount = votes.count;
-                }
-            });
-
-            // Require at least 50% of positions to vote for this stop (majority rule)
-            // This prevents flickering between nearby stops
             const majorityThreshold = Math.ceil(historyLength * 0.5);
 
-            if (winningStopId && winningVoteCount >= majorityThreshold) {
-                const winningStop = allStopsRef.current.find(s => s.stop_id === winningStopId);
+            votesByStop.forEach((data, stopId) => {
+                if (dismissedStopsRef.current.has(stopId)) return;
 
-                if (winningStop && nearbyStop?.stop_id !== winningStopId) {
-                    setNearbyStop(winningStop);
+                // Must appear in at least 50% of the recent samples to prevent flickering
+                if (data.count >= majorityThreshold && data.weight > maxWeight) {
+                    maxWeight = data.weight;
+                    winningStop = data.stop;
                 }
-            } else if (!winningStopId || winningVoteCount < majorityThreshold) {
-                // No clear winner or user left all stop areas
-                if (nearbyStop) {
-                    setNearbyStop(null);
-                }
+            });
+
+            // 5. Update State
+            if (winningStop && nearbyStop?.stop_id !== winningStop.stop_id) {
+                setNearbyStop(winningStop);
+            } else if (!winningStop && nearbyStop) {
+                setNearbyStop(null);
             }
+
         }, 1500);
 
         return () => clearInterval(intervalId);
