@@ -107,6 +107,7 @@ function Map() {
     const allStopTimesRef = useRef([]);
     const [nearbyStop, setNearbyStop] = useState(null);
     const dismissedStopsRef = useRef(new Set());
+    const manualFiltering = useRef(false)
 
     // Position history for improved bus stop detection
     // Stores {lat, lng, timestamp, nearestStopId} for voting-based detection
@@ -2206,130 +2207,110 @@ function Map() {
     }, []);
 
     const calculateBearing = (lat1, lon1, lat2, lon2) => {
-        // Convert degrees to radians
         const toRad = (deg) => (deg * Math.PI) / 180;
         const toDeg = (rad) => (rad * 180) / Math.PI;
-
         const φ1 = toRad(lat1);
         const φ2 = toRad(lat2);
         const Δλ = toRad(lon2 - lon1);
-
         const y = Math.sin(Δλ) * Math.cos(φ2);
-        const x = Math.cos(φ1) * Math.sin(φ2) -
-            Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-
-        const θ = Math.atan2(y, x);
-
-        // Normalize to 0-360 degrees
-        return (toDeg(θ) + 360) % 360;
+        const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+        return (toDeg(Math.atan2(y, x)) + 360) % 360;
     };
-
-    // Note: stops and stoptimes are now prefetched in generateMap() for faster startup
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            const coords = map.current?._controls?.[2]?._lastKnownPosition?.coords;
-            if (!coords || allStopsRef.current.length === 0) return;
+            const mapInstance = map.current;
+            if (!mapInstance || allStopsRef.current.length === 0 || manualFiltering.current) return;
 
-            const { latitude: userLat, longitude: userLng, accuracy: userAccuracy, heading: gpsHeading } = coords;
+            const geolocate = mapInstance._controls.find(
+                (c) => c.options && c.options.trackUserLocation !== undefined
+            );
 
-            // Use Device Orientation if GPS heading is null (user is standing still)
-            // Note: You'll need to capture this from a window 'deviceorientation' listener
-            const userHeading = gpsHeading ?? window._currentCompassHeading;
+            const lastPos = geolocate?._lastKnownPosition;
+            if (!lastPos) return;
 
-            if (userAccuracy > 20) return;
+            let { latitude: userLat, longitude: userLng, accuracy: userAccuracy, heading: gpsHeading } = lastPos.coords;
+            // userLat = 46.77319985463608; // constanta sau regionala nu mai stiu
+            // userLng = 23.59727261976576;
 
-            const proximityThreshold = Math.max(0.035, userAccuracy / 1000);
+            const userHeading = gpsHeading ?? compassHeadingRef.current ?? mapInstance.getBearing();
+            if (userAccuracy > 35) return;
 
-            // 1. Find ALL candidate stops within range for this specific tick
-            const candidatesForThisTick = allStopsRef.current
+            const proximityThreshold = Math.max(0.050, userAccuracy / 1000);
+
+            const currentCandidates = allStopsRef.current
                 .map(stop => ({
                     stop,
-                    dist: Math.abs(calculateDistance(userLat, userLng, stop.stop_lat, stop.stop_lon))
+                    dist: calcDistance(userLat, userLng, stop.stop_lat, stop.stop_lon)
                 }))
-                .filter(c => c.dist < proximityThreshold);
+                .filter(c =>
+                    c.dist < proximityThreshold &&
+                    !dismissedStopsRef.current.has(c.stop.stop_id)
+                );
 
-            // 2. Add current state to history
             positionHistoryRef.current.push({
-                candidates: candidatesForThisTick,
-                userLat,
-                userLng,
-                userHeading,
+                candidates: currentCandidates,
+                userLat, userLng, userHeading,
                 timestamp: Date.now()
             });
 
-            if (positionHistoryRef.current.length > POSITION_HISTORY_SIZE) {
-                positionHistoryRef.current.shift();
-            }
+            if (positionHistoryRef.current.length > 6) positionHistoryRef.current.shift();
+            if (positionHistoryRef.current.length < 2) return;
 
-            if (positionHistoryRef.current.length < 3) return;
+            const votesObj = {};
+            const history = positionHistoryRef.current;
 
-            // 3. Aggregate Weighted Votes
-            const votesByStop = new window.Map();
-            const historyLength = positionHistoryRef.current.length;
+            history.forEach((entry, idx) => {
+                const recencyWeight = (idx + 1) / history.length;
+                entry.candidates.forEach(({ stop }) => {
+                    let score = recencyWeight;
 
-            positionHistoryRef.current.forEach((pos, index) => {
-                const recencyWeight = index + 1;
+                    if (entry.userHeading !== null && entry.userHeading !== undefined) {
+                        const bearingToStop = calculateBearing(entry.userLat, entry.userLng, stop.stop_lat, stop.stop_lon);
+                        const diff = Math.abs((entry.userHeading - bearingToStop + 180 + 360) % 360 - 180);
 
-                pos.candidates.forEach(({ stop, dist }) => {
-                    let finalWeight = recencyWeight;
-
-                    if (pos.userHeading !== null && pos.userHeading !== undefined) {
-                        const bearingToStop = calculateBearing(pos.userLat, pos.userLng, stop.stop_lat, stop.stop_lon);
-                        const diff = Math.abs((pos.userHeading - bearingToStop + 180 + 360) % 360 - 180);
-
-                        /**
-                         * THE TIE-BREAKER LOGIC (Looking toward road)
-                         */
-                        if (diff < 60) {
-                            // User is facing TOWARD the stop (likely the one across the street)
-                            finalWeight *= 0.1;
-                        } else if (diff > 75 && diff < 105) {
-                            // SIDEWAYS LOOK (Perpendicular to the road/stop)
-                            // Common waiting posture, give a slight boost
-                            finalWeight *= 1.2;
-                        } else if (diff > 135) {
-                            // BACK TO STOP (User facing the road, stop is behind them)
-                            // High confidence this is their current stop
-                            finalWeight *= 2.0;
-                        }
+                        if (diff > 135) score *= 3.0;
+                        else if (diff < 45) score *= 0.2;
+                        else if (diff >= 70 && diff <= 110) score *= 1.5;
                     }
 
-                    const current = votesByStop.get(stop.stop_id) || { weight: 0, count: 0, stop };
-                    votesByStop.set(stop.stop_id, {
-                        weight: current.weight + finalWeight,
-                        count: current.count + 1,
-                        stop: stop
-                    });
+                    if (!votesObj[stop.stop_id]) {
+                        votesObj[stop.stop_id] = { totalScore: 0, hits: 0, stop };
+                    }
+                    votesObj[stop.stop_id].totalScore += score;
+                    votesObj[stop.stop_id].hits += 1;
                 });
             });
 
-            // 4. Determine Winner
-            let winningStop = null;
-            let maxWeight = 0;
-            const majorityThreshold = Math.ceil(historyLength * 0.5);
+            let bestStop = null;
+            let highestScore = 0;
+            const consensusThreshold = Math.ceil(history.length * 0.5);
 
-            votesByStop.forEach((data, stopId) => {
-                if (dismissedStopsRef.current.has(stopId)) return;
-
-                // Must appear in at least 50% of the recent samples to prevent flickering
-                if (data.count >= majorityThreshold && data.weight > maxWeight) {
-                    maxWeight = data.weight;
-                    winningStop = data.stop;
+            Object.values(votesObj).forEach((data) => {
+                if (data.hits >= consensusThreshold && data.totalScore > highestScore) {
+                    highestScore = data.totalScore;
+                    bestStop = data.stop;
                 }
             });
 
-            // 5. Update State
-            if (winningStop && nearbyStop?.stop_id !== winningStop.stop_id) {
-                setNearbyStop(winningStop);
-            } else if (!winningStop && nearbyStop) {
-                setNearbyStop(null);
-            }
+            console.log(bestStop)
+
+            // 3. Update State ONLY if it's a new stop and not dismissed
+            setNearbyStop(prev => {
+                // If the algorithm finds nothing, clear the suggestion
+                if (!bestStop || dismissedStopsRef.current.has(bestStop.stop_id)) return null;
+
+                // If it's a new stop and not the one we just dismissed
+                if (bestStop.stop_id !== prev?.stop_id) {
+                    return bestStop;
+                }
+                return prev;
+            });
 
         }, 1500);
 
         return () => clearInterval(intervalId);
-    }, [nearbyStop]);
+    }, []);
 
     // Filter vehicles that will pass through a specific stop (direction-aware)
     const filterVehiclesByStop = (stop) => {
@@ -2405,10 +2386,12 @@ function Map() {
                     setNearbyStop(null);
                     resetMarkers();
                     setShowUndemibusuToast(true);
+                    manualFiltering.current = true;
                 }}
                 onDismiss={(stopId) => {
                     dismissedStopsRef.current.add(stopId);
                     setNearbyStop(null);
+                    manualFiltering.current = false;
                 }}
             />
             <PaywallSheet
@@ -2488,6 +2471,7 @@ function Map() {
                     }, 1000);
                 }}
                 onHide={() => {
+                    manualFiltering.current = false
                     setShownVehicles();
                     setShowUndemibusuToast(false)
                     setUniqueLines(unique.current)
