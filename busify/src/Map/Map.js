@@ -2064,12 +2064,21 @@ function Map() {
         });
     };
 
+    const prefetchVehicleData = async () => {
+        try {
+            const data = await fetch('https://busifyserver.onrender.com/allVehicleData').then(r => r.json()).catch(() => [])
+            console.log(data)
+            socketData(data)
+        } catch {}
+    }
+
     const handleSocketOns = (visChange = false) => {
         // Disconnect existing socket if reconnecting after visibility change
         if (visChange && socket.current) {
             socket.current.disconnect();
             socket.current = null;
         }
+        prefetchVehicleData();
         connectSocket(visChange);
     };
 
