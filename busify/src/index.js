@@ -22,6 +22,7 @@ import Onboarding from "./Onboarding/Onboarding";
 import BottomBar from "./OtherComponents/BottomBar";
 import { SheetProvider } from './Contexts/SheetContext';
 import Teste from "./Map/Teste";
+import Directions from "./Directions/Directions";
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -63,7 +64,7 @@ root.render(
                     <Route path="/setari" element={<Settings />} />
                     <Route path="/setari/panou-linii" element={<PanouDisplayLinii />} />
                     <Route path="/onboarding" element={<Onboarding />} />
-                    <Route path="/teste" element={<Teste />} />
+                    <Route path="/directii" element={<Directions />} />
                     <Route path='/.well-known/assetlinks.json' element={<FileViewer filePath="../public/assetlinks.json" />} />
                     <Route path="*" element={<KeepAlive><Map /></KeepAlive>} />
                 </Routes>

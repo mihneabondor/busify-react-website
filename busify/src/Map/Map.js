@@ -23,6 +23,8 @@ import {useActivate} from "react-activation";
 import PaywallSheet from "../Paywall/PaywallSheet";
 import { LiaPiggyBankSolid } from "react-icons/lia";
 import Supercluster from 'supercluster';
+import { TbRoute } from "react-icons/tb";
+import {Overlay, OverlayTrigger, Tooltip} from "react-bootstrap";
 
 function Map() {
     var map = useRef();
@@ -1097,7 +1099,7 @@ function Map() {
                 const root = createRoot(btn);
                 root.render(
                     <LiaPiggyBankSolid
-                        style={{scale: "1.7", filter: "brightness(0) saturate(100%) invert(56%) sepia(80%) saturate(873%) hue-rotate(167deg) brightness(90%) contrast(93%)"}}
+                        style={{scale: "1.75", filter: "brightness(0) saturate(100%) invert(56%) sepia(80%) saturate(873%) hue-rotate(167deg) brightness(90%) contrast(93%)"}}
                     />
                 );
                 div.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -1108,6 +1110,37 @@ function Map() {
         }
         const button = new settingsButton();
         map.current.addControl(button, "top-right");
+    }
+
+    function addDirectionsButton() {
+        class settingsButton {
+            onAdd(map) {
+                const div = document.createElement("div");
+                div.className = "mapboxgl-ctrl mapboxgl-ctrl-group";
+
+                const btn = document.createElement("button");
+                div.appendChild(btn);
+
+                const root = createRoot(btn);
+                root.render(
+                    <span style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <TbRoute
+                        style={{
+                            scale: "1.5",
+                            filter: "brightness(0) saturate(100%) invert(56%) sepia(80%) saturate(873%) hue-rotate(167deg) brightness(90%) contrast(93%)"
+                        }}
+                    />
+                </span>
+                );
+
+                div.addEventListener("contextmenu", (e) => e.preventDefault());
+                div.addEventListener("click", () => nav('/directii'));
+
+                return div;
+            }
+        }
+
+        map.current.addControl(new settingsButton(), "top-right");
     }
 
     // Ref to store prefetched buses data
@@ -1165,6 +1198,7 @@ function Map() {
             if(!localStorage.hasOwnProperty("active_subscription")) {
                 addDonationButton();
             }
+            addDirectionsButton()
             map.current.on('load', () => {
                 // Initialize cluster indexes
                 initializeClusterIndexes();

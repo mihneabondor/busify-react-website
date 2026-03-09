@@ -11,10 +11,10 @@ import {ReactComponent as HeartIconFill} from "../Images/heartIconFill.svg";
 
 import {ReactComponent as TOSIcon} from "../Images/TOSIcon.svg";
 import {ReactComponent as ArrowRight} from "../Images/arrow-up-right.svg";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import CustomSwitch from "../OtherComponents/CustomSwitch";
 import {ReactComponent as ChevronRightIcon} from "../Images/ChevronRightIcon.svg";
-import {useLocation, useNavigate} from "react-router-dom";
+import {useLocation, useNavigate, useSearchParams} from "react-router-dom";
 import PaywallSheet from "../Paywall/PaywallSheet";
 
 import { TbLocation } from "react-icons/tb";
@@ -33,6 +33,13 @@ function Settings() {
     const nav = useNavigate();
     const location = useLocation();
     const [showDonationPaywall, setShowDonationPaywall] = useState(false);
+    const [searchParams] = useSearchParams();
+
+    useEffect(() => {
+        if(searchParams.get("abonare")) {
+            setShowDonationPaywall(true);
+        }
+    }, []);
 
     return (
         <div
