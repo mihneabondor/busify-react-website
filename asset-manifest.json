@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.7780e45c.css",
-    "main.js": "/static/js/main.de29ad65.js",
+    "main.js": "/static/js/main.48e8c5c5.js",
     "static/media/image7 2.png": "/static/media/image7 2.f5061430b48bac569c43.png",
     "static/media/image7.png": "/static/media/image7.f5061430b48bac569c43.png",
     "static/media/Third.png": "/static/media/Third.9f2496eeddd7c42e031b.png",
@@ -35,6 +35,7 @@
     "static/media/orareIconFill.svg": "/static/media/orareIconFill.41435fee9e30f29ecda58b7ac59df330.svg",
     "static/media/backButton.svg": "/static/media/backButton.b8cbf8bd0e7e89205ba58b5e8076e25a.svg",
     "static/media/favoriteIcon.svg": "/static/media/favoriteIcon.57e865454a238362c7e8c633f7cce1d2.svg",
+    "static/media/SwitchIcon.svg": "/static/media/SwitchIcon.ef475576879c6a4fc860472df2ad6155.svg",
     "static/media/orarIconNoBar.svg": "/static/media/orarIconNoBar.542a4a8e8772cd1c4e753d99b14f5805.svg",
     "static/media/orarIcon.svg": "/static/media/orarIcon.1a0c1a11a5a20f0fc328b625163a89c9.svg",
     "static/media/orareIcon.svg": "/static/media/orareIcon.c1916d10246e409d285ddcf164ba88ed.svg",
@@ -47,6 +48,7 @@
     "index.html": "/index.html",
     "static/media/homeIconFill.svg": "/static/media/homeIconFill.9d1e644092d4263e85411217a29ace18.svg",
     "static/media/homeIcon.svg": "/static/media/homeIcon.8aa80b5ff20805b87feeca58584789ad.svg",
+    "static/media/DirectionsDecoration.svg": "/static/media/DirectionsDecoration.1b01a41720dcc7e023e3e89fc742a7d6.svg",
     "static/media/DeLaIcon.svg": "/static/media/DeLaIcon.02c681c29980d0d41286eb6c8974ed10.svg",
     "static/media/SpreIcon.svg": "/static/media/SpreIcon.bdcf21ce0f81a55d7f5f9d2228a7ff83.svg",
     "static/media/ShareIcon.svg": "/static/media/ShareIcon.1feb72fc55dd05c8f9a532b3f9432f03.svg",
@@ -67,10 +69,10 @@
     "static/media/ChevronRightIcon.svg": "/static/media/ChevronRightIcon.758ef38bb2110e934778fa4524432c40.svg",
     "static/media/backIcon.svg": "/static/media/backIcon.156cbffdc2250db9107fa46e75b6beaa.svg",
     "main.7780e45c.css.map": "/static/css/main.7780e45c.css.map",
-    "main.de29ad65.js.map": "/static/js/main.de29ad65.js.map"
+    "main.48e8c5c5.js.map": "/static/js/main.48e8c5c5.js.map"
   },
   "entrypoints": [
     "static/css/main.7780e45c.css",
-    "static/js/main.de29ad65.js"
+    "static/js/main.48e8c5c5.js"
   ]
 }
