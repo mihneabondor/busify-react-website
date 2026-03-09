@@ -1520,7 +1520,7 @@ function Map() {
                             },
                             'paint': {
                                 'line-color': '#62A7FB',
-                                'line-width': 3,
+                                'line-width': 5,
                             }
                         });
                     
@@ -1585,8 +1585,8 @@ function Map() {
                                 },
                                 'paint': {
                                     'line-color': '#62A7FB',
-                                    'line-width': 3,
-                                    'line-dasharray': [3, 3]
+                                    'line-width': 5,
+                                    'line-dasharray': [5, 5]
                                 }
                             });
 
@@ -2166,14 +2166,6 @@ function Map() {
             // Time has passed, show the popup and schedule next one in 30 days
             setShowDonationPopup(true);
             setNextDate(30);
-        }
-    }
-
-    const mapOptimizationUpdateNotification = () => {
-        if(!localStorage.hasOwnProperty("map_optimization_update_notifiation")){
-            setNotificationTitle("Începem lucrul la optimizări semnificative ale hărții! Modificările vor fi vizibile o perioadă doar celor cu abonament activ.")
-            setShowNotification(true)
-            localStorage.setItem("map_optimization_update_notifiation", "true")
         }
     }
 

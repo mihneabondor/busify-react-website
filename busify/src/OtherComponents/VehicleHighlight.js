@@ -181,7 +181,10 @@ function VehicleHighlight(props) {
                             label={props.vehicle?.label}
                             minContent={true}
                         />
-                        <div style={{textAlign: 'left'}}><b>{props.vehicle?.route}</b></div>
+                        <div style={{textAlign: 'left',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'}}><b>{props.vehicle?.route}</b></div>
                         <CloseButton style={{marginLeft: 'auto'}} onClick={() => {
                             props.onHide()
                             stopCenteredFirstTimeRef.current = false;
@@ -251,12 +254,14 @@ function VehicleHighlight(props) {
                             ({Math.floor(userVehicleDistState / 20 * 60)} min)
                         </div>
                     </div>
-
+                </div>
+            }
+        >
+                <div style={{margin: "15px", overflow: "hidden"}}>
                     <div style={{
                         display: "flex",
                         justifyContent: 'space-evenly',
                         alignItems: "center",
-                        marginTop: '10px',
                     }}>
                         <Button variant="secondary" style={{
                             background: "#F5F6F8",
@@ -324,10 +329,6 @@ function VehicleHighlight(props) {
                             Distribuie
                         </Button>
                     </div>
-                </div>
-            }
-        >
-                <div style={{margin: "15px", overflow: "hidden"}}>
                 <div style={{
                     display: "flex",
                     flexDirection: "row",

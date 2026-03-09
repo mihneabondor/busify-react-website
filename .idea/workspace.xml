@@ -7,6 +7,7 @@
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/VehicleHighlight.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/VehicleHighlight.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -175,6 +176,8 @@
       <workItem from="1772091072600" duration="555000" />
       <workItem from="1772097715226" duration="1508000" />
       <workItem from="1772388852838" duration="1112000" />
+      <workItem from="1772465235792" duration="1020000" />
+      <workItem from="1773049111453" duration="752000" />
     </task>
     <servers />
   </component>
