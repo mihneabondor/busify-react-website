@@ -1134,7 +1134,11 @@ function Map() {
                 );
 
                 div.addEventListener("contextmenu", (e) => e.preventDefault());
-                div.addEventListener("click", () => nav('/directii'));
+                div.addEventListener("click", () => {
+                    const coords = map.current?._controls?.[2]?._lastKnownPosition?.coords;
+
+                    nav(`/directii?userLat=${coords?.latitude}&userLng=${coords?.longitude}`);
+                });
 
                 return div;
             }
@@ -2053,7 +2057,6 @@ function Map() {
             }
         } else {
             if (hasChanged()) {
-                console.log("update detected")
                 vehicles.current = newVehicles;
                 lastVehiclesRef.current = newVehicles;
                 debouncedUpdateMarker();
@@ -2083,7 +2086,6 @@ function Map() {
         // socket.current = io('http://192.168.0.221:3001')
 
         socket.current.on('allVehicleData', data => {
-            console.log("socket update received");
             // Socket now only handles updates, not initial load
             socketData(data);
             setTimeout(() => {
