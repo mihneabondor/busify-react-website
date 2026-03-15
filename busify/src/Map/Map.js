@@ -89,7 +89,6 @@ function Map() {
     const [showNotification, setShowNotification] = useState(false)
     const [notificationTitle, setNotificationTitle] = useState('Link copiat!');
 
-    const [showSms, setShowSms] = useState(false)
     const smsDataRef = useRef(null)
 
     const [showStop, setShowStop] = useState(false)
@@ -103,6 +102,8 @@ function Map() {
     const updateCancelToken = useRef({ cancelled: false });
 
     const [showDonationPopup, setShowDonationPopup] = useState(false);
+
+    const userCoords = useRef(null);
 
     // In-station toast state
     const allStopsRef = useRef([]);
@@ -1135,7 +1136,7 @@ function Map() {
 
                 div.addEventListener("contextmenu", (e) => e.preventDefault());
                 div.addEventListener("click", () => {
-                    const coords = map.current?._controls?.[2]?._lastKnownPosition?.coords;
+                    const coords = userCoords.current;
 
                     nav(`/directii?userLat=${coords?.latitude}&userLng=${coords?.longitude}`);
                 });
@@ -1197,6 +1198,14 @@ function Map() {
                 trackUserLocation: true,
                 showUserHeading: true,
             })
+
+            geo.on('geolocate', (e) => {
+                userCoords.current = {
+                    latitude: e.coords.latitude,
+                    longitude: e.coords.longitude,
+                }
+            })
+
             addSearchButton();
             map.current.addControl(geo);
             if(!localStorage.hasOwnProperty("active_subscription")) {
