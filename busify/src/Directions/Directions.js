@@ -1034,8 +1034,26 @@ function Directions() {
 
     const getUserAddress = async () => {
         try {
-            const latitude = parseFloat(searchParams.get("userLat"));
-            const longitude = parseFloat(searchParams.get("userLng"));
+            let latitude = parseFloat(searchParams.get("userLat"));
+            let longitude = parseFloat(searchParams.get("userLng"));
+
+            // If search params are not available, use browser geolocation
+            if (isNaN(latitude) || isNaN(longitude)) {
+                const position = await new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject(new Error('Geolocation not supported'));
+                        return;
+                    }
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
+                });
+                latitude = position.coords.latitude;
+                longitude = position.coords.longitude;
+            }
+
             const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`;
             const data = await fetch(url, { headers: { "User-Agent": "Busify" } });
             const resp = await data.json();
@@ -1112,20 +1130,53 @@ function Directions() {
         })));
     };
 
+    const geocodeAddress = async (address) => {
+        try {
+            const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(address)}&lat=46.7712&lon=23.6236&limit=1`;
+            const data = await fetch(url);
+            const result = await data.json();
+            if (result.features && result.features.length > 0) {
+                const [lon, lat] = result.features[0].geometry.coordinates;
+                return { lat, lon };
+            }
+            return null;
+        } catch (e) {
+            console.error('Geocoding failed:', e);
+            return null;
+        }
+    };
+
     const searchRoute = async (overrideOrigin, overrideDestination, overrideOriginCoords, overrideDestCoords) => {
         try {
             const origin = overrideOrigin ?? originSearchValue;
             const destination = overrideDestination ?? destinationSearchValue;
-            const fromCoords = overrideOriginCoords ?? originCoords;
-            const toCoords = overrideDestCoords ?? destinationCoords;
+            let fromCoords = overrideOriginCoords ?? originCoords;
+            let toCoords = overrideDestCoords ?? destinationCoords;
 
             if (!origin.trim() || !destination.trim()) return;
-            if (!fromCoords || !toCoords) {
-                console.warn('Missing coordinates for route search');
-                return;
-            }
 
             setIsSearchingRoute(true);
+
+            // Geocode addresses if coordinates are missing
+            if (!fromCoords || !toCoords) {
+                const [originResult, destResult] = await Promise.all([
+                    !fromCoords ? geocodeAddress(origin) : Promise.resolve(fromCoords),
+                    !toCoords ? geocodeAddress(destination) : Promise.resolve(toCoords)
+                ]);
+
+                fromCoords = originResult;
+                toCoords = destResult;
+
+                // Update state with the geocoded coordinates
+                if (originResult && !originCoords) setOriginCoords(originResult);
+                if (destResult && !destinationCoords) setDestinationCoords(destResult);
+
+                if (!fromCoords || !toCoords) {
+                    console.warn('Could not geocode addresses');
+                    setIsSearchingRoute(false);
+                    return;
+                }
+            }
 
             const updated = saveToHistory(origin, destination, fromCoords, toCoords);
             setRouteHistory(updated);
