@@ -6,6 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Directions/Directions.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Directions/Directions.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/index.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -180,6 +183,8 @@
       <workItem from="1773072249924" duration="5449000" />
       <workItem from="1773077772535" duration="569000" />
       <workItem from="1773488334300" duration="17454000" />
+      <workItem from="1773571243079" duration="341000" />
+      <workItem from="1773840017999" duration="11947000" />
     </task>
     <servers />
   </component>

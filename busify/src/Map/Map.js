@@ -25,6 +25,8 @@ import { LiaPiggyBankSolid } from "react-icons/lia";
 import Supercluster from 'supercluster';
 import { TbRoute } from "react-icons/tb";
 import {Overlay, OverlayTrigger, Tooltip} from "react-bootstrap";
+import ItinerarySheet from "../OtherComponents/ItinerarySheet";
+import polyline from '@mapbox/polyline';
 
 function Map() {
     var map = useRef();
@@ -102,6 +104,13 @@ function Map() {
     const updateCancelToken = useRef({ cancelled: false });
 
     const [showDonationPopup, setShowDonationPopup] = useState(false);
+
+    // Itinerary navigation state
+    const [activeItinerary, setActiveItinerary] = useState(null);
+    const activeItineraryRef = useRef(null);
+    const [itineraryOrigin, setItineraryOrigin] = useState('');
+    const [itineraryDestination, setItineraryDestination] = useState('');
+    const [currentItineraryLeg, setCurrentItineraryLeg] = useState(0);
 
     const userCoords = useRef(null);
 
@@ -2083,6 +2092,34 @@ function Map() {
                 resetMarkers()
             }
         }
+
+        // Check for itinerary navigation when component is reactivated
+        // Use window.history.state to get fresh state since location may be stale in closure
+        const navState = window.history.state?.usr;
+        console.log('useActivate fired, navState:', navState);
+
+        if (navState?.itinerary && !activeItineraryRef.current) {
+            const itinerary = navState.itinerary;
+            console.log('Processing itinerary in useActivate:', itinerary);
+
+            setActiveItinerary(itinerary);
+            activeItineraryRef.current = itinerary;
+            setItineraryOrigin(navState.origin || '');
+            setItineraryDestination(navState.destination || '');
+            setCurrentItineraryLeg(0);
+
+            // Clear the state to prevent re-triggering
+            window.history.replaceState({}, document.title);
+
+            // Wait a tick for state to settle, then draw
+            setTimeout(() => {
+                if (map.current) {
+                    console.log('Drawing itinerary route from useActivate');
+                    drawItineraryRoute(itinerary);
+                    filterVehiclesForItinerary(itinerary);
+                }
+            }, 100);
+        }
     })
 
     // Track if initial data has been loaded (to avoid processing socket data as "first load")
@@ -2238,6 +2275,44 @@ function Map() {
         };
     }, []);
 
+    // Handle itinerary navigation from Directions page
+    useEffect(() => {
+        // Try both location.state and window.history.state.usr (React Router stores state in usr)
+        const navState = location.state || window.history.state?.usr;
+
+        if (navState?.itinerary && !activeItineraryRef.current) {
+            const itinerary = navState.itinerary;
+            console.log('useEffect: Received itinerary from navigation:', itinerary);
+
+            setActiveItinerary(itinerary);
+            activeItineraryRef.current = itinerary;
+            setItineraryOrigin(navState.origin || '');
+            setItineraryDestination(navState.destination || '');
+            setCurrentItineraryLeg(0);
+
+            // Clear the state to prevent re-triggering on navigation
+            window.history.replaceState({}, document.title);
+
+            // Wait for map to be ready, then draw the route
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max wait
+            const waitForMap = setInterval(() => {
+                attempts++;
+                if (map.current && loaded) {
+                    clearInterval(waitForMap);
+                    console.log('useEffect: Map ready, drawing itinerary route');
+                    drawItineraryRoute(itinerary);
+                    filterVehiclesForItinerary(itinerary);
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(waitForMap);
+                    console.warn('useEffect: Timed out waiting for map to be ready');
+                }
+            }, 100);
+
+            return () => clearInterval(waitForMap);
+        }
+    }, [location.state, location.key, loaded]);
+
     // Add a ref to store compass heading
     const compassHeadingRef = useRef(null);
 
@@ -2339,7 +2414,6 @@ function Map() {
                 }
             });
 
-            console.log(bestStop)
 
             // 3. Update State ONLY if it's a new stop and not dismissed
             setNearbyStop(prev => {
@@ -2357,6 +2431,407 @@ function Map() {
 
         return () => clearInterval(intervalId);
     }, []);
+
+    // ─── Itinerary Route Drawing ─────────────────────────────────────────────────
+
+    const vehicleTypeColors = {
+        autobuze: '905EA8',
+        microbuze: '905EA8',
+        troleibuze: '2D8CFF',
+        tramvaie: '0FBE7E',
+    };
+
+    const getItineraryRouteColor = (leg) => {
+        if (leg.vehicleType && vehicleTypeColors[leg.vehicleType]) {
+            return vehicleTypeColors[leg.vehicleType];
+        }
+        return leg.routeColor || '3c4e9a';
+    };
+
+    // Helper to find the closest point index in a polyline to a given coordinate
+    const findClosestPointIndex = (polylineCoords, targetLat, targetLon) => {
+        let minDist = Infinity;
+        let closestIndex = 0;
+
+        polylineCoords.forEach((coord, index) => {
+            const dist = Math.abs(calcDistance(targetLat, targetLon, coord[1], coord[0]));
+            if (dist < minDist) {
+                minDist = dist;
+                closestIndex = index;
+            }
+        });
+
+        return closestIndex;
+    };
+
+    // Fetch walking route from OSRM public server (road-snapped polyline)
+    const fetchWalkingRoute = async (fromLat, fromLon, toLat, toLon) => {
+        try {
+            // OSRM public server for walking - format: /route/v1/foot/{lon},{lat};{lon},{lat}
+            const url = `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${fromLon},${fromLat};${toLon},${toLat}?geometries=polyline&overview=full`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.code === 'Ok' && data.routes && data.routes[0]) {
+                // Decode the polyline (OSRM uses precision 5)
+                const encodedPolyline = data.routes[0].geometry;
+                const decoded = polyline.decode(encodedPolyline);
+                // Convert to [lng, lat] format for Mapbox
+                return decoded.map(([lat, lng]) => [lng, lat]);
+            }
+            return null;
+        } catch (e) {
+            console.error('Failed to fetch walking route from OSRM:', e);
+            return null;
+        }
+    };
+
+    // Fetch route shape from server and trim between two stops
+    const fetchAndTrimRouteShape = async (tripId, fromLat, fromLon, toLat, toLon) => {
+        try {
+            // OTP tripId format: "CLUJRO:14_0_S_49_1350" -> extract "14_0" for shapes endpoint
+            // The shapes endpoint expects format like "14_0" (route_direction)
+            let shapeId = tripId;
+            if (tripId.includes(':')) {
+                // Remove "CLUJRO:" prefix
+                shapeId = tripId.split(':')[1];
+            }
+            if (shapeId.includes('_S_')) {
+                // Extract route and direction: "14_0_S_49_1350" -> "14_0"
+                const parts = shapeId.split('_S_')[0];
+                shapeId = parts;
+            }
+
+            const url = `https://busifyserver.onrender.com/shapes?shapeid=${shapeId}`;
+            const response = await fetch(url);
+            const shapeData = await response.json();
+
+            if (!shapeData || shapeData.length === 0) {
+                return null;
+            }
+
+            // Convert to [lng, lat] format
+            const fullPolyline = shapeData.map(elem => [elem.shape_pt_lon, elem.shape_pt_lat]);
+
+            // Find ALL points close to the origin and destination (within threshold)
+            const threshold = 0.0005; // ~50 meters
+            const originCandidates = [];
+            const destCandidates = [];
+
+            fullPolyline.forEach((coord, index) => {
+                const distToOrigin = Math.abs(coord[1] - fromLat) + Math.abs(coord[0] - fromLon);
+                const distToDest = Math.abs(coord[1] - toLat) + Math.abs(coord[0] - toLon);
+
+                if (distToOrigin < threshold) {
+                    originCandidates.push({ index, dist: distToOrigin });
+                }
+                if (distToDest < threshold) {
+                    destCandidates.push({ index, dist: distToDest });
+                }
+            });
+
+            // If no candidates found, use closest point approach
+            if (originCandidates.length === 0 || destCandidates.length === 0) {
+                const startIndex = findClosestPointIndex(fullPolyline, fromLat, fromLon);
+                const endIndex = findClosestPointIndex(fullPolyline, toLat, toLon);
+
+                if (startIndex < endIndex) {
+                    return fullPolyline.slice(startIndex, endIndex + 1);
+                }
+                return null; // Wrong direction, don't return anything
+            }
+
+            // Find the pair where origin comes BEFORE destination (correct travel direction)
+            let bestPair = null;
+            let shortestSegment = Infinity;
+
+            for (const origin of originCandidates) {
+                for (const dest of destCandidates) {
+                    // Only consider pairs where we travel forward (origin index < dest index)
+                    if (origin.index < dest.index) {
+                        const segmentLength = dest.index - origin.index;
+                        // Prefer shorter segments (avoid going the long way around)
+                        if (segmentLength < shortestSegment) {
+                            shortestSegment = segmentLength;
+                            bestPair = { start: origin.index, end: dest.index };
+                        }
+                    }
+                }
+            }
+
+            if (bestPair) {
+                return fullPolyline.slice(bestPair.start, bestPair.end + 1);
+            }
+
+            return null;
+        } catch (e) {
+            console.error('Failed to fetch route shape:', e);
+            return null;
+        }
+    };
+
+    const drawItineraryRoute = async (itinerary) => {
+        if (!map.current || !itinerary) return;
+
+        // Remove any existing itinerary route layers
+        removeItineraryRoute();
+
+        const bounds = new mapboxgl.LngLatBounds();
+
+        // Process each leg
+        for (let index = 0; index < itinerary.legs.length; index++) {
+            const leg = itinerary.legs[index];
+            const sourceId = `itinerary-leg-${index}`;
+            const layerId = `itinerary-leg-layer-${index}`;
+            let coordinates = [];
+
+            if (leg.transitLeg) {
+                // For transit legs, use the encoded polyline from OTP response
+                // This is more reliable than fetching from shapes endpoint
+                if (leg.legGeometry?.points) {
+                    try {
+                        const decoded = polyline.decode(leg.legGeometry.points);
+                        // Convert to [lng, lat] format for Mapbox
+                        coordinates = decoded.map(([lat, lng]) => [lng, lat]);
+                    } catch (e) {
+                        console.warn('Failed to decode transit leg polyline', e);
+                        // Fallback to straight line
+                        coordinates = [[leg.from.lon, leg.from.lat], [leg.to.lon, leg.to.lat]];
+                    }
+                } else {
+                    // No polyline available, use straight line
+                    coordinates = [[leg.from.lon, leg.from.lat], [leg.to.lon, leg.to.lat]];
+                }
+            } else if (leg.mode === 'WALK') {
+                // For walking legs, fetch road-snapped route from OSRM
+                const walkingRoute = await fetchWalkingRoute(
+                    leg.from.lat,
+                    leg.from.lon,
+                    leg.to.lat,
+                    leg.to.lon
+                );
+
+                if (walkingRoute && walkingRoute.length > 0) {
+                    coordinates = walkingRoute;
+                } else {
+                    // Fallback to straight line if OSRM fetch fails
+                    console.warn('Could not fetch walking route, using straight line');
+                    coordinates = [[leg.from.lon, leg.from.lat], [leg.to.lon, leg.to.lat]];
+                }
+            } else {
+                // Unknown leg type - skip it
+                console.warn('Unknown leg type, skipping', leg.mode);
+                continue;
+            }
+
+            // Extend bounds
+            coordinates.forEach(coord => bounds.extend(coord));
+
+            // Add source
+            map.current.addSource(sourceId, {
+                type: 'geojson',
+                data: {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: coordinates
+                    }
+                }
+            });
+
+            // Add layer with appropriate styling
+            const isWalk = leg.mode === 'WALK';
+            const routeColor = isWalk ? '#888888' : `#${getItineraryRouteColor(leg)}`;
+
+            map.current.addLayer({
+                id: layerId,
+                type: 'line',
+                source: sourceId,
+                layout: {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                paint: {
+                    'line-color': routeColor,
+                    'line-width': 4,
+                    'line-dasharray': isWalk ? [2, 2] : [1, 0]
+                }
+            });
+        }
+
+        // Add markers for transit boarding/alighting points
+        const transitLegs = itinerary.legs.filter(l => l.transitLeg);
+        transitLegs.forEach((leg, index) => {
+            // Boarding marker
+            addItineraryMarker(
+                [leg.from.lon, leg.from.lat],
+                `itinerary-board-${index}`,
+                leg.from.name,
+                'boarding',
+                `#${getItineraryRouteColor(leg)}`
+            );
+
+            // Alighting marker
+            addItineraryMarker(
+                [leg.to.lon, leg.to.lat],
+                `itinerary-alight-${index}`,
+                leg.to.name,
+                'alighting',
+                `#${getItineraryRouteColor(leg)}`
+            );
+        });
+
+        // Add start and end markers
+        const firstLeg = itinerary.legs[0];
+        const lastLeg = itinerary.legs[itinerary.legs.length - 1];
+
+        addItineraryEndpointMarker(
+            [firstLeg.from.lon, firstLeg.from.lat],
+            'itinerary-start',
+            '#8A56A3' // Purple for start
+        );
+
+        addItineraryEndpointMarker(
+            [lastLeg.to.lon, lastLeg.to.lat],
+            'itinerary-end',
+            '#2D8CFE' // Blue for end
+        );
+
+        // Fit map to show entire route
+        map.current.fitBounds(bounds, {
+            padding: { top: 100, bottom: 250, left: 50, right: 50 },
+            duration: 1000,
+            maxZoom: 15
+        });
+    };
+
+    const itineraryMarkersRef = useRef([]);
+
+    const addItineraryMarker = (lngLat, id, name, type, color) => {
+        const el = document.createElement('div');
+        el.className = `itinerary-marker itinerary-marker-${type}`;
+        el.style.cssText = `
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: ${color};
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        `;
+
+        const marker = new mapboxgl.Marker(el)
+            .setLngLat(lngLat)
+            .addTo(map.current);
+
+        itineraryMarkersRef.current.push({ marker, id });
+    };
+
+    const addItineraryEndpointMarker = (lngLat, id, color) => {
+        const el = document.createElement('div');
+        el.style.cssText = `
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: ${color};
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        `;
+
+        const marker = new mapboxgl.Marker(el)
+            .setLngLat(lngLat)
+            .addTo(map.current);
+
+        itineraryMarkersRef.current.push({ marker, id });
+    };
+
+    const removeItineraryRoute = () => {
+        if (!map.current) return;
+
+        // Remove all leg layers and sources
+        for (let i = 0; i < 20; i++) {
+            const layerId = `itinerary-leg-layer-${i}`;
+            const sourceId = `itinerary-leg-${i}`;
+
+            if (map.current.getLayer(layerId)) {
+                map.current.removeLayer(layerId);
+            }
+            if (map.current.getSource(sourceId)) {
+                map.current.removeSource(sourceId);
+            }
+        }
+
+        // Remove all itinerary markers
+        itineraryMarkersRef.current.forEach(({ marker }) => {
+            marker.remove();
+        });
+        itineraryMarkersRef.current = [];
+    };
+
+    const filterVehiclesForItinerary = (itinerary) => {
+        if (!itinerary) return;
+
+        // Get all transit legs and their route names
+        const transitLegs = itinerary.legs.filter(l => l.transitLeg);
+        const routeNames = new Set(transitLegs.map(l => l.routeShortName));
+
+        // Find vehicles that match these routes
+        const matchingLabels = [];
+        vehicles.current.forEach(vehicle => {
+            if (routeNames.has(vehicle.line)) {
+                // Check if this vehicle is heading toward one of the boarding stops
+                const relevantLeg = transitLegs.find(l => l.routeShortName === vehicle.line);
+                if (relevantLeg) {
+                    // Get trip_ids that pass through the boarding stop
+                    const boardingStopId = relevantLeg.from.stopId?.replace('CLUJRO:', '') || relevantLeg.from.globalStopId?.replace('CLUJRO:', '');
+                    const tripIdsAtStop = new Set(
+                        allStopTimesRef.current
+                            .filter(st => st.stop_id == boardingStopId)
+                            .map(st => st.trip_id)
+                    );
+
+                    // Check if vehicle serves this stop and hasn't passed it
+                    if (tripIdsAtStop.has(vehicle.tripId)) {
+                        const pseudoStop = {
+                            stop_id: boardingStopId,
+                            stop_lat: relevantLeg.from.lat,
+                            stop_lon: relevantLeg.from.lon
+                        };
+                        if (!hasVehiclePassedStop(vehicle, pseudoStop)) {
+                            matchingLabels.push(vehicle.label);
+                        }
+                    }
+                }
+            }
+        });
+
+        // Update foundLabelsRef for marker visibility
+        foundLabelsRef.current = matchingLabels;
+
+        // Update line visibility
+        unique.current = unique.current.map(elem =>
+            [elem[0], routeNames.has(elem[0])]
+        );
+        setUniqueLines(unique.current);
+        setCheckAllChecked(false);
+
+        resetMarkers();
+    };
+
+    const closeItineraryNavigation = () => {
+        setActiveItinerary(null);
+        activeItineraryRef.current = null;
+        setItineraryOrigin('');
+        setItineraryDestination('');
+        setCurrentItineraryLeg(0);
+
+        removeItineraryRoute();
+
+        // Reset vehicle filtering
+        foundLabelsRef.current = [];
+        setShownVehicles();
+        resetMarkers();
+    };
 
     // Filter vehicles that will pass through a specific stop (direction-aware)
     const filterVehiclesByStop = (stop) => {
@@ -2597,6 +3072,16 @@ function Map() {
                     setShowNotification(true)
                 }}
             />
+            {activeItinerary && (
+                <ItinerarySheet
+                    itinerary={activeItinerary}
+                    currentLegIndex={currentItineraryLeg}
+                    onClose={closeItineraryNavigation}
+                    map={map}
+                    origin={itineraryOrigin}
+                    destination={itineraryDestination}
+                />
+            )}
         </div >
     );
 }

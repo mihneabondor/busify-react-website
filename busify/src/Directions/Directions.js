@@ -9,6 +9,7 @@ import InputGroup from "react-bootstrap/InputGroup";
 import {ReactComponent as LocationIcon} from "../Images/locationIcon.svg";
 import Dropdown from "react-bootstrap/Dropdown";
 import Button from "react-bootstrap/Button";
+import Spinner from "react-bootstrap/Spinner";
 import Marker from "../OtherComponents/Marker";
 import { FaWalking } from "react-icons/fa";
 import { MdHistory } from "react-icons/md";
@@ -69,9 +70,9 @@ const loadHistory = () => {
 };
 
 // Saves a new search to history, deduplicating by origin+destination
-const saveToHistory = (origin, destination) => {
+const saveToHistory = (origin, destination, originCoords, destinationCoords) => {
     const existing = loadHistory();
-    const entry = { origin, destination, timestamp: Date.now() };
+    const entry = { origin, destination, originCoords, destinationCoords, timestamp: Date.now() };
     const deduped = existing.filter(
         e => !(e.origin === origin && e.destination === destination)
     );
@@ -261,6 +262,8 @@ function Directions() {
     const nav = useNavigate();
     const [originSearchValue, setOriginSearchValue] = useState('');
     const [destinationSearchValue, setDestinationSearchValue] = useState('');
+    const [originCoords, setOriginCoords] = useState(null); // { lat, lon }
+    const [destinationCoords, setDestinationCoords] = useState(null); // { lat, lon }
     const [searchParams] = useSearchParams();
 
     const [destinationSuggestions, setDestinationSuggestions] = useState([]);
@@ -272,19 +275,773 @@ function Directions() {
     const [itineraries, setItineraries] = useState([]);
     const [routeHistory, setRouteHistory] = useState([]);
 
+    const [isLoadingOriginSuggestions, setIsLoadingOriginSuggestions] = useState(false);
+    const [isLoadingDestinationSuggestions, setIsLoadingDestinationSuggestions] = useState(false);
+    const [isSearchingRoute, setIsSearchingRoute] = useState(false);
+
     const lineTypeCacheRef = useRef(null);
 
-    const mockData = "{\"plan\":{\"date\":1773488349000,\"from\":{\"lat\":46.74847021734982,\"lon\":23.56757577988606,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"itineraries\":[{\"accessibility\":\"None\",\"duration\":2808,\"endTime\":1773491273000,\"legs\":[{\"distance\":994,\"duration\":835,\"endTime\":1773489300000,\"from\":{\"lat\":46.74847784603872,\"lon\":23.5675973072648,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"legGeometry\":{\"length\":40,\"points\":\"}pi|Gm`znCc@X??mHlEsElBk@\\\\w@r@c@`@i@b@a@b@??oCvA??BHMHKR??G???eEv@gBFQ???[D??kAE??QB??OVIf@??AdA??D|BBdC??FA??DA\"},\"mode\":\"WALK\",\"startTime\":1773488465000,\"steps\":[],\"to\":{\"lat\":46.75538911945495,\"lon\":23.5620129480958,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"transitLeg\":false},{\"agencyId\":\"CLUJRO:2\",\"agencyName\":\"CTP Cluj\",\"distance\":6658.349577245983,\"duration\":1920,\"endTime\":1773491220000,\"from\":{\"globalStopId\":\"CLUJRO:316\",\"lat\":46.75538545297143,\"lon\":23.56194997342318,\"name\":\"Izlazului\",\"stopId\":\"CLUJRO:4\",\"stopIndex\":3,\"vertexType\":\"TRANSIT\"},\"globalRouteId\":\"CLUJRO:331426\",\"headsign\":\"Snagov Nord\",\"intermediateStops\":[{\"name\":\"Calea Mănăștur\",\"lat\":46.76074540217097,\"lon\":23.56443209754914},{\"name\":\"Agronomia\",\"lat\":46.76258900885873,\"lon\":23.57135686413243}],\"mode\":\"BUS\",\"route\":\"25\",\"routeColor\":\"3c4e9a\",\"routeShortName\":\"25\",\"routeTextColor\":\"ffffff\",\"startTime\":1773489300000,\"steps\":[],\"to\":{\"globalStopId\":\"CLUJRO:328\",\"lat\":46.77145630736669,\"lon\":23.62520816582175,\"name\":\"Iulius Mall Vest\",\"stopId\":\"CLUJRO:173\",\"stopIndex\":15,\"vertexType\":\"TRANSIT\"},\"transitLeg\":true,\"tripId\":\"CLUJRO:14_0_S_49_1350\"},{\"distance\":60,\"duration\":53,\"endTime\":1773491273000,\"from\":{\"lat\":46.77147898678061,\"lon\":23.62522792071104,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"mode\":\"WALK\",\"startTime\":1773491220000,\"steps\":[],\"to\":{\"lat\":46.77146543837667,\"lon\":23.62568456679583,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"transitLeg\":false}],\"startTime\":1773488465000,\"transfers\":0,\"transitTime\":1920,\"walkTime\":888},{\"accessibility\":\"None\",\"duration\":2868,\"endTime\":1773491333000,\"legs\":[{\"distance\":994,\"duration\":835,\"endTime\":1773489300000,\"from\":{\"lat\":46.74847784603872,\"lon\":23.5675973072648,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"mode\":\"WALK\",\"startTime\":1773488465000,\"steps\":[],\"to\":{\"lat\":46.75538911945495,\"lon\":23.5620129480958,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"transitLeg\":false},{\"agencyId\":\"CLUJRO:2\",\"distance\":3751.496584721422,\"duration\":840,\"endTime\":1773490140000,\"from\":{\"globalStopId\":\"CLUJRO:316\",\"lat\":46.75538545297143,\"lon\":23.56194997342318,\"name\":\"Izlazului\",\"stopId\":\"CLUJRO:4\",\"stopIndex\":3,\"vertexType\":\"TRANSIT\"},\"headsign\":\"Snagov Nord\",\"intermediateStops\":[{\"name\":\"Calea Mănăștur\"},{\"name\":\"Agronomia\"},{\"name\":\"Calea Moților\"},{\"name\":\"Memorandumului Sud\"},{\"name\":\"Victoria\"}],\"mode\":\"BUS\",\"route\":\"25\",\"routeColor\":\"3c4e9a\",\"routeShortName\":\"25\",\"startTime\":1773489300000,\"steps\":[],\"to\":{\"globalStopId\":\"CLUJRO:322\",\"lat\":46.77297615873368,\"lon\":23.59694252767721,\"name\":\"Regionala CFR\",\"stopId\":\"CLUJRO:10\",\"stopIndex\":9,\"vertexType\":\"TRANSIT\"},\"transitLeg\":true},{\"distance\":356,\"duration\":293,\"endTime\":1773490433000,\"from\":{\"lat\":46.77299271241098,\"lon\":23.59692960977554,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"mode\":\"WALK\",\"startTime\":1773490140000,\"steps\":[],\"to\":{\"lat\":46.77107505917324,\"lon\":23.59862141311169,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"transitLeg\":false},{\"agencyId\":\"CLUJRO:2\",\"distance\":2685.502642981711,\"duration\":540,\"endTime\":1773491280000,\"from\":{\"globalStopId\":\"CLUJRO:2145\",\"lat\":46.77106959962243,\"lon\":23.59862425670458,\"name\":\"Tribunal\",\"stopId\":\"CLUJRO:366\",\"stopIndex\":14,\"vertexType\":\"TRANSIT\"},\"headsign\":\"Disp. Unirii\",\"intermediateStops\":[{\"name\":\"Rubin Patitia\"},{\"name\":\"Simion Bărnuțiu\"},{\"name\":\"Biblioteca Județeană\"},{\"name\":\"Campus Universitar Vest\"}],\"mode\":\"BUS\",\"route\":\"45\",\"routeColor\":\"d24cae\",\"routeShortName\":\"45\",\"startTime\":1773490740000,\"steps\":[],\"to\":{\"globalStopId\":\"CLUJRO:2150\",\"lat\":46.77145630736669,\"lon\":23.62520816582175,\"name\":\"Iulius Mall Vest\",\"stopId\":\"CLUJRO:173\",\"stopIndex\":19,\"vertexType\":\"TRANSIT\"},\"transitLeg\":true},{\"distance\":60,\"duration\":53,\"endTime\":1773491333000,\"from\":{\"lat\":46.77147898678061,\"lon\":23.62522792071104,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"mode\":\"WALK\",\"startTime\":1773491280000,\"steps\":[],\"to\":{\"lat\":46.77146543837667,\"lon\":23.62568456679583,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"transitLeg\":false}],\"startTime\":1773488465000,\"transfers\":1,\"transitTime\":1380,\"walkTime\":1181},{\"accessibility\":\"None\",\"duration\":3084,\"endTime\":1773491573000,\"legs\":[{\"distance\":1543,\"duration\":1291,\"endTime\":1773489780000,\"from\":{\"lat\":46.74847784603872,\"lon\":23.5675973072648,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"mode\":\"WALK\",\"startTime\":1773488489000,\"steps\":[],\"to\":{\"lat\":46.76073150572846,\"lon\":23.56443900614977,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"transitLeg\":false},{\"agencyId\":\"CLUJRO:2\",\"distance\":5696.276667457071,\"duration\":1740,\"endTime\":1773491520000,\"from\":{\"globalStopId\":\"CLUJRO:299\",\"lat\":46.76074540217097,\"lon\":23.56443209754914,\"name\":\"Calea Mănăștur\",\"stopId\":\"CLUJRO:5\",\"stopIndex\":3,\"vertexType\":\"TRANSIT\"},\"headsign\":\"Disp. Unirii\",\"intermediateStops\":[{\"name\":\"Agronomia\"},{\"name\":\"Calea Moților\"},{\"name\":\"Memorandumului Sud\"},{\"name\":\"Victoria\"},{\"name\":\"Regionala CFR\"},{\"name\":\"Biserica Sf. Petru\"},{\"name\":\"P-Ța Mărăști\"},{\"name\":\"Mareșal C-Tin Prezan\"},{\"name\":\"Dorobanților\"},{\"name\":\"Campus Universitar Vest\"}],\"mode\":\"BUS\",\"route\":\"24B\",\"routeColor\":\"d24cae\",\"routeShortName\":\"24B\",\"startTime\":1773489780000,\"steps\":[],\"to\":{\"globalStopId\":\"CLUJRO:310\",\"lat\":46.77145630736669,\"lon\":23.62520816582175,\"name\":\"Iulius Mall Vest\",\"stopId\":\"CLUJRO:173\",\"stopIndex\":14,\"vertexType\":\"TRANSIT\"},\"transitLeg\":true},{\"distance\":60,\"duration\":53,\"endTime\":1773491573000,\"from\":{\"lat\":46.77147898678061,\"lon\":23.62522792071104,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"mode\":\"WALK\",\"startTime\":1773491520000,\"steps\":[],\"to\":{\"lat\":46.77146543837667,\"lon\":23.62568456679583,\"name\":\"\",\"vertexType\":\"NORMAL\"},\"transitLeg\":false}],\"startTime\":1773488489000,\"transfers\":0,\"transitTime\":1740,\"walkTime\":1344}],\"to\":{\"lat\":46.77147370855037,\"lon\":23.62569363503033,\"name\":\"\",\"vertexType\":\"NORMAL\"}}}";
+    const mockData = "{\n" +
+        "  \"plan\": {\n" +
+        "    \"date\": 1773488349000,\n" +
+        "    \"from\": {\n" +
+        "      \"lat\": 46.74847021734982,\n" +
+        "      \"lon\": 23.56757577988606,\n" +
+        "      \"name\": \"\",\n" +
+        "      \"vertexType\": \"NORMAL\"\n" +
+        "    },\n" +
+        "    \"itineraries\": [\n" +
+        "      {\n" +
+        "        \"accessibility\": \"None\",\n" +
+        "        \"duration\": 2808,\n" +
+        "        \"endTime\": 1773491273000,\n" +
+        "        \"legs\": [\n" +
+        "          {\n" +
+        "            \"distance\": 994,\n" +
+        "            \"duration\": 835,\n" +
+        "            \"endTime\": 1773489300000,\n" +
+        "            \"from\": {\n" +
+        "              \"lat\": 46.74847784603872,\n" +
+        "              \"lon\": 23.5675973072648,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"legGeometry\": {\n" +
+        "              \"length\": 40,\n" +
+        "              \"points\": \"}pi|Gm`znCc@X??mHlEsElBk@\\\\w@r@c@`@i@b@a@b@??oCvA??BHMHKR??G???eEv@gBFQ???[D??kAE??QB??OVIf@??AdA??D|BBdC??FA??DA\"\n" +
+        "            },\n" +
+        "            \"mode\": \"WALK\",\n" +
+        "            \"startTime\": 1773488465000,\n" +
+        "            \"steps\": [],\n" +
+        "            \"to\": {\n" +
+        "              \"lat\": 46.75538911945495,\n" +
+        "              \"lon\": 23.5620129480958,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"transitLeg\": false\n" +
+        "          },\n" +
+        "          {\n" +
+        "            \"agencyId\": \"CLUJRO:2\",\n" +
+        "            \"agencyName\": \"CTP Cluj\",\n" +
+        "            \"agencyTimeZoneOffset\": 7200000,\n" +
+        "            \"agencyUrl\": \"http://transitapp.com\",\n" +
+        "            \"arrivalDelay\": 0,\n" +
+        "            \"departureDelay\": 0,\n" +
+        "            \"distance\": 6658.349577245983,\n" +
+        "            \"duration\": 1920,\n" +
+        "            \"endTime\": 1773491220000,\n" +
+        "            \"from\": {\n" +
+        "              \"globalStopId\": \"CLUJRO:316\",\n" +
+        "              \"lat\": 46.75538545297143,\n" +
+        "              \"lon\": 23.56194997342318,\n" +
+        "              \"name\": \"Izlazului\",\n" +
+        "              \"stopCode\": \"\",\n" +
+        "              \"stopId\": \"CLUJRO:4\",\n" +
+        "              \"stopIndex\": 3,\n" +
+        "              \"vertexType\": \"TRANSIT\"\n" +
+        "            },\n" +
+        "            \"globalRouteId\": \"CLUJRO:331426\",\n" +
+        "            \"headsign\": \"Snagov Nord\",\n" +
+        "            \"interlineWithPreviousLeg\": false,\n" +
+        "            \"intermediateStops\": [\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:317\",\n" +
+        "                \"lat\": 46.76074540217097,\n" +
+        "                \"lon\": 23.56443209754914,\n" +
+        "                \"name\": \"Calea Mănăștur\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:5\",\n" +
+        "                \"stopIndex\": 4,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:318\",\n" +
+        "                \"lat\": 46.76258900885873,\n" +
+        "                \"lon\": 23.57135686413243,\n" +
+        "                \"name\": \"Agronomia\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:6\",\n" +
+        "                \"stopIndex\": 5,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:319\",\n" +
+        "                \"lat\": 46.76611434457386,\n" +
+        "                \"lon\": 23.5796036316089,\n" +
+        "                \"name\": \"Calea Moților\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:7\",\n" +
+        "                \"stopIndex\": 6,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:320\",\n" +
+        "                \"lat\": 46.76962169388229,\n" +
+        "                \"lon\": 23.58712194961362,\n" +
+        "                \"name\": \"Memorandumului Sud\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:8\",\n" +
+        "                \"stopIndex\": 7,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:321\",\n" +
+        "                \"lat\": 46.77166315104385,\n" +
+        "                \"lon\": 23.59277867452387,\n" +
+        "                \"name\": \"Victoria\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:9\",\n" +
+        "                \"stopIndex\": 8,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:322\",\n" +
+        "                \"lat\": 46.77297615873368,\n" +
+        "                \"lon\": 23.59694252767721,\n" +
+        "                \"name\": \"Regionala CFR\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:10\",\n" +
+        "                \"stopIndex\": 9,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:323\",\n" +
+        "                \"lat\": 46.77624069155151,\n" +
+        "                \"lon\": 23.60628646596298,\n" +
+        "                \"name\": \"Biserica Sf. Petru\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:168\",\n" +
+        "                \"stopIndex\": 10,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:324\",\n" +
+        "                \"lat\": 46.77757168564804,\n" +
+        "                \"lon\": 23.61127769382496,\n" +
+        "                \"name\": \"P-Ța Mărăști\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:169\",\n" +
+        "                \"stopIndex\": 11,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:325\",\n" +
+        "                \"lat\": 46.77839006715334,\n" +
+        "                \"lon\": 23.61579228190914,\n" +
+        "                \"name\": \"Mareșal C-Tin Prezan\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:170\",\n" +
+        "                \"stopIndex\": 12,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:326\",\n" +
+        "                \"lat\": 46.77787745456211,\n" +
+        "                \"lon\": 23.61994714185911,\n" +
+        "                \"name\": \"Dorobanților\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:171\",\n" +
+        "                \"stopIndex\": 13,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:327\",\n" +
+        "                \"lat\": 46.77410930235639,\n" +
+        "                \"lon\": 23.62166484369991,\n" +
+        "                \"name\": \"Campus Universitar Vest\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:172\",\n" +
+        "                \"stopIndex\": 14,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              }\n" +
+        "            ],\n" +
+        "            \"legGeometry\": {\n" +
+        "              \"length\": 116,\n" +
+        "              \"points\": \"g|j|Gq}xnC@?Q?MeIBeADAJUCUGIIGMBKLc@ZkBb@_@PyA|@uAjAaBfAm@Zc@LQBqAGgBMiBUmA?]SQc@WcAY}Bu@wEuAcGUuAqAcLq@iF_@wB}AiGg@}BMc@Q[eBsBcBcCkAyBSy@o@eDcCyKoAaF_A{DgBoFmE}KoCqGgAsCmAuDqDiLkBsFe@_AQk@mDmQ{@sFk@wC}A{GB?W{@Vv@CB_@kA}DyNmF_Sq@{CyA{GPMQLMc@g@yDy@{Ec@kBy@gCq@mDWgBQoB}@{HmAcM@u@Js@C_@MWKKIEUy@qAoMG]Q[MqAFu@h@yBPa@b@q@tAgApIsCtEgB~C_AdA_@zAk@`@MlAy@TUb@q@^y@Lc@n@qAVUTIBMCYX_BpAiDDK\"\n" +
+        "            },\n" +
+        "            \"mode\": \"BUS\",\n" +
+        "            \"realTime\": false,\n" +
+        "            \"route\": \"25\",\n" +
+        "            \"routeColor\": \"3c4e9a\",\n" +
+        "            \"routeId\": \"CLUJRO:14\",\n" +
+        "            \"routeLongName\": \"Str. Bucium - Str. Unirii\",\n" +
+        "            \"routeShortName\": \"25\",\n" +
+        "            \"routeTextColor\": \"ffffff\",\n" +
+        "            \"routeType\": 3,\n" +
+        "            \"startTime\": 1773489300000,\n" +
+        "            \"steps\": [],\n" +
+        "            \"to\": {\n" +
+        "              \"globalStopId\": \"CLUJRO:328\",\n" +
+        "              \"lat\": 46.77145630736669,\n" +
+        "              \"lon\": 23.62520816582175,\n" +
+        "              \"name\": \"Iulius Mall Vest\",\n" +
+        "              \"stopCode\": \"\",\n" +
+        "              \"stopId\": \"CLUJRO:173\",\n" +
+        "              \"stopIndex\": 15,\n" +
+        "              \"vertexType\": \"TRANSIT\"\n" +
+        "            },\n" +
+        "            \"transitLeg\": true,\n" +
+        "            \"tripBlockId\": \"\",\n" +
+        "            \"tripId\": \"CLUJRO:14_0_S_49_1350\",\n" +
+        "            \"tripShortName\": \"\"\n" +
+        "          },\n" +
+        "          {\n" +
+        "            \"distance\": 60,\n" +
+        "            \"duration\": 53,\n" +
+        "            \"endTime\": 1773491273000,\n" +
+        "            \"from\": {\n" +
+        "              \"lat\": 46.77147898678061,\n" +
+        "              \"lon\": 23.62522792071104,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"legGeometry\": {\n" +
+        "              \"length\": 11,\n" +
+        "              \"points\": \"u`n|GsheoCGP??KQACIQ??FOFQ??Pc@\"\n" +
+        "            },\n" +
+        "            \"mode\": \"WALK\",\n" +
+        "            \"startTime\": 1773491220000,\n" +
+        "            \"steps\": [],\n" +
+        "            \"to\": {\n" +
+        "              \"lat\": 46.77146543837667,\n" +
+        "              \"lon\": 23.62568456679583,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"transitLeg\": false\n" +
+        "          }\n" +
+        "        ],\n" +
+        "        \"startTime\": 1773488465000,\n" +
+        "        \"transfers\": 0,\n" +
+        "        \"transitTime\": 1920,\n" +
+        "        \"walkTime\": 888,\n" +
+        "        \"wheelchairNeed\": \"None\"\n" +
+        "      },\n" +
+        "      {\n" +
+        "        \"accessibility\": \"None\",\n" +
+        "        \"duration\": 2868,\n" +
+        "        \"endTime\": 1773491333000,\n" +
+        "        \"legs\": [\n" +
+        "          {\n" +
+        "            \"distance\": 994,\n" +
+        "            \"duration\": 835,\n" +
+        "            \"endTime\": 1773489300000,\n" +
+        "            \"from\": {\n" +
+        "              \"lat\": 46.74847784603872,\n" +
+        "              \"lon\": 23.5675973072648,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"legGeometry\": {\n" +
+        "              \"length\": 40,\n" +
+        "              \"points\": \"}pi|Gm`znCc@X??mHlEsElBk@\\\\w@r@c@`@i@b@a@b@??oCvA??BHMHKR??G???eEv@gBFQ???[D??kAE??QB??OVIf@??AdA??D|BBdC??FA??DA\"\n" +
+        "            },\n" +
+        "            \"mode\": \"WALK\",\n" +
+        "            \"startTime\": 1773488465000,\n" +
+        "            \"steps\": [],\n" +
+        "            \"to\": {\n" +
+        "              \"lat\": 46.75538911945495,\n" +
+        "              \"lon\": 23.5620129480958,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"transitLeg\": false\n" +
+        "          },\n" +
+        "          {\n" +
+        "            \"agencyId\": \"CLUJRO:2\",\n" +
+        "            \"agencyName\": \"CTP Cluj\",\n" +
+        "            \"agencyTimeZoneOffset\": 7200000,\n" +
+        "            \"agencyUrl\": \"http://transitapp.com\",\n" +
+        "            \"arrivalDelay\": 0,\n" +
+        "            \"departureDelay\": 0,\n" +
+        "            \"distance\": 3751.496584721422,\n" +
+        "            \"duration\": 840,\n" +
+        "            \"endTime\": 1773490140000,\n" +
+        "            \"from\": {\n" +
+        "              \"globalStopId\": \"CLUJRO:316\",\n" +
+        "              \"lat\": 46.75538545297143,\n" +
+        "              \"lon\": 23.56194997342318,\n" +
+        "              \"name\": \"Izlazului\",\n" +
+        "              \"stopCode\": \"\",\n" +
+        "              \"stopId\": \"CLUJRO:4\",\n" +
+        "              \"stopIndex\": 3,\n" +
+        "              \"vertexType\": \"TRANSIT\"\n" +
+        "            },\n" +
+        "            \"globalRouteId\": \"CLUJRO:331426\",\n" +
+        "            \"headsign\": \"Snagov Nord\",\n" +
+        "            \"interlineWithPreviousLeg\": false,\n" +
+        "            \"intermediateStops\": [\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:317\",\n" +
+        "                \"lat\": 46.76074540217097,\n" +
+        "                \"lon\": 23.56443209754914,\n" +
+        "                \"name\": \"Calea Mănăștur\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:5\",\n" +
+        "                \"stopIndex\": 4,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:318\",\n" +
+        "                \"lat\": 46.76258900885873,\n" +
+        "                \"lon\": 23.57135686413243,\n" +
+        "                \"name\": \"Agronomia\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:6\",\n" +
+        "                \"stopIndex\": 5,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:319\",\n" +
+        "                \"lat\": 46.76611434457386,\n" +
+        "                \"lon\": 23.5796036316089,\n" +
+        "                \"name\": \"Calea Moților\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:7\",\n" +
+        "                \"stopIndex\": 6,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:320\",\n" +
+        "                \"lat\": 46.76962169388229,\n" +
+        "                \"lon\": 23.58712194961362,\n" +
+        "                \"name\": \"Memorandumului Sud\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:8\",\n" +
+        "                \"stopIndex\": 7,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:321\",\n" +
+        "                \"lat\": 46.77166315104385,\n" +
+        "                \"lon\": 23.59277867452387,\n" +
+        "                \"name\": \"Victoria\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:9\",\n" +
+        "                \"stopIndex\": 8,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              }\n" +
+        "            ],\n" +
+        "            \"legGeometry\": {\n" +
+        "              \"length\": 62,\n" +
+        "              \"points\": \"g|j|Gq}xnC@?Q?MeIBeADAJUCUGIIGMBKLc@ZkBb@_@PyA|@uAjAaBfAm@Zc@LQBqAGgBMiBUmA?]SQc@WcAY}Bu@wEuAcGUuAqAcLq@iF_@wB}AiGg@}BMc@Q[eBsBcBcCkAyBSy@o@eDcCyKoAaF_A{DgBoFmE}KoCqGgAsCmAuDqDiLkBsFe@_AQk@mDmQ{@sFk@wC}A{GB?Wy@\"\n" +
+        "            },\n" +
+        "            \"mode\": \"BUS\",\n" +
+        "            \"realTime\": false,\n" +
+        "            \"route\": \"25\",\n" +
+        "            \"routeColor\": \"3c4e9a\",\n" +
+        "            \"routeId\": \"CLUJRO:14\",\n" +
+        "            \"routeLongName\": \"Str. Bucium - Str. Unirii\",\n" +
+        "            \"routeShortName\": \"25\",\n" +
+        "            \"routeTextColor\": \"ffffff\",\n" +
+        "            \"routeType\": 3,\n" +
+        "            \"startTime\": 1773489300000,\n" +
+        "            \"steps\": [],\n" +
+        "            \"to\": {\n" +
+        "              \"globalStopId\": \"CLUJRO:322\",\n" +
+        "              \"lat\": 46.77297615873368,\n" +
+        "              \"lon\": 23.59694252767721,\n" +
+        "              \"name\": \"Regionala CFR\",\n" +
+        "              \"stopCode\": \"\",\n" +
+        "              \"stopId\": \"CLUJRO:10\",\n" +
+        "              \"stopIndex\": 9,\n" +
+        "              \"vertexType\": \"TRANSIT\"\n" +
+        "            },\n" +
+        "            \"transitLeg\": true,\n" +
+        "            \"tripBlockId\": \"\",\n" +
+        "            \"tripId\": \"CLUJRO:14_0_S_49_1350\",\n" +
+        "            \"tripShortName\": \"\"\n" +
+        "          },\n" +
+        "          {\n" +
+        "            \"distance\": 356,\n" +
+        "            \"duration\": 293,\n" +
+        "            \"endTime\": 1773490433000,\n" +
+        "            \"from\": {\n" +
+        "              \"lat\": 46.77299271241098,\n" +
+        "              \"lon\": 23.59692960977554,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"legGeometry\": {\n" +
+        "              \"length\": 13,\n" +
+        "              \"points\": \"ejn|Gww_oCV|@Lb@??JGtI_FAK??RGPG??GSc@}C\"\n" +
+        "            },\n" +
+        "            \"mode\": \"WALK\",\n" +
+        "            \"startTime\": 1773490140000,\n" +
+        "            \"steps\": [],\n" +
+        "            \"to\": {\n" +
+        "              \"lat\": 46.77107505917324,\n" +
+        "              \"lon\": 23.59862141311169,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"transitLeg\": false\n" +
+        "          },\n" +
+        "          {\n" +
+        "            \"agencyId\": \"CLUJRO:2\",\n" +
+        "            \"agencyName\": \"CTP Cluj\",\n" +
+        "            \"agencyTimeZoneOffset\": 7200000,\n" +
+        "            \"agencyUrl\": \"http://transitapp.com\",\n" +
+        "            \"arrivalDelay\": 0,\n" +
+        "            \"departureDelay\": 0,\n" +
+        "            \"distance\": 2685.502642981711,\n" +
+        "            \"duration\": 540,\n" +
+        "            \"endTime\": 1773491280000,\n" +
+        "            \"from\": {\n" +
+        "              \"globalStopId\": \"CLUJRO:2145\",\n" +
+        "              \"lat\": 46.77106959962243,\n" +
+        "              \"lon\": 23.59862425670458,\n" +
+        "              \"name\": \"Tribunal\",\n" +
+        "              \"stopCode\": \"\",\n" +
+        "              \"stopId\": \"CLUJRO:366\",\n" +
+        "              \"stopIndex\": 14,\n" +
+        "              \"vertexType\": \"TRANSIT\"\n" +
+        "            },\n" +
+        "            \"globalRouteId\": \"CLUJRO:331497\",\n" +
+        "            \"headsign\": \"Disp. Unirii\",\n" +
+        "            \"interlineWithPreviousLeg\": false,\n" +
+        "            \"intermediateStops\": [\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:2146\",\n" +
+        "                \"lat\": 46.77232864809212,\n" +
+        "                \"lon\": 23.60403816512424,\n" +
+        "                \"name\": \"Rubin Patitia\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:823\",\n" +
+        "                \"stopIndex\": 15,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:2147\",\n" +
+        "                \"lat\": 46.77340783249471,\n" +
+        "                \"lon\": 23.60722175911189,\n" +
+        "                \"name\": \"Simion Bărnuțiu\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:701\",\n" +
+        "                \"stopIndex\": 16,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:2148\",\n" +
+        "                \"lat\": 46.77657344007564,\n" +
+        "                \"lon\": 23.61384075678112,\n" +
+        "                \"name\": \"Biblioteca Județeană\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:368\",\n" +
+        "                \"stopIndex\": 17,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:2149\",\n" +
+        "                \"lat\": 46.77410930235639,\n" +
+        "                \"lon\": 23.62166484369991,\n" +
+        "                \"name\": \"Campus Universitar Vest\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:172\",\n" +
+        "                \"stopIndex\": 18,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              }\n" +
+        "            ],\n" +
+        "            \"legGeometry\": {\n" +
+        "              \"length\": 34,\n" +
+        "              \"points\": \"e~m|Gib`oCwB{OyBkN_BoIwAsFmBsGaAkBcKcR[}@c@cBoAwMMBCC}@wJyBeTzG}BdE{ABHp@UhBi@|CcA@C?Mr@YlAy@TUb@q@^y@Lc@b@kB|AcDp@eBLNZ{@\"\n" +
+        "            },\n" +
+        "            \"mode\": \"BUS\",\n" +
+        "            \"realTime\": false,\n" +
+        "            \"route\": \"45\",\n" +
+        "            \"routeColor\": \"d24cae\",\n" +
+        "            \"routeId\": \"CLUJRO:113\",\n" +
+        "            \"routeLongName\": \"Zorilor - Unirii\",\n" +
+        "            \"routeShortName\": \"45\",\n" +
+        "            \"routeTextColor\": \"ffffff\",\n" +
+        "            \"routeType\": 3,\n" +
+        "            \"startTime\": 1773490740000,\n" +
+        "            \"steps\": [],\n" +
+        "            \"to\": {\n" +
+        "              \"globalStopId\": \"CLUJRO:2150\",\n" +
+        "              \"lat\": 46.77145630736669,\n" +
+        "              \"lon\": 23.62520816582175,\n" +
+        "              \"name\": \"Iulius Mall Vest\",\n" +
+        "              \"stopCode\": \"\",\n" +
+        "              \"stopId\": \"CLUJRO:173\",\n" +
+        "              \"stopIndex\": 19,\n" +
+        "              \"vertexType\": \"TRANSIT\"\n" +
+        "            },\n" +
+        "            \"transitLeg\": true,\n" +
+        "            \"tripBlockId\": \"\",\n" +
+        "            \"tripId\": \"CLUJRO:113_0_S_18_1355\",\n" +
+        "            \"tripShortName\": \"\"\n" +
+        "          },\n" +
+        "          {\n" +
+        "            \"distance\": 60,\n" +
+        "            \"duration\": 53,\n" +
+        "            \"endTime\": 1773491333000,\n" +
+        "            \"from\": {\n" +
+        "              \"lat\": 46.77147898678061,\n" +
+        "              \"lon\": 23.62522792071104,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"legGeometry\": {\n" +
+        "              \"length\": 11,\n" +
+        "              \"points\": \"u`n|GsheoCGP??KQACIQ??FOFQ??Pc@\"\n" +
+        "            },\n" +
+        "            \"mode\": \"WALK\",\n" +
+        "            \"startTime\": 1773491280000,\n" +
+        "            \"steps\": [],\n" +
+        "            \"to\": {\n" +
+        "              \"lat\": 46.77146543837667,\n" +
+        "              \"lon\": 23.62568456679583,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"transitLeg\": false\n" +
+        "          }\n" +
+        "        ],\n" +
+        "        \"startTime\": 1773488465000,\n" +
+        "        \"transfers\": 1,\n" +
+        "        \"transitTime\": 1380,\n" +
+        "        \"walkTime\": 1181,\n" +
+        "        \"wheelchairNeed\": \"None\"\n" +
+        "      },\n" +
+        "      {\n" +
+        "        \"accessibility\": \"None\",\n" +
+        "        \"duration\": 3084,\n" +
+        "        \"endTime\": 1773491573000,\n" +
+        "        \"legs\": [\n" +
+        "          {\n" +
+        "            \"distance\": 1543,\n" +
+        "            \"duration\": 1291,\n" +
+        "            \"endTime\": 1773489780000,\n" +
+        "            \"from\": {\n" +
+        "              \"lat\": 46.74847784603872,\n" +
+        "              \"lon\": 23.5675973072648,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"legGeometry\": {\n" +
+        "              \"length\": 75,\n" +
+        "              \"points\": \"}pi|Gm`znCc@X??mHlEsElBk@\\\\w@r@c@`@i@b@a@b@??oCvAKDYN??aB`@eBXqBFYAkAI??g@J??ML??O???IM??e@E??kBf@_A`@??ULe@ZsAhAmAv@SNcAh@??a@FsAIOA??OC??[C??MA??M???MA??_@A??_@G??UA??QEmAC???K??QMMg@??Ks@MkACSGe@Kw@G[\"\n" +
+        "            },\n" +
+        "            \"mode\": \"WALK\",\n" +
+        "            \"startTime\": 1773488489000,\n" +
+        "            \"steps\": [],\n" +
+        "            \"to\": {\n" +
+        "              \"lat\": 46.76073150572846,\n" +
+        "              \"lon\": 23.56443900614977,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"transitLeg\": false\n" +
+        "          },\n" +
+        "          {\n" +
+        "            \"agencyId\": \"CLUJRO:2\",\n" +
+        "            \"agencyName\": \"CTP Cluj\",\n" +
+        "            \"agencyTimeZoneOffset\": 7200000,\n" +
+        "            \"agencyUrl\": \"http://transitapp.com\",\n" +
+        "            \"arrivalDelay\": 0,\n" +
+        "            \"departureDelay\": 0,\n" +
+        "            \"distance\": 5696.276667457071,\n" +
+        "            \"duration\": 1740,\n" +
+        "            \"endTime\": 1773491520000,\n" +
+        "            \"from\": {\n" +
+        "              \"globalStopId\": \"CLUJRO:299\",\n" +
+        "              \"lat\": 46.76074540217097,\n" +
+        "              \"lon\": 23.56443209754914,\n" +
+        "              \"name\": \"Calea Mănăștur\",\n" +
+        "              \"stopCode\": \"\",\n" +
+        "              \"stopId\": \"CLUJRO:5\",\n" +
+        "              \"stopIndex\": 3,\n" +
+        "              \"vertexType\": \"TRANSIT\"\n" +
+        "            },\n" +
+        "            \"globalRouteId\": \"CLUJRO:331425\",\n" +
+        "            \"headsign\": \"Disp. Unirii\",\n" +
+        "            \"interlineWithPreviousLeg\": false,\n" +
+        "            \"intermediateStops\": [\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:300\",\n" +
+        "                \"lat\": 46.76258900885873,\n" +
+        "                \"lon\": 23.57135686413243,\n" +
+        "                \"name\": \"Agronomia\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:6\",\n" +
+        "                \"stopIndex\": 4,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:301\",\n" +
+        "                \"lat\": 46.76611434457386,\n" +
+        "                \"lon\": 23.5796036316089,\n" +
+        "                \"name\": \"Calea Moților\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:7\",\n" +
+        "                \"stopIndex\": 5,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:302\",\n" +
+        "                \"lat\": 46.76962169388229,\n" +
+        "                \"lon\": 23.58712194961362,\n" +
+        "                \"name\": \"Memorandumului Sud\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:8\",\n" +
+        "                \"stopIndex\": 6,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:303\",\n" +
+        "                \"lat\": 46.77166315104385,\n" +
+        "                \"lon\": 23.59277867452387,\n" +
+        "                \"name\": \"Victoria\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:9\",\n" +
+        "                \"stopIndex\": 7,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:304\",\n" +
+        "                \"lat\": 46.77297615873368,\n" +
+        "                \"lon\": 23.59694252767721,\n" +
+        "                \"name\": \"Regionala CFR\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:10\",\n" +
+        "                \"stopIndex\": 8,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:305\",\n" +
+        "                \"lat\": 46.77624069155151,\n" +
+        "                \"lon\": 23.60628646596298,\n" +
+        "                \"name\": \"Biserica Sf. Petru\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:168\",\n" +
+        "                \"stopIndex\": 9,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:306\",\n" +
+        "                \"lat\": 46.77757168564804,\n" +
+        "                \"lon\": 23.61127769382496,\n" +
+        "                \"name\": \"P-Ța Mărăști\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:169\",\n" +
+        "                \"stopIndex\": 10,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:307\",\n" +
+        "                \"lat\": 46.77839006715334,\n" +
+        "                \"lon\": 23.61579228190914,\n" +
+        "                \"name\": \"Mareșal C-Tin Prezan\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:170\",\n" +
+        "                \"stopIndex\": 11,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:308\",\n" +
+        "                \"lat\": 46.77787745456211,\n" +
+        "                \"lon\": 23.61994714185911,\n" +
+        "                \"name\": \"Dorobanților\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:171\",\n" +
+        "                \"stopIndex\": 12,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"globalStopId\": \"CLUJRO:309\",\n" +
+        "                \"lat\": 46.77410930235639,\n" +
+        "                \"lon\": 23.62166484369991,\n" +
+        "                \"name\": \"Campus Universitar Vest\",\n" +
+        "                \"stopCode\": \"\",\n" +
+        "                \"stopId\": \"CLUJRO:172\",\n" +
+        "                \"stopIndex\": 13,\n" +
+        "                \"vertexType\": \"TRANSIT\"\n" +
+        "              }\n" +
+        "            ],\n" +
+        "            \"legGeometry\": {\n" +
+        "              \"length\": 83,\n" +
+        "              \"points\": \"i~k|GglynCSkAQcAuAcGUuAqAcLq@iF_@wBmCyKEQ_@i@wAeB_@g@gAcBgAqBSy@o@eDsE{R_A{DaBaFFC_H_QaByDmAmDG_@_I}Uk@cAgAoFAU??eBoJABsBcLy@wDwFySwDyN}DcQMUg@uBQqACg@c@oCsCaL[kB}Ca[IU@_@Js@C_@MWKKIEUy@qAoMG]Q[MqAFu@b@gBVs@b@q@nA_AvI{CtEgB~C_AdA_@zAk@`@MlAy@TUb@q@^y@Lc@n@qAVUPEFQCYF[PcAz@{BLNZ{@\"\n" +
+        "            },\n" +
+        "            \"mode\": \"BUS\",\n" +
+        "            \"realTime\": false,\n" +
+        "            \"route\": \"24B\",\n" +
+        "            \"routeColor\": \"d24cae\",\n" +
+        "            \"routeId\": \"CLUJRO:13\",\n" +
+        "            \"routeLongName\": \"Str. Unirii - Vivo Center\",\n" +
+        "            \"routeShortName\": \"24B\",\n" +
+        "            \"routeTextColor\": \"ffffff\",\n" +
+        "            \"routeType\": 3,\n" +
+        "            \"startTime\": 1773489780000,\n" +
+        "            \"steps\": [],\n" +
+        "            \"to\": {\n" +
+        "              \"globalStopId\": \"CLUJRO:310\",\n" +
+        "              \"lat\": 46.77145630736669,\n" +
+        "              \"lon\": 23.62520816582175,\n" +
+        "              \"name\": \"Iulius Mall Vest\",\n" +
+        "              \"stopCode\": \"\",\n" +
+        "              \"stopId\": \"CLUJRO:173\",\n" +
+        "              \"stopIndex\": 14,\n" +
+        "              \"vertexType\": \"TRANSIT\"\n" +
+        "            },\n" +
+        "            \"transitLeg\": true,\n" +
+        "            \"tripBlockId\": \"\",\n" +
+        "            \"tripId\": \"CLUJRO:13_1_S_26_1355\",\n" +
+        "            \"tripShortName\": \"\"\n" +
+        "          },\n" +
+        "          {\n" +
+        "            \"distance\": 60,\n" +
+        "            \"duration\": 53,\n" +
+        "            \"endTime\": 1773491573000,\n" +
+        "            \"from\": {\n" +
+        "              \"lat\": 46.77147898678061,\n" +
+        "              \"lon\": 23.62522792071104,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"legGeometry\": {\n" +
+        "              \"length\": 11,\n" +
+        "              \"points\": \"u`n|GsheoCGP??KQACIQ??FOFQ??Pc@\"\n" +
+        "            },\n" +
+        "            \"mode\": \"WALK\",\n" +
+        "            \"startTime\": 1773491520000,\n" +
+        "            \"steps\": [],\n" +
+        "            \"to\": {\n" +
+        "              \"lat\": 46.77146543837667,\n" +
+        "              \"lon\": 23.62568456679583,\n" +
+        "              \"name\": \"\",\n" +
+        "              \"vertexType\": \"NORMAL\"\n" +
+        "            },\n" +
+        "            \"transitLeg\": false\n" +
+        "          }\n" +
+        "        ],\n" +
+        "        \"startTime\": 1773488489000,\n" +
+        "        \"transfers\": 0,\n" +
+        "        \"transitTime\": 1740,\n" +
+        "        \"walkTime\": 1344,\n" +
+        "        \"wheelchairNeed\": \"None\"\n" +
+        "      }\n" +
+        "    ],\n" +
+        "    \"to\": {\n" +
+        "      \"lat\": 46.77147370855037,\n" +
+        "      \"lon\": 23.62569363503033,\n" +
+        "      \"name\": \"\",\n" +
+        "      \"vertexType\": \"NORMAL\"\n" +
+        "    }\n" +
+        "  }\n" +
+        "}"
 
     const getUserAddress = async () => {
         try {
-            const latitude = searchParams.get("userLat");
-            const longitude = searchParams.get("userLng");
+            const latitude = parseFloat(searchParams.get("userLat"));
+            const longitude = parseFloat(searchParams.get("userLng"));
             const url = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`;
             const data = await fetch(url, { headers: { "User-Agent": "Busify" } });
             const resp = await data.json();
             const address = resp.address;
             setOriginSearchValue(`${address.road || ""} ${address.house_number || ""}`);
+            setOriginCoords({ lat: latitude, lon: longitude });
         } catch (e) {
             console.log(e);
         }
@@ -355,19 +1112,37 @@ function Directions() {
         })));
     };
 
-    const searchRoute = async (overrideOrigin, overrideDestination) => {
-        const origin = overrideOrigin ?? originSearchValue;
-        const destination = overrideDestination ?? destinationSearchValue;
+    const searchRoute = async (overrideOrigin, overrideDestination, overrideOriginCoords, overrideDestCoords) => {
+        try {
+            const origin = overrideOrigin ?? originSearchValue;
+            const destination = overrideDestination ?? destinationSearchValue;
+            const fromCoords = overrideOriginCoords ?? originCoords;
+            const toCoords = overrideDestCoords ?? destinationCoords;
 
-        if (!origin.trim() || !destination.trim()) return;
+            if (!origin.trim() || !destination.trim()) return;
+            if (!fromCoords || !toCoords) {
+                console.warn('Missing coordinates for route search');
+                return;
+            }
 
-        const updated = saveToHistory(origin, destination);
-        setRouteHistory(updated);
+            setIsSearchingRoute(true);
 
-        // TODO: replace with real API call
-        const data = JSON.parse(mockData);
-        const enriched = await enrichItineraries(data.plan.itineraries);
-        setItineraries(enriched);
+            const updated = saveToHistory(origin, destination, fromCoords, toCoords);
+            setRouteHistory(updated);
+
+            // OTP API expects format: lat,lon
+            const fromPlace = `${fromCoords.lat},${fromCoords.lon}`;
+            const toPlace = `${toCoords.lat},${toCoords.lon}`;
+
+            const f = await fetch(`https://busifyserver.onrender.com/otp?fromPlace=${fromPlace}&toPlace=${toPlace}`);
+            const data = await f.json();
+            const enriched = await enrichItineraries(data.plan.itineraries);
+            setItineraries(enriched);
+        } catch(e) {
+            console.log(e)
+        } finally {
+            setIsSearchingRoute(false);
+        }
     };
 
     // Load history on mount
@@ -381,27 +1156,37 @@ function Directions() {
     }, []);
 
     useEffect(() => {
-        if (!originSearchValue) return;
+        if (!originSearchValue) {
+            setIsLoadingOriginSuggestions(false);
+            return;
+        }
+        setIsLoadingOriginSuggestions(true);
         const timer = setTimeout(() => {
             getSuggestions(originSearchValue)
                 .then(r => buildSuggestions(r))
                 .then(suggestions => {
                     if (suggestions.length > 0) setOriginSuggestions(suggestions);
                 })
-                .catch(err => console.error(err));
+                .catch(err => console.error(err))
+                .finally(() => setIsLoadingOriginSuggestions(false));
         }, 1000);
         return () => clearTimeout(timer);
     }, [originSearchValue]);
 
     useEffect(() => {
-        if (!destinationSearchValue) return;
+        if (!destinationSearchValue) {
+            setIsLoadingDestinationSuggestions(false);
+            return;
+        }
+        setIsLoadingDestinationSuggestions(true);
         const timer = setTimeout(() => {
             getSuggestions(destinationSearchValue)
                 .then(r => buildSuggestions(r))
                 .then(suggestions => {
                     if (suggestions.length > 0) setDestinationSuggestions(suggestions);
                 })
-                .catch(err => console.error(err));
+                .catch(err => console.error(err))
+                .finally(() => setIsLoadingDestinationSuggestions(false));
         }, 500);
         return () => clearTimeout(timer);
     }, [destinationSearchValue]);
@@ -416,22 +1201,23 @@ function Directions() {
                 textAlign: "center",
                 zIndex: 10,
                 width: "90%",
+                display: !localStorage.hasOwnProperty("active_subscription") ? "initial" : "none"
             }}>
-                <div><b> Lucrăm cu spor la propriul sistem de direcții pas cu pas! </b></div>
-                <div> Acesta va fi disponibil exclusiv abonaților.</div>
-                <Button style={{margin: '15px', visibility: !localStorage.hasOwnProperty("active_subscription") ? "visible" : "hidden"}} onClick={() => {nav('/setari?abonare=true')}}><b>Devino abonat!</b></Button>
+                <div><b> Navighează ușor prin Cluj! </b></div>
+                <div> Cu propriul nostru sistem de navigare te ducem acolo unde ai nevoie, când ai nevoie! </div>
+                <Button style={{margin: '15px'}} onClick={() => {nav('/setari?abonare=true')}}><b>Devino abonat!</b></Button>
                 <Button variant={'undefined'} style={{outline: 'solid 1px'}} onClick={() => {nav(-1)}} > Înapoi </Button>
             </div>
-            <div style={{filter: "blur(4px)", pointerEvents: "none", userSelect: "none"}}>
+            <div style={{filter: !localStorage.hasOwnProperty("active_subscription") ? "blur(4px)" : "", pointerEvents: !localStorage.hasOwnProperty("active_subscription") ? "none" : "initial", userSelect: !localStorage.hasOwnProperty("active_subscription") ? "none" : "initial"}}>
             <div className="orare-content-header" style={{padding: "20px"}}>
                 <BackButton style={{marginRight: "auto"}} onClick={() => {nav(-1)}}/>
                 <h2 style={{marginBottom: '20px'}}><b>Direcții pas cu pas</b></h2>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", zIndex: 10, position: "relative" }}>
                     <Decoration style={{ flexShrink: 0, marginTop: "5px" }} />
                     <Form style={{ flex: 1 }}>
                         <form onSubmit={(e) => { e.preventDefault(); searchRoute(); }}>
                             <Form.Group style={{ display: "flex", flexDirection: "column", gap: "20px", margin: 0 }}>
-                                <Dropdown show={originSuggestions.length > 0 && isOriginFocused}>
+                                <Dropdown show={(originSuggestions.length > 0 || isLoadingOriginSuggestions) && isOriginFocused} style={{zIndex: 1000, position: "relative"}}>
                                     <InputGroup>
                                         <Form.Control
                                             type="text"
@@ -449,28 +1235,35 @@ function Directions() {
                                             />
                                         </InputGroup.Text>
                                     </InputGroup>
-                                    <Dropdown.Menu style={{ width: "100%" }}>
-                                        {originSuggestions.map((suggestion, index) => (
-                                            <Dropdown.Item
-                                                key={index}
-                                                style={{ overflow: "hidden", whiteSpace: "nowrap" }}
-                                                onClick={() => {
-                                                    setOriginSearchValue(suggestion.name);
-                                                    setOriginSuggestions([]);
-                                                }}
-                                            >
-                                                <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{suggestion.name}</div>
-                                                {suggestion.address ? (
-                                                    <div style={{ fontSize: "0.75rem", color: "gray", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                                        {suggestion.address}
-                                                    </div>
-                                                ) : null}
-                                            </Dropdown.Item>
-                                        ))}
+                                    <Dropdown.Menu style={{ width: "100%", zIndex: 1000 }}>
+                                        {isLoadingOriginSuggestions && originSuggestions.length === 0 ? (
+                                            <div style={{ display: "flex", justifyContent: "center", padding: "10px" }}>
+                                                <Spinner animation="border" size="sm" style={{ color: "#915FA8" }} />
+                                            </div>
+                                        ) : (
+                                            originSuggestions.map((suggestion, index) => (
+                                                <Dropdown.Item
+                                                    key={index}
+                                                    style={{ overflow: "hidden", whiteSpace: "nowrap" }}
+                                                    onClick={() => {
+                                                        setOriginSearchValue(suggestion.name);
+                                                        setOriginCoords({ lat: suggestion.lat, lon: suggestion.lon });
+                                                        setOriginSuggestions([]);
+                                                    }}
+                                                >
+                                                    <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{suggestion.name}</div>
+                                                    {suggestion.address ? (
+                                                        <div style={{ fontSize: "0.75rem", color: "gray", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                            {suggestion.address}
+                                                        </div>
+                                                    ) : null}
+                                                </Dropdown.Item>
+                                            ))
+                                        )}
                                     </Dropdown.Menu>
                                 </Dropdown>
 
-                                <Dropdown show={destinationSuggestions.length > 0 && isDestinationFocused}>
+                                <Dropdown show={(destinationSuggestions.length > 0 || isLoadingDestinationSuggestions) && isDestinationFocused} style={{zIndex: 100, position: "relative"}}>
                                     <Form.Control
                                         type="text"
                                         inputMode="search"
@@ -480,41 +1273,56 @@ function Directions() {
                                         onBlur={() => setTimeout(() => setIsDestinationFocused(false), 150)}
                                         onChange={(e) => setDestinationSearchValue(e.target.value)}
                                     />
-                                    <Dropdown.Menu style={{ width: "100%" }}>
-                                        {destinationSuggestions.map((suggestion, index) => (
-                                            <Dropdown.Item
-                                                key={index}
-                                                style={{ overflow: "hidden", whiteSpace: "nowrap" }}
-                                                onClick={() => {
-                                                    setDestinationSearchValue(suggestion.name);
-                                                    setDestinationSuggestions([]);
-                                                }}
-                                            >
-                                                <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{suggestion.name}</div>
-                                                {suggestion.address ? (
-                                                    <div style={{ fontSize: "0.75rem", color: "gray", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                                        {suggestion.address}
-                                                    </div>
-                                                ) : null}
-                                            </Dropdown.Item>
-                                        ))}
+                                    <Dropdown.Menu style={{ width: "100%", zIndex: 100 }}>
+                                        {isLoadingDestinationSuggestions && destinationSuggestions.length === 0 ? (
+                                            <div style={{ display: "flex", justifyContent: "center", padding: "10px" }}>
+                                                <Spinner animation="border" size="sm" style={{ color: "#915FA8" }} />
+                                            </div>
+                                        ) : (
+                                            destinationSuggestions.map((suggestion, index) => (
+                                                <Dropdown.Item
+                                                    key={index}
+                                                    style={{ overflow: "hidden", whiteSpace: "nowrap" }}
+                                                    onClick={() => {
+                                                        setDestinationSearchValue(suggestion.name);
+                                                        setDestinationCoords({ lat: suggestion.lat, lon: suggestion.lon });
+                                                        setDestinationSuggestions([]);
+                                                    }}
+                                                >
+                                                    <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{suggestion.name}</div>
+                                                    {suggestion.address ? (
+                                                        <div style={{ fontSize: "0.75rem", color: "gray", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                            {suggestion.address}
+                                                        </div>
+                                                    ) : null}
+                                                </Dropdown.Item>
+                                            ))
+                                        )}
                                     </Dropdown.Menu>
                                 </Dropdown>
                             </Form.Group>
                         </form>
                     </Form>
                     <SwitchIcon style={{scale: "1.2", margin: "3px"}} onClick={() => {
-                        const t = originSearchValue;
+                        const tempName = originSearchValue;
+                        const tempCoords = originCoords;
                         setOriginSearchValue(destinationSearchValue);
-                        setDestinationSearchValue(t);
+                        setOriginCoords(destinationCoords);
+                        setDestinationSearchValue(tempName);
+                        setDestinationCoords(tempCoords);
                     }}/>
                 </div>
                 <Button
-                    style={{ width: "100%", background: "white", boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px', marginTop: "20px", color: 'black' }}
+                    style={{ width: "100%", background: "white", boxShadow: 'rgba(100, 100, 111, 0.2) 0px 7px 29px 0px', marginTop: "20px", color: 'black', zIndex: '1'}}
                     variant='undefined'
                     onClick={() => searchRoute()}
+                    disabled={isSearchingRoute}
                 >
-                    Caută rută
+                    {isSearchingRoute ? (
+                        <Spinner animation="border" size="sm" style={{ color: "#915FA8" }} />
+                    ) : (
+                        "Caută rută"
+                    )}
                 </Button>
             </div>
 
@@ -538,7 +1346,9 @@ function Directions() {
                                     onSelect={(e) => {
                                         setOriginSearchValue(e.origin);
                                         setDestinationSearchValue(e.destination);
-                                        searchRoute(e.origin, e.destination);
+                                        setOriginCoords(e.originCoords);
+                                        setDestinationCoords(e.destinationCoords);
+                                        searchRoute(e.origin, e.destination, e.originCoords, e.destinationCoords);
                                     }}
                                 />
                             ))}
@@ -555,8 +1365,13 @@ function Directions() {
                                     key={index}
                                     itinerary={itinerary}
                                     onSelect={(it) => {
-                                        console.log("Selected itinerary:", it);
-                                        // TODO: navigate to detail view or show on map
+                                        nav('/', {
+                                            state: {
+                                                itinerary: it,
+                                                origin: originSearchValue,
+                                                destination: destinationSearchValue
+                                            }
+                                        });
                                     }}
                                 />
                             ))}
