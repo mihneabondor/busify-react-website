@@ -1,31 +1,111 @@
-import MapNavbar from "../MapNavbar"
 import './Orar.css'
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import OrarTable from './OrarTable';
-import {useLocation, useNavigate, useSearchParams} from "react-router-dom";
+import {useNavigate, useSearchParams} from "react-router-dom";
 import { useParams } from "react-router-dom";
 import Traseu from "./Traseu";
-import BottomBar from "../OtherComponents/BottomBar";
 import {ReactComponent as BackButton} from "../Images/backButton.svg";
 import {ReactComponent as BusIcon} from "../Images/busIcon.svg";
 import {ReactComponent as TroleibusIcon} from "../Images/troleibusIcon.svg";
 import {ReactComponent as TramIcon} from "../Images/tramvaiIcon.svg";
 import {ReactComponent as HeartIcon} from "../Images/heartIcon.svg";
 import {ReactComponent as HeartIconFill} from "../Images/heartIconFill.svg";
+import { useSchedule, useAnunturi } from '../hooks/useApi';
 
 function Orar(props) {
     const [page, setPage] = useState('lv');
-    const orarFullRef = useRef();
     const [orar, setOrar] = useState();
     const { linie } = useParams();
     const [searchParams] = useSearchParams();
-    const [route, setRoute] = useState();
-    const [linieFav, setLinieFav] = useState(false)
-    const [type, setType] = useState("");
+    const [linieFav, setLinieFav] = useState(false);
 
     const nav = useNavigate();
+
+    // Use SWR for data fetching with automatic caching
+    const { schedule, isLoading: scheduleLoading, isError: scheduleError } = useSchedule(linie);
+    const { anunturi, isLoading: anunturiLoading } = useAnunturi();
+
+    // Process schedule data - filter empty lines
+    const processedSchedule = useMemo(() => {
+        if (!schedule) return null;
+
+        const processed = { ...schedule };
+        if (processed.station?.d)
+            processed.station.d.lines = processed.station.d.lines.filter(elem => elem[0] || elem[1]);
+        if (processed.station?.lv)
+            processed.station.lv.lines = processed.station.lv.lines.filter(elem => elem[0] || elem[1]);
+        if (processed.station?.s)
+            processed.station.s.lines = processed.station.s.lines.filter(elem => elem[0] || elem[1]);
+
+        return processed;
+    }, [schedule]);
+
+    // Determine correct schedule based on day and announcements
+    useEffect(() => {
+        if (!processedSchedule) return;
+
+        let anuntOrar = '';
+
+        // Check announcements for schedule overrides
+        if (anunturi && anunturi.end_date) {
+            const [day, month, year] = anunturi.end_date.split("/").map(Number);
+            const endDate = new Date(year, month - 1, day);
+
+            if (endDate >= new Date()) {
+                anunturi.modificari?.forEach(elem => {
+                    const dateParts = elem.zi.split('/');
+                    const modDate = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
+                    const today = new Date();
+
+                    if (modDate.setHours(0, 0, 0, 0) === today.setHours(0, 0, 0, 0)) {
+                        if (elem.orar === 'sambata') {
+                            anuntOrar = processedSchedule.station.s ? 's' : 'lv';
+                        } else if (elem.orar === 'duminica') {
+                            anuntOrar = processedSchedule.station.d ? 'd' : 'lv';
+                        }
+                    }
+                });
+            }
+        }
+
+        // Set schedule based on announcement or day of week
+        if (anuntOrar) {
+            setPage(anuntOrar);
+            setOrar(processedSchedule.station[anuntOrar]);
+        } else {
+            const weekday = new Date().getDay();
+            if (weekday === 0) {
+                if (processedSchedule.station.d) {
+                    setPage('d');
+                    setOrar(processedSchedule.station.d);
+                } else {
+                    setPage('lv');
+                    setOrar(processedSchedule.station.lv);
+                }
+            } else if (weekday === 6) {
+                if (processedSchedule.station.s) {
+                    setPage('s');
+                    setOrar(processedSchedule.station.s);
+                } else {
+                    setPage('lv');
+                    setOrar(processedSchedule.station.lv);
+                }
+            } else {
+                setPage('lv');
+                setOrar(processedSchedule.station.lv);
+            }
+        }
+    }, [processedSchedule, anunturi]);
+
+    // Check favorites on mount
+    useEffect(() => {
+        if (localStorage.getItem('linii_favorite')) {
+            const favorite = localStorage.getItem('linii_favorite').split(' ');
+            setLinieFav(favorite.includes(linie));
+        }
+    }, [linie]);
 
     const handleBackNavigation = () => {
         const id = searchParams.get('id');
@@ -36,122 +116,31 @@ function Orar(props) {
         }
     };
 
-    const fetchData = async () => {
-        try {
-            const url = 'https://orare.busify.ro/public/' + linie + '.json'
-            const resp = await fetch(url)
-            const data = await resp.json();
-            orarFullRef.current = data;
-            setType(data.type)
-            console.log(orarFullRef.current)
-            if(orarFullRef.current.station.d)
-                orarFullRef.current.station.d.lines = orarFullRef.current.station.d.lines.filter(elem => elem[0] || elem[1])
-            if(orarFullRef.current.station.lv)
-                orarFullRef.current.station.lv.lines = orarFullRef.current.station.lv.lines.filter(elem => elem[0] || elem[1])
-            if(orarFullRef.current.station.s)
-                orarFullRef.current.station.s.lines = orarFullRef.current.station.s.lines.filter(elem => elem[0] || elem[1])
+    // Derived values
+    const type = processedSchedule?.type || "";
+    const route = processedSchedule?.route;
 
-            const anuntData = await fetch('https://busifyserver.onrender.com/anunturi');
-            const anunt = await anuntData.json();
-            const [day, month, year] = anunt.end_date.split("/").map(Number);
-            const date = new Date(year, month - 1, day);
-            let anuntOrar = '';
-            console.log(date)
-            if(date <= new Date()){
-                anunt.modificari.forEach(elem => {
-                    const dateParts = elem.zi.split('/')
-                    const date = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
-                    const today = new Date();
-                    if(date.setHours(0, 0, 0, 0) === today.setHours(0, 0, 0, 0)){
-                        if(elem.orar === 'sambata'){
-                            if(orarFullRef.current.station.s){
-                                anuntOrar = 's';
-                                setOrar(orarFullRef.current.station.s)
-                            } else {
-                                anuntOrar = 'lv';
-                                setOrar(orarFullRef.current.station.lv)
-                            }
-                        }
-                        else if(elem.orar === 'duminica'){
-                            console.log('intra')
-                            if(orarFullRef.current.station.d){
-                                anuntOrar = 'd';
-                                setOrar(orarFullRef.current.station.d)
-                            } else {
-                                anuntOrar = 'lv';
-                                setOrar(orarFullRef.current.station.lv)
-                            }
-                        }
-                    }
-                })
-            }
-
-            if(anuntOrar)
-                setPage(anuntOrar);
-            else {
-                const weekday = (new Date()).getDay();
-                if (weekday === 0) {
-                    if(orarFullRef.current.station.d){
-                        setPage('d')
-                        setOrar(orarFullRef.current.station.d)
-                    } else {
-                        setPage('lv')
-                        setOrar(orarFullRef.current.station.lv);
-                    }
-                } else if (weekday === 6) {
-                    if(orarFullRef.current.station.s) {
-                        setPage('s')
-                        setOrar(orarFullRef.current.station.s);
-                    } else {
-                        setPage('lv')
-                        setOrar(orarFullRef.current.station.lv);
-                    }
-                }
-                else {
-                    setPage('lv')
-                    setOrar(orarFullRef.current.station.lv);
-                }
-            }
-            setRoute(data.route);
-        } catch (err) {
-            console.log(err)
-            const weekday = (new Date()).getDay();
-            if (weekday === 0) {
-                if(orarFullRef.current.station.d){
-                    setPage('d')
-                    setOrar(orarFullRef.current.station.d)
-                } else {
-                    setPage('lv')
-                    setOrar(orarFullRef.current.station.lv);
-                }
-            } else if (weekday === 6) {
-                if(orarFullRef.current.station.s) {
-                    setPage('s')
-                    setOrar(orarFullRef.current.station.s);
-                } else {
-                    setPage('lv')
-                    setOrar(orarFullRef.current.station.lv);
-                }
-            }
-            else {
-                setPage('lv')
-                setOrar(orarFullRef.current.station.lv);
-            }
-        }
+    // Show loading state
+    if (scheduleLoading) {
+        return (
+            <div className='orar-page-body'>
+                <div className="orare-content-header">
+                    <BackButton style={{marginRight: 'auto', display: window.history.length > 1 ? "initial" : 'none'}}
+                                onClick={handleBackNavigation}/>
+                    <h2 style={{textAlign: "center"}}><b>Linia {linie}</b></h2>
+                </div>
+                <div style={{display: 'flex', justifyContent: 'center', padding: '50px'}}>
+                    <div className="spinner-border" role="status">
+                        <span className="visually-hidden">Se încarcă...</span>
+                    </div>
+                </div>
+            </div>
+        );
     }
-    useEffect(() => {
-        fetchData()
-        if(localStorage.getItem('linii_favorite')){
-            const favorite = localStorage.getItem('linii_favorite').split(' ')
-            console.log(linie)
-            console.log(favorite.includes(linie))
-            setLinieFav(favorite.includes(linie))
-        }
-    }, [])
     return (
         <div className='orar-page-body'>
             <div className="orare-content-header">
-                <BackButton style={{marginRight: 'auto', display: window.history.length > 1 ? "inital" : 'none'}}
+                <BackButton style={{marginRight: 'auto', display: window.history.length > 1 ? "initial" : 'none'}}
                             onClick={handleBackNavigation}/>
                 <div className='orar-title-label' style={{display: 'flex'}}>
                     {type === 'troleibuze' ?
@@ -216,21 +205,21 @@ function Orar(props) {
                         activeKey={page}
                         onSelect={(k) => {
                             if (k === 'lv')
-                                setOrar(orarFullRef.current.station.lv)
+                                setOrar(processedSchedule.station.lv)
                             else if (k === 's')
-                                setOrar(orarFullRef.current.station.s)
-                            else setOrar(orarFullRef.current.station.d)
+                                setOrar(processedSchedule.station.s)
+                            else setOrar(processedSchedule.station.d)
                             setPage(k)
                         }}>
-                        {orarFullRef.current && orarFullRef.current.station.lv ?
+                        {processedSchedule && processedSchedule.station.lv ?
                             <Tab eventKey="lv" title="Luni-vineri">
                                 <OrarTable orar={orar}/>
                             </Tab> : <div></div>}
-                        {orarFullRef.current && orarFullRef.current.station.s ?
+                        {processedSchedule && processedSchedule.station.s ?
                             <Tab eventKey="s" title="Sâmbătă">
                                 <OrarTable orar={orar}/>
                             </Tab> : <div></div>}
-                        {orarFullRef.current && orarFullRef.current.station.d ?
+                        {processedSchedule && processedSchedule.station.d ?
                             <Tab eventKey="d" title="Duminică">
                                 <OrarTable orar={orar}/>
                             </Tab> : <div></div>}
@@ -240,7 +229,6 @@ function Orar(props) {
                 <Traseu/>
             </div> : <div></div>}
             <br/> <br/> <br/>
-            {/*<BottomBar/>*/}
         </div>
     )
 }

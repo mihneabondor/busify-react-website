@@ -34,6 +34,20 @@ const formatTime = (ms) => {
     return d.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
 };
 
+// Extract departure time from tripId (format: CLUJRO:{routeId}_{dir}_{sched}_{idx}_{HHMM})
+// The last part is the time when the bus departs from the route's origin terminal
+const extractTripDepartureTime = (tripId) => {
+    if (!tripId) return null;
+    const parts = tripId.split('_');
+    if (parts.length < 5) return null;
+    const timeStr = parts[parts.length - 1]; // e.g., "1350" for 13:50
+    if (!/^\d{3,4}$/.test(timeStr)) return null;
+    const padded = timeStr.padStart(4, '0');
+    const hours = padded.slice(0, 2);
+    const minutes = padded.slice(2, 4);
+    return `${hours}:${minutes}`;
+};
+
 const getTransitLegs = (itinerary) =>
     itinerary.legs.filter(leg => leg.transitLeg);
 
@@ -132,6 +146,10 @@ function ItineraryCard({ itinerary, onSelect }) {
     const arrivalTime = formatTime(itinerary.endTime);
     const summary = buildLegSummary(itinerary);
 
+    // Get the first transit leg's departure time (when user boards the first bus)
+    const firstTransitLeg = transitLegs[0];
+    const departureTime = firstTransitLeg ? formatTime(firstTransitLeg.startTime) : null;
+
     return (
         <div style={{
             outline: "solid 1px RGB(208,215,227)",
@@ -165,9 +183,16 @@ function ItineraryCard({ itinerary, onSelect }) {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                        <div style={{ fontSize: '0.8rem', color: 'gray', marginBottom: '2px' }}>
-                            Ajungi la ora: <b>{arrivalTime}</b>
-                        </div>
+                        {departureTime && (
+                            <div style={{ fontSize: '0.8rem', color: 'gray', marginBottom: '2px' }}>
+                                Plecare: <b>{departureTime}</b> · Sosire: <b>{arrivalTime}</b>
+                            </div>
+                        )}
+                        {!departureTime && (
+                            <div style={{ fontSize: '0.8rem', color: 'gray', marginBottom: '2px' }}>
+                                Ajungi la ora: <b>{arrivalTime}</b>
+                            </div>
+                        )}
                         <div style={{ fontSize: '0.8rem', color: 'gray' }}>
                             {summary}
                         </div>
@@ -210,6 +235,7 @@ function ItineraryCard({ itinerary, onSelect }) {
                         }
 
                         if (leg.transitLeg) {
+                            const boardingTime = formatTime(leg.startTime);
                             return (
                                 <div key={i} style={{
                                     display: 'flex',
@@ -228,7 +254,8 @@ function ItineraryCard({ itinerary, onSelect }) {
                                         fontWeight: 'bold',
                                         whiteSpace: 'nowrap',
                                     }}>
-                                        {leg.from.name} → {leg.to.name}
+                                        <span style={{ fontWeight: 'normal', opacity: 0.8 }}>{boardingTime}</span>
+                                        {' '}{leg.from.name} → {leg.to.name}
                                     </div>
                                 </div>
                             );

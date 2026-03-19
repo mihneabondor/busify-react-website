@@ -30,6 +30,20 @@ const formatTime = (ms) => {
     return d.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
 };
 
+// Extract departure time from tripId (format: CLUJRO:{routeId}_{dir}_{sched}_{idx}_{HHMM})
+// The last part is the time when the bus departs from the route's origin terminal
+const extractTripDepartureTime = (tripId) => {
+    if (!tripId) return null;
+    const parts = tripId.split('_');
+    if (parts.length < 5) return null;
+    const timeStr = parts[parts.length - 1]; // e.g., "1350" for 13:50
+    if (!/^\d{3,4}$/.test(timeStr)) return null;
+    const padded = timeStr.padStart(4, '0');
+    const hours = padded.slice(0, 2);
+    const minutes = padded.slice(2, 4);
+    return `${hours}:${minutes}`;
+};
+
 const vehicleTypeColors = {
     autobuze: '905EA8',
     microbuze: '905EA8',
@@ -98,6 +112,7 @@ function LegCard({ leg, isActive, nextLeg, isLastLeg, destinationName }) {
         const toStopIndex = leg.to?.stopIndex ?? 0;
         const stopsCount = Math.abs(toStopIndex - fromStopIndex);
         const durationMin = Math.round(leg.duration / 60);
+        const boardingTime = formatTime(leg.startTime);
 
         return (
             <div
@@ -115,7 +130,10 @@ function LegCard({ leg, isActive, nextLeg, isLastLeg, destinationName }) {
                         />
                     </div>
                     <div className="leg-card-content">
-                        <div className="leg-card-title">{leg.from.name}</div>
+                        <div className="leg-card-title">
+                            <span style={{ color: '#915FA8', fontWeight: 'bold', marginRight: '6px' }}>{boardingTime}</span>
+                            {leg.from.name}
+                        </div>
                         <div className="leg-card-subtitle">→ {leg.to.name}</div>
                     </div>
                 </div>
@@ -304,27 +322,27 @@ function ItinerarySheet({ itinerary, currentLegIndex = 0, onClose, map, origin, 
             defaultSnap={({ headerHeight }) => headerHeight}
             header={
                 <div className="itinerary-sheet-header">
-                    {/* Color bar */}
-                    <div className="itinerary-color-bar">
-                        {itinerary.legs.map((leg, i) => (
-                            <div
-                                key={i}
-                                className={`color-bar-segment ${i === activeLegIndex ? 'active' : ''}`}
-                                style={{
-                                    flex: leg.duration,
-                                    background: leg.transitLeg
-                                        ? `#${getRouteColor(leg)}`
-                                        : 'RGB(208,215,227)'
-                                }}
-                            />
-                        ))}
+                    {/* Header top row with color bar and close button */}
+                    <div className="itinerary-header-top">
+                        <div className="itinerary-color-bar">
+                            {itinerary.legs.map((leg, i) => (
+                                <div
+                                    key={i}
+                                    className={`color-bar-segment ${i === activeLegIndex ? 'active' : ''}`}
+                                    style={{
+                                        flex: leg.duration,
+                                        background: leg.transitLeg
+                                            ? `#${getRouteColor(leg)}`
+                                            : 'RGB(208,215,227)'
+                                    }}
+                                />
+                            ))}
+                        </div>
+                        <CloseButton onClick={onClose} />
                     </div>
 
                     {/* Header content */}
                     <div className="itinerary-header-content">
-                        <div className="itinerary-header-top">
-                            <CloseButton onClick={onClose} style={{marginLeft: "auto"}}/>
-                        </div>
 
                         {/* Leg carousel with Swiper */}
                         <div className="itinerary-swiper-container">

@@ -6,7 +6,15 @@
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/public/sw.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/public/sw.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Directions/Directions.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Directions/Directions.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Orare/Orar.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Orare/Orar.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Orare/Orare.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Orare/Orare.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Orare/Traseu.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Orare/Traseu.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/ItinerarySheet.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/ItinerarySheet.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/ItinerarySheet.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/ItinerarySheet.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -183,7 +191,9 @@
       <workItem from="1773488334300" duration="17454000" />
       <workItem from="1773571243079" duration="341000" />
       <workItem from="1773840017999" duration="12027000" />
-      <workItem from="1773852652033" duration="360000" />
+      <workItem from="1773852652033" duration="381000" />
+      <workItem from="1773853440829" duration="1331000" />
+      <workItem from="1773923584638" duration="3179000" />
     </task>
     <servers />
   </component>

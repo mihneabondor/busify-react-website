@@ -1,17 +1,15 @@
 import './Traseu.css'
 import { useParams } from 'react-router-dom'
-import { useNavigate } from "react-router-dom";
 import React from 'react';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import mapboxgl from 'mapbox-gl';
-import Form from 'react-bootstrap/Form';
 import Container from "react-bootstrap/Container";
 import CustomSwitch from "../OtherComponents/CustomSwitch";
+import { useStops, useStopTimes, useRoutes, useMapboxToken } from '../hooks/useApi';
 
 function Traseu() {
     const { linie } = useParams();
-    const [stops, setStops] = useState([]);
-    const stopsRef = useRef([]);
+    const [displayStops, setDisplayStops] = useState([]);
 
     const turRef = useRef('_0');
     const [turLabel, setTurLabel] = useState('_0');
@@ -20,7 +18,6 @@ function Traseu() {
     const stopElementsRef = useRef({});
     const scrollContainerRef = useRef(null);
 
-
     const markersRef = useRef([]);
 
     var map = useRef(null);
@@ -28,34 +25,41 @@ function Traseu() {
     var defLng = 23.591423;
     var defLat = 46.770439;
 
-    const fetchData = async () => {
-        try {
-            var url = 'https://busifyserver.onrender.com/stops';
-            let data = await fetch(url);
-            const stops = await data.json();
+    // Use SWR hooks for cached data fetching
+    const { stops: allStops, isLoading: stopsLoading } = useStops();
+    const { stopTimes: allStopTimes, isLoading: stopTimesLoading } = useStopTimes();
+    const { routes: allRoutes, isLoading: routesLoading } = useRoutes();
+    const { mapboxData, isLoading: mapboxLoading } = useMapboxToken();
 
-            url = 'https://busifyserver.onrender.com/stoptimes';
-            data = await fetch(url);
-            let stopTimes = await data.json();
+    // Derive routeId from cached routes data
+    const routeId = useMemo(() => {
+        if (!allRoutes || allRoutes.length === 0) return null;
+        const route = allRoutes.find(elem => elem.route_short_name === linie);
+        return route?.route_id || null;
+    }, [allRoutes, linie]);
 
-            url = 'https://busifyserver.onrender.com/routes';
-            data = await fetch(url);
-            let routes = await data.json();
+    // Process stops data when SWR data changes or tur changes
+    const processStopsData = useCallback(() => {
+        if (!allStops || !allStopTimes || !routeId) return;
 
-            const routeId = routes.find(elem => elem.route_short_name === linie).route_id;
-            stopTimes = stopTimes.filter(elem => elem.trip_id === routeId + turRef.current);
-            stopsRef.current = []
-            stopTimes.forEach(element => {
-                const stop = stops.find(e => e.stop_id === element.stop_id)
-                stopsRef.current.push(stop)
-            });
-            setStops(stopsRef.current)
-            addPolyline(routeId + turRef.current)
-            markersRef.current.forEach(elem => elem.remove())
-            markersRef.current = []
-            stopsRef.current.forEach((e, index) => addMarker(e, index))
-        } catch (e){console.error(e); }
-    }
+        const filteredStopTimes = allStopTimes.filter(elem => elem.trip_id === routeId + turRef.current);
+        const stopsForRoute = [];
+
+        filteredStopTimes.forEach(element => {
+            const stop = allStops.find(e => e.stop_id === element.stop_id);
+            if (stop) stopsForRoute.push(stop);
+        });
+
+        setDisplayStops(stopsForRoute);
+
+        // Update markers if map is ready
+        if (map.current) {
+            markersRef.current.forEach(elem => elem.remove());
+            markersRef.current = [];
+            stopsForRoute.forEach((e, index) => addMarker(e, index));
+            addPolyline(routeId + turRef.current);
+        }
+    }, [allStops, allStopTimes, routeId]);
 
     const addMarker = (stop, index) => {
         //popup
@@ -147,25 +151,20 @@ function Traseu() {
         // }
     }, []);
 
-    const initializeMap =async () => {
+    // Initialize map when mapbox token is available
+    useEffect(() => {
+        if (!mapboxData || map.current) return;
+
         try {
-            const request = await fetch('https://busifyserver.onrender.com/mapbox');
-            const data = await request.json();
-            mapboxgl.accessToken = data.accessToken;
+            mapboxgl.accessToken = mapboxData.accessToken;
             map.current = new mapboxgl.Map({
                 container: 'map',
                 center: [defLng, defLat],
-                style: data.style,
-                zoom: 14,
-                attributionControl: false
-            });
-            map.current = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v12',
-                center: [defLng, defLat],
+                style: mapboxData.style || 'mapbox://styles/mapbox/streets-v12',
                 zoom: 12,
                 attributionControl: false
             });
+
             const geo = new mapboxgl.GeolocateControl({
                 positionOptions: {
                     enableHighAccuracy: true
@@ -173,15 +172,24 @@ function Traseu() {
                 trackUserLocation: true,
                 showUserHeading: true,
                 showAccuracyCircle: true
-            })
+            });
             map.current.addControl(geo);
-        } catch {}
-    }
 
+            // Process stops data once map is ready
+            map.current.on('load', () => {
+                processStopsData();
+            });
+        } catch (e) {
+            console.error('Map initialization error:', e);
+        }
+    }, [mapboxData, processStopsData]);
+
+    // Re-process stops when data changes or tur changes
     useEffect(() => {
-        initializeMap();
-        fetchData();
-    }, [])
+        if (map.current && allStops && allStopTimes && routeId) {
+            processStopsData();
+        }
+    }, [allStops, allStopTimes, routeId, turLabel, processStopsData]);
 
     useEffect(() => {
         if (selectedStop && stopElementsRef.current[selectedStop.stop_id]) {
@@ -202,18 +210,23 @@ function Traseu() {
                 });
             }
 
-            map.current.flyTo({
-                center: [selectedStop.stop_lon, selectedStop.stop_lat],
-                duration: 1000,
-                zoom: 13,
-                essential: true
-            });
+            if (map.current) {
+                map.current.flyTo({
+                    center: [selectedStop.stop_lon, selectedStop.stop_lat],
+                    duration: 1000,
+                    zoom: 13,
+                    essential: true
+                });
 
-            markersRef.current.forEach(elem => elem.remove())
-            markersRef.current = []
-            stopsRef.current.forEach((e, index) => addMarker(e, index))
+                markersRef.current.forEach(elem => elem.remove());
+                markersRef.current = [];
+                displayStops.forEach((e, index) => addMarker(e, index));
+            }
         }
-    }, [selectedStop]);
+    }, [selectedStop, displayStops]);
+
+    // Show loading state
+    const isLoading = stopsLoading || stopTimesLoading || routesLoading || mapboxLoading;
 
     return (
         <div className="traseu">
@@ -225,9 +238,8 @@ function Traseu() {
                         checked={turRef.current === "_0"}
                         label={turRef.current === '_0' ? 'Tur' : 'Retur'}
                         onChange={() => {
-                            turRef.current = turRef.current === '_0' ? '_1' : '_0'
-                            setTurLabel(turRef.current)
-                            fetchData()
+                            turRef.current = turRef.current === '_0' ? '_1' : '_0';
+                            setTurLabel(turRef.current);
                         }}
                     />
                 </div>
@@ -236,7 +248,13 @@ function Traseu() {
             <div className='traseu-body'>
                 <Container fluid className="d-flex overflow-auto py-2" ref={scrollContainerRef}>
                     <div className="d-flex align-items-start position-relative" style={{ minWidth: "max-content", overflowY: "auto" }}>
-                        {stops.map((step, index) => (
+                        {isLoading ? (
+                            <div style={{display: 'flex', justifyContent: 'center', width: '100%', padding: '20px'}}>
+                                <div className="spinner-border spinner-border-sm" role="status">
+                                    <span className="visually-hidden">Se încarcă...</span>
+                                </div>
+                            </div>
+                        ) : displayStops.map((step, index) => (
                             <div
                                 ref={(el) => {
                                     if (el) stopElementsRef.current[step.stop_id] = el;

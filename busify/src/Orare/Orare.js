@@ -1,61 +1,62 @@
 import './Orare.css'
 import Form from 'react-bootstrap/Form';
-import { useState, useRef, useEffect } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useNavigate } from "react-router-dom";
-import BottomBar from '../OtherComponents/BottomBar';
 import {ReactComponent as OrarIcon} from '../Images/orarIcon.svg'
 import Marker from '../OtherComponents/Marker'
 import Anunt from "./Anunt";
 import {useSheet} from "../Contexts/SheetContext";
+import { useBusesBasic } from '../hooks/useApi';
+import debounce from 'lodash.debounce';
 
 function Orare() {
-    const searchValueRef = useRef();
-    const [lines, setLines] = useState([]);
-    const linesRef = useRef();
-    const copie = useRef();
     const nav = useNavigate();
-    const bottomRef = useRef()
     const [searchValue, setSearchValue] = useState('');
-
     const [activeFilter, setActiveFilter] = useState('toate');
-    const [anunt, setAnunt] = useState(null);
-    const [modificare, setModificare] = useState(null);
     const {sheetOpen, setSheetOpen} = useSheet();
 
-    const search = (e) => {
-        e.preventDefault();
-        if (linesRef.current.find(elem => elem.name === searchValueRef.current.value.toUpperCase())) {
-            let url = '/orare/' + searchValueRef.current.value.toUpperCase();
-            console.log(url)
-            nav(url);
-        } else alert('Linia pe care ai introdus-o nu exista!')
-    }
+    // Use SWR for data fetching with automatic caching
+    const { lines, isLoading, isError } = useBusesBasic();
 
-    const fetchData = async () => {
-        try {
-            const resp = await fetch('https://orare.busify.ro/public/buses_basic.json');
-            const buses_basic = await resp.json();
-            const sol = []
-            const joinArray = (arr) => {
-                arr.forEach(elem => {
-                    sol.push(elem)
-                })
-            }
-            joinArray(buses_basic.urbane)
-            joinArray(buses_basic.metropolitane)
-            joinArray(buses_basic.market)
-            joinArray(buses_basic.noapte)
-            setLines(sol)
-            linesRef.current = sol
-            copie.current = sol
-        } catch (err) {
-            console.log(err)
-        }
-    }
+    // Debounced search handler to prevent excessive filtering
+    const debouncedSetSearch = useMemo(
+        () => debounce((value) => setSearchValue(value), 150),
+        []
+    );
 
-    useEffect(() => {
-        fetchData()
-    }, [])
+    // Memoize filtered lines to prevent recalculation on every render
+    const filteredLines = useMemo(() => {
+        if (!lines) return [];
+        return lines.filter(line => {
+            const matchesFilter = activeFilter.toLowerCase() === 'toate' ||
+                                  activeFilter.toLowerCase() === line.type;
+            const matchesSearch = searchValue === '' ||
+                                  line.name.toLowerCase().includes(searchValue.toLowerCase());
+            return matchesFilter && matchesSearch;
+        });
+    }, [lines, activeFilter, searchValue]);
+
+    // Memoize navigation handler
+    const handleLineClick = useCallback((lineName) => {
+        setSheetOpen(false);
+        nav(`/orare/${lineName}`);
+    }, [nav, setSheetOpen]);
+
+    // Show loading state
+    if (isLoading) {
+        return (
+            <div className="orare">
+                <div className="orare-content-header">
+                    <h2><b>Orare</b></h2>
+                </div>
+                <div style={{display: 'flex', justifyContent: 'center', padding: '50px'}}>
+                    <div className="spinner-border" role="status">
+                        <span className="visually-hidden">Se încarcă...</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="orare">
@@ -64,17 +65,21 @@ function Orare() {
                 <Anunt/>
                 <Form style={{width: '90vw'}} onSubmit={(e) => {
                     e.preventDefault();
-                    if (lines.filter(elem => elem.name === searchValue).length > 0) {
+                    const matchingLine = lines.find(elem => elem.name.toLowerCase() === searchValue.toLowerCase());
+                    if (matchingLine) {
                         setSheetOpen(false);
-                        nav(`/orare/${searchValue}`)
+                        nav(`/orare/${matchingLine.name}`)
                     }
                     else
                         alert("Linie invalida")
                 }}>
                     <Form.Group>
-                        <Form.Control type="Text" placeholder="Caută o linie" value={searchValue} onChange={(e) => {
-                            setSearchValue(e.target.value)
-                        }}/>
+                        <Form.Control
+                            type="Text"
+                            placeholder="Caută o linie"
+                            defaultValue={searchValue}
+                            onChange={(e) => debouncedSetSearch(e.target.value)}
+                        />
                     </Form.Group>
                 </Form>
             </div>
@@ -111,18 +116,15 @@ function Orare() {
                             setActiveFilter("tramvaie")
                         }}>
                         <img alt="" width='20px' height='20px' className='orare-filter-button-icon tramvai'
-                             src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAChUlEQVR4nO2aPWsVQRSGH7ULCAaM6A0IimgXrURzFRX0J1hpQPEj4g/wRm2sQizSSaxV0MYPUBuxU7ARRYKNSCKmkKiYC0Iwt4grB05kWOYm+3FmJ4F9YJqZ2ffMuzOzX2ehPBuAQ8B14AHwBpgEpoA5oKNlTusmtc994BrQVI2oXABmgKRkEY1zsUxcdQbyFZhIGTsK9Dr9e7VuaeDS93bqRLRiGPmuwYeB9U79U60f8hwzpG3SZwk59pLWzxKB18ArT/2oDmrM0zambaM59KJxWgf7zNP2XNtOsQbYp4Od9rR90ba9rELWAQPARWAceKmD/Qu0nY3c1rpE+4zrhh9QjSjIBj0B3HU2fZkyq1rHUxeOYMiN66yzREKUaeBMSEN7gPcBDaTLO2C3tYkjwO8KTSRaJOZhKxM7U5u26tIGdlgYuZcx4GAB7WZG7TsWRrJelYqSRfuHhZGsS2C16v8n1t5IaiNd8J2dh8A27GkAj6uckc2Eo69KI6FJaiPLUM9ICZJ6aS1DvbTWwtLqIxxbqjTyCOjHnn7gSf2stQKxn3qT+jE+ReyZSOoZSeE7O5KBuqLvDw3Na3QKnOU8OqXxifoSMq0CRvLolMYn6ns73FrASB6d0vhEZRn4bmZ5jeTRKU0n45IYMVpaI132Ummmugi3jDZ7Fp3PFkYmCgzQutyyMCKf9hcimvgD7MKIyxGNDGPMeWC+QgPzmh0LglwabwKLAQ0sagzfpdmMjc6fDQuaU7fipDPjL4BNBEIyVx810Ddgf6Ac/YzG+KR5S1OaTsLnA7CdcDSAtxrrF3DMSnjQuUnJV/gewtOjsSSmxD5oISoiP4EbFf+hILEkpsQ+sFLvf6fcs2hxhnn4AAAAAElFTkSuQmCC"/>
+                             src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAChUlEQVR4nO2aPWsVQRSGH7ULCAaM6A0IimgXrURzFRX0J1hpQPEj4g/wRm2sQizSSaxV0MYPUBuxU7ARRYKNSCKmkKiYC0Iwt4grB05kWOYm+3FmJ4F9YJqZ2ffMuzOzX2uhPBuAQ8B14AHwBpgEpoA5oKNlTusmtc994BrQVI2oXABmgKRkEY1zsUxcdQbyFZhIGTsK9Dr9e7VuaeDS93bqRLRiGPmuwYeB9U79U60f8hwzpG3SZwk59pLWzxKB18ArT/2oDmrM0zambaM59KJxWgf7zNP2XNtOsQbYp4Od9rR90ba9rELWAQPARWAceKmD/Qu0nY3c1rpE+4zrhh9QjSjIBj0B3HU2fZkyq1rHUxeOYMiN66yzREKUaeBMSEN7gPcBDaTLO2C3tYkjwO8KTSRaJOZhKxM7U5u26tIGdlgYuZcx4GAB7WZG7TsWRrJelYqSRfuHhZGsS2C16v8n1t5IaiNd8J2dh8A27GkAj6uckc2Eo69KI6FJaiPLUM9ICZJ6aS1DvbTWwtLqIxxbqjTyCOjHnn7gSf2stQKxn3qT+jE+ReyZSOoZSeE7O5KBuqLvDw3Na3QKnOU8OqXxifoSMq0CRvLolMYn6ns73FrASB6d0vhEZRn4bmZ5jeTRKU0n45IYMVpaI132Ummmugi3jDZ7Fp3PFkYmCgzQutyyMCKf9hcimvgD7MKIyxGNDGPMeWC+QgPzmh0LglwabwKLAQ0sagzfpdmMjc6fDQuaU7fipDPjL4BNBEIyVx810Ddgf6Ac/YzG+KR5S1OaTsLnA7CdcDSAtxrrF3DMSnjQuUnJV/gewtOjsSSmxD5oISoiP4EbFf+hILEkpsQ+sFLvf6fcs2hxhnn4AAAAAElFTkSuQmCC"/>
                         Tramvaie
                     </div>
                 </div>
-                {lines.map((line) => (
-                    <div className='orare-cell'
-                         style={{display: (activeFilter.toLowerCase() === line.type || activeFilter.toLowerCase() === "toate") && (searchValue === '' || line.name.toLowerCase().includes(searchValue.toLowerCase())) ? 'flex' : 'none'}}
-                         onClick={() => {
-                             setSheetOpen(false);
-                             let url = `/orare/${line.name}`
-                             nav(url)
-                         }}>
+                {filteredLines.map((line) => (
+                    <div
+                        className='orare-cell'
+                        key={line.name}
+                        onClick={() => handleLineClick(line.name)}>
                         <Marker
                             type={line.type}
                             name={line.name}/>
@@ -132,9 +134,6 @@ function Orare() {
                 ))}
             </div>
             <br/> <br/> <br/>
-            {/*<div style={{bottom: '0', position: 'fixed'}}>*/}
-            {/*<BottomBar/>*/}
-            {/*</div>*/}
         </div>
     )
 }

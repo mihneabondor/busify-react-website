@@ -1,17 +1,26 @@
 /* ─── Itinerary Sheet Styles ─────────────────────────────────────────────────── */
 
 .itinerary-sheet-header {
-    padding: 0;
+    padding: 0 15px 0 15px;
 }
 
-/* Color bar at top */
+/* Header top row - contains color bar and close button */
+.itinerary-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 5px;
+}
+
+/* Color bar - now shorter, next to X button */
 .itinerary-color-bar {
     display: flex;
-    height: 5px;
-    width: 100%;
-    border-radius: 3px 3px 0 0;
+    height: 6px;
+    flex: 1;
+    max-width: 100%;
+    border-radius: 3px;
     overflow: hidden;
-    margin-bottom: 12px;
 }
 
 .color-bar-segment {
@@ -24,13 +33,6 @@
 
 /* Header content */
 .itinerary-header-content {
-}
-
-.itinerary-header-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 12px;
 }
 
 .itinerary-header-info {
@@ -89,7 +91,7 @@
     padding: 12px 16px;
     border-radius: 12px;
     min-width: 180px;
-    max-width: 240px;
+    max-width: 80vw;
     min-height: 95px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -106,8 +108,8 @@
 .leg-card-top-row {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
     width: 100%;
+    text-align: left;
 }
 
 .itinerary-leg-card:hover {
@@ -141,7 +143,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    text-align: left;
 }
 
 .leg-card-title {
@@ -171,10 +173,10 @@
 .leg-card-meta-full {
     display: flex;
     align-items: center;
-    gap: 10px;
     width: 100%;
     flex-wrap: nowrap;
     overflow: hidden;
+    justify-content: space-between;
 }
 
 .leg-card-duration {
@@ -201,7 +203,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    flex: 1;
     min-width: 0;
 }
 
@@ -394,8 +395,7 @@
     gap: 8px;
     font-size: 0.78rem;
     color: gray;
-    padding: 4px 0;
-    padding-left: 4px;
+    padding: 4px 0 4px 4px;
 }
 
 .stop-dot {
