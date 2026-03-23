@@ -127,6 +127,7 @@ function LegCard({ leg, isActive, nextLeg, isLastLeg, destinationName }) {
                         <Marker
                             type={leg.vehicleType}
                             name={leg.routeShortName}
+                            minContent={true}
                         />
                     </div>
                     <div className="leg-card-content">
@@ -221,6 +222,7 @@ function ExpandedLegItem({ leg, index, totalLegs, isActive, nextLeg, isLastLeg, 
                             <Marker
                                 type={leg.vehicleType}
                                 name={leg.routeShortName}
+                                minContent={true}
                             />
                             <span className="expanded-leg-title">spre {leg.headsign}</span>
                         </div>
