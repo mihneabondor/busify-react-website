@@ -90,6 +90,8 @@ function Map() {
 
     const [showNotification, setShowNotification] = useState(false)
     const [notificationTitle, setNotificationTitle] = useState('Link copiat!');
+    const [notificationMessage, setNotificationMessage] = useState('');
+    const [notificationType, setNotificationType] = useState('success');
 
     const smsDataRef = useRef(null)
 
@@ -2251,6 +2253,32 @@ function Map() {
         }
     }
 
+    const fetchServerNotification = async () => {
+        try {
+            const response = await fetch('https://server.busify.ro/notifications');
+            const data = await response.json();
+
+            if (data && data.id && data.active) {
+                // Check if this notification was already shown
+                const shownNotifications = JSON.parse(localStorage.getItem('shown_notifications') || '[]');
+
+                if (!shownNotifications.includes(data.id)) {
+                    // Save the notification id to localStorage
+                    shownNotifications.push(data.id);
+                    localStorage.setItem('shown_notifications', JSON.stringify(shownNotifications));
+
+                    // Display the notification
+                    setNotificationTitle(data.title);
+                    setNotificationMessage(data.message);
+                    setNotificationType(data.type);
+                    setShowNotification(true);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch server notification:', error);
+        }
+    }
+
     useEffect(() => {
         if (loaded && map.current) {
             map.current.resize();
@@ -2264,6 +2292,7 @@ function Map() {
         localStorage.setItem('labels', '');
         generateMap();
         donationNotification();
+        fetchServerNotification();
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
@@ -2383,17 +2412,28 @@ function Map() {
 
             history.forEach((entry, idx) => {
                 const recencyWeight = (idx + 1) / history.length;
-                entry.candidates.forEach(({ stop }) => {
-                    let score = recencyWeight;
+                entry.candidates.forEach(({ stop, dist }) => {
+                    // Heading is the PRIMARY factor - start with heading score
+                    let headingScore = 1.0; // neutral default
 
                     if (entry.userHeading !== null && entry.userHeading !== undefined) {
                         const bearingToStop = calculateBearing(entry.userLat, entry.userLng, stop.stop_lat, stop.stop_lon);
                         const diff = Math.abs((entry.userHeading - bearingToStop + 180 + 360) % 360 - 180);
 
-                        if (diff > 135) score *= 3.0;
-                        else if (diff < 45) score *= 0.2;
-                        else if (diff >= 70 && diff <= 110) score *= 1.5;
+                        // Strong preference for stops behind the user (facing away from stop = looking at it)
+                        if (diff > 135) headingScore = 10.0;       // Facing away from stop (stop is behind user) - strongest
+                        else if (diff > 110) headingScore = 6.0;   // Mostly behind
+                        else if (diff >= 70 && diff <= 110) headingScore = 3.0; // To the side
+                        else if (diff >= 45 && diff < 70) headingScore = 1.0;   // Somewhat in front
+                        else headingScore = 0.1;                   // Directly facing stop (walking toward it)
                     }
+
+                    // Distance is SECONDARY - small penalty for farther stops
+                    // dist is in km, so 0.05km = 50m would give distancePenalty ~= 1.0
+                    const distancePenalty = 1.0 / (1.0 + dist * 10);
+
+                    // Final score: heading dominates, distance is a small tiebreaker
+                    const score = headingScore * recencyWeight * (0.7 + 0.3 * distancePenalty);
 
                     if (!votesObj[stop.stop_id]) {
                         votesObj[stop.stop_id] = { totalScore: 0, hits: 0, stop };
@@ -2885,6 +2925,8 @@ function Map() {
                 show={showNotification}
                 onHide={()=>{setShowNotification(false)}}
                 title={notificationTitle}
+                message={notificationMessage}
+                type={notificationType}
             />
             <InStationToast
                 nearbyStop={nearbyStop}
@@ -3069,6 +3111,8 @@ function Map() {
                 nearestStopRef={nearestStopRef}
                 copyLinkNotification = {() => {
                     setNotificationTitle("Link copiat!")
+                    setNotificationMessage('')
+                    setNotificationType('success')
                     setShowNotification(true)
                 }}
             />
