@@ -9,6 +9,19 @@
 
 .map-container {
     height: calc(100dvh - 60px);
+    --map-zoom: 13; /* Default zoom level, updated via JS */
+}
+
+/* Zoom-based marker scaling for better visibility at different zoom levels */
+.map-container .mapboxgl-marker {
+    --scale: clamp(0.8, calc(0.6 + var(--map-zoom) * 0.025), 1);
+    transform-origin: center center;
+}
+
+.map-container .marker-container,
+.map-container .cluster-pills-row {
+    transform: scale(var(--scale));
+    transform-origin: center center;
 }
 
 .vehicle-marker-teste {
@@ -59,7 +72,15 @@
 /* Only animate markers that are actively moving to new positions */
 .mapboxgl-marker.marker-animating,
 .mapboxgl-marker:has(.marker-animating) {
-    transition: transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+    transition: transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+}
+
+/* Disable all transitions when map is being panned/zoomed */
+.map-moving .mapboxgl-marker,
+.map-moving .mapboxgl-marker.marker-animating,
+.map-moving .cluster-arrow,
+.map-moving .marker-arrow {
+    transition: none !important;
 }
 
 /* Hide markers that are part of a cluster */
@@ -71,4 +92,18 @@
 .cluster-marker-el {
     z-index: 3;
     cursor: pointer;
+}
+
+/* Pulse animation for vehicles that just received position updates */
+@keyframes marker-pulse {
+    0%, 100% {
+        transform: scale(var(--scale, 1));
+    }
+    50% {
+        transform: scale(calc(var(--scale, 1) * 1.08));
+    }
+}
+
+.marker-updated .marker-container {
+    animation: marker-pulse 0.5s ease-out;
 }

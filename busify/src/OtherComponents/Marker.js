@@ -143,7 +143,7 @@ function Marker(props) {
                     width: props.minContent ? "initial" : "70px",
                     display: "flex",
                     outline: props.outline ? '2px solid white' : "none",
-                    boxShadow: 'rgba(255, 255, 255, 0.1) 0px 1px 1px 0px inset, rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1)',
                     alignItems: 'center',
                     justifyContent: 'center'
                 }}
@@ -176,7 +176,7 @@ function Marker(props) {
                     top: `${(badgeDims.height / 2) + arrowPosition.dy - (41 / 2)}px`,
                     transform: `rotate(${arrowPosition.bearing - (props.mapBearing || 0)}deg)`,
                     transformOrigin: 'center center',
-                    transition: 'transform 0.7s ease, top 0.7s ease, left 0.7s ease',
+                    transition: 'transform 0.4s ease, top 0.4s ease, left 0.4s ease',
                     pointerEvents: 'none',
                     width: '41px',
                     height: '41px',

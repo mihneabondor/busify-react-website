@@ -145,7 +145,7 @@ function ClusterMarker({ vehicles, mapBearing = 0, iconite, sageti }) {
                         top: `calc(50% + ${arrowPosition.dy}px - 20.5px)`,
                         transform: `rotate(${arrowPosition.bearing - (mapBearing || 0)}deg)`,
                         transformOrigin: 'center center',
-                        transition: 'transform 0.7s ease, top 0.7s ease, left 0.7s ease',
+                        transition: 'transform 0.4s ease, top 0.4s ease, left 0.4s ease',
                         pointerEvents: 'none',
                         width: '41px',
                         height: '41px',

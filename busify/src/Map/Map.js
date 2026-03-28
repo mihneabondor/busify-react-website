@@ -315,19 +315,37 @@ function Map() {
         return unique.current.find(elem => elem[0] === vehicle.line)[1] === false;
     }
 
-    // Offset a [lng, lat] point to the right of the direction from start to end by 'distance' meters
-    function offsetToRight(start, end, distance = 0.0004) {
-        // Calculate direction angle
+    // Offset a [lng, lat] point to the right of the direction from start to end
+    // distanceMeters: offset distance in meters (default ~15m, good for road separation)
+    function offsetToRight(start, end, distanceMeters = 15) {
+        // Handle edge case: if start and end are the same, return start unchanged
         const dx = end[0] - start[0];
         const dy = end[1] - start[1];
-        const angle = Math.atan2(dy, dx);
+        if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) {
+            return start;
+        }
 
-        // Perpendicular angle to the right
-        const rightAngle = angle - Math.PI / 2;
+        // Calculate bearing from start to end using proper geodesic formula
+        const lat1 = start[1] * Math.PI / 180;
+        const lat2 = end[1] * Math.PI / 180;
+        const dLon = (end[0] - start[0]) * Math.PI / 180;
 
-        // Offset in degrees (approximate, works for small distances)
-        const dLng = (distance * Math.cos(rightAngle));
-        const dLat = (distance * Math.sin(rightAngle));
+        const y = Math.sin(dLon) * Math.cos(lat2);
+        const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+        const bearing = Math.atan2(y, x);
+
+        // Perpendicular bearing to the right (+90 degrees)
+        const rightBearing = bearing + Math.PI / 2;
+
+        // Convert distance from meters to degrees, accounting for latitude
+        // At the equator: 1 degree ≈ 111,320 meters
+        // Longitude degrees shrink by cos(latitude)
+        const metersPerDegreeLat = 111320;
+        const metersPerDegreeLon = 111320 * Math.cos(lat1);
+
+        // Calculate offset in degrees
+        const dLat = (distanceMeters * Math.cos(rightBearing)) / metersPerDegreeLat;
+        const dLng = (distanceMeters * Math.sin(rightBearing)) / metersPerDegreeLon;
 
         return [start[0] + dLng, start[1] + dLat];
     }
@@ -548,7 +566,7 @@ function Map() {
                         if (!isMapMoving.current) {
                             el.classList.add('marker-animating');
                             existingEntry.marker.setLngLat(offsetCoords);
-                            setTimeout(() => el.classList.remove('marker-animating'), 850);
+                            setTimeout(() => el.classList.remove('marker-animating'), 550);
                         } else {
                             // Update position instantly without animation
                             existingEntry.marker.setLngLat(offsetCoords);
@@ -557,6 +575,9 @@ function Map() {
 
                     // Update the stored Supercluster ID for click handler
                     existingEntry.superclusterId = cluster.id;
+
+                    // Update z-index based on current cluster size
+                    existingEntry.marker.getElement().style.zIndex = Math.min(10 + clusterVehicles.length, 50);
 
                     // Re-render the React component with updated vehicles
                     existingEntry.root.render(
@@ -574,6 +595,8 @@ function Map() {
                 // Create new cluster marker
                 const el = document.createElement('div');
                 el.className = 'marker cluster-marker-el';
+                // Dynamic z-index: larger clusters render on top
+                el.style.zIndex = Math.min(10 + clusterVehicles.length, 50);
                 const root = ReactDOM.createRoot(el);
 
                 root.render(
@@ -925,8 +948,12 @@ function Map() {
                         // animating from wrong screen positions
                         if (!isMapMoving.current) {
                             el.classList.add('marker-animating');
+                            el.classList.add('marker-updated');
                             entry.marker.setLngLat(end);
-                            setTimeout(() => el.classList.remove('marker-animating'), 850);
+                            setTimeout(() => {
+                                el.classList.remove('marker-animating');
+                                el.classList.remove('marker-updated');
+                            }, 550);
                         } else {
                             // Update position instantly without animation
                             entry.marker.setLngLat(end);
@@ -1227,6 +1254,9 @@ function Map() {
                 // Initialize cluster indexes
                 initializeClusterIndexes();
 
+                // Set initial zoom level for CSS-based marker scaling
+                document.getElementById('map')?.style.setProperty('--map-zoom', map.current.getZoom());
+
                 // Map is now ready to process vehicle data
                 onMapReady();
                 if (refresh)
@@ -1276,9 +1306,15 @@ function Map() {
             // Track map movement state to prevent marker animation glitches
             map.current.on('movestart', () => {
                 isMapMoving.current = true;
+                // Add class to disable transitions during pan/zoom
+                document.getElementById('map')?.classList.add('map-moving');
             });
             map.current.on('moveend', () => {
                 isMapMoving.current = false;
+                // Remove class after a short delay to allow final position to settle
+                setTimeout(() => {
+                    document.getElementById('map')?.classList.remove('map-moving');
+                }, 50);
             });
 
             map.current.on('rotate', () => {
@@ -1349,6 +1385,10 @@ function Map() {
 
             // Update clusters on zoom changes
             map.current.on('zoomend', () => {
+                // Update CSS custom property for zoom-based marker scaling
+                const zoom = map.current.getZoom();
+                document.getElementById('map')?.style.setProperty('--map-zoom', zoom);
+
                 if (!selectedVehicleRef.current) {
                     updateMarkerClusterVisibility();
                     debouncedRenderClusters();

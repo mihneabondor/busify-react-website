@@ -6,7 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/ClusterMarker.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/ClusterMarker.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/Marker.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/Marker.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -192,7 +195,8 @@
       <workItem from="1774276130380" duration="4355000" />
       <workItem from="1774295250836" duration="648000" />
       <workItem from="1774350982422" duration="1698000" />
-      <workItem from="1774707614123" duration="611000" />
+      <workItem from="1774707614123" duration="2254000" />
+      <workItem from="1774711528474" duration="1665000" />
     </task>
     <servers />
   </component>
