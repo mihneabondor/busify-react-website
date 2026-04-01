@@ -9,19 +9,6 @@
 
 .map-container {
     height: calc(100dvh - 60px);
-    --map-zoom: 13; /* Default zoom level, updated via JS */
-}
-
-/* Zoom-based marker scaling for better visibility at different zoom levels */
-.map-container .mapboxgl-marker {
-    --scale: clamp(0.8, calc(0.6 + var(--map-zoom) * 0.025), 1);
-    transform-origin: center center;
-}
-
-.map-container .marker-container,
-.map-container .cluster-pills-row {
-    transform: scale(var(--scale));
-    transform-origin: center center;
 }
 
 .vehicle-marker-teste {
@@ -88,19 +75,31 @@
     display: none !important;
 }
 
-/* Cluster marker container */
+/* Cluster marker container - z-index set dynamically in JS, keep low to stay below map controls */
 .cluster-marker-el {
-    z-index: 3;
+    z-index: 1;
     cursor: pointer;
+}
+
+/* Ensure map control buttons always stay above markers */
+.mapboxgl-ctrl-top-right,
+.mapboxgl-ctrl-top-left,
+.mapboxgl-ctrl-bottom-right,
+.mapboxgl-ctrl-bottom-left {
+    z-index: 10 !important;
+}
+
+.mapboxgl-ctrl-group {
+    z-index: 10 !important;
 }
 
 /* Pulse animation for vehicles that just received position updates */
 @keyframes marker-pulse {
     0%, 100% {
-        transform: scale(var(--scale, 1));
+        transform: scale(1);
     }
     50% {
-        transform: scale(calc(var(--scale, 1) * 1.08));
+        transform: scale(1.08);
     }
 }
 

@@ -24,16 +24,49 @@ import {useSheet} from "../Contexts/SheetContext";
 const STORAGE_KEY = 'lastMapPath';
 const MAP_PATHS = ['/', '/map', '/harta'];
 
+// Icon with notification badge - defined outside component to avoid recreation
+const IconWithBadge = ({ children }) => (
+    <div className="icon-with-badge">
+        {children}
+        <span className="notification-dot" />
+    </div>
+);
+
 function BottomBar() {
     const nav = useNavigate();
     const location = useLocation();
     const [keyboardVisible, setKeyboardVisible] = useState(false);
     const { sheetOpen, subscribe } = useSheet();
     const [localSheetOpen, setLocalSheetOpen] = useState(sheetOpen);
+    const [hasUnseenNotifications, setHasUnseenNotifications] = useState(false);
 
     const isMobileDevice = () => {
         return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
     };
+
+    // Check for unseen notifications
+    const checkUnseenNotifications = () => {
+        try {
+            const saved = JSON.parse(localStorage.getItem('saved_notifications') || '[]');
+            const seen = JSON.parse(localStorage.getItem('seen_notification_ids') || '[]');
+            const unseenCount = saved.filter(n => !seen.includes(n.id)).length;
+            setHasUnseenNotifications(unseenCount > 0);
+        } catch (e) {
+            setHasUnseenNotifications(false);
+        }
+    };
+
+    useEffect(() => {
+        checkUnseenNotifications();
+
+        window.addEventListener('storage', checkUnseenNotifications);
+        window.addEventListener('focus', checkUnseenNotifications);
+
+        return () => {
+            window.removeEventListener('storage', checkUnseenNotifications);
+            window.removeEventListener('focus', checkUnseenNotifications);
+        };
+    }, []);
 
     // Reset keyboard visibility when route changes
     useEffect(() => {
@@ -88,9 +121,18 @@ function BottomBar() {
         { title: 'Acasă', icon: <HomeIcon />, activeIcon: <HomeIconFill />, page: '/' },
         { title: 'Orare', icon: <OrareIcon />, activeIcon: <OrareIconFill />, page: '/orare' },
         { title: 'Favorite', icon: <FavoriteIcon />, activeIcon: <FavoriteIconFill />, page: '/favorite' },
-        { title: 'Știri', icon: <StiriIcon />, activeIcon: <StiriIconFill />, page: '/stiri' },
+        {
+            title: 'Știri',
+            icon: hasUnseenNotifications
+                ? <IconWithBadge><StiriIcon /></IconWithBadge>
+                : <StiriIcon />,
+            activeIcon: hasUnseenNotifications
+                ? <IconWithBadge><StiriIconFill /></IconWithBadge>
+                : <StiriIconFill />,
+            page: '/stiri'
+        },
         { title: 'Setări', icon: <SetariIcon />, activeIcon: <SetariIconFill />, page: '/setari' }
-    ], []);
+    ], [hasUnseenNotifications]);
 
     // Compute selected index based on location
     const selectedIndex = useMemo(() => {

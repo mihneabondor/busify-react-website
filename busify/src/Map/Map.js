@@ -115,6 +115,7 @@ function Map() {
     const [currentItineraryLeg, setCurrentItineraryLeg] = useState(0);
 
     const userCoords = useRef(null);
+    const geoControlRef = useRef(null);
 
     // In-station toast state
     const allStopsRef = useRef([]);
@@ -315,14 +316,33 @@ function Map() {
         return unique.current.find(elem => elem[0] === vehicle.line)[1] === false;
     }
 
-    // Offset a [lng, lat] point to the right of the direction from start to end
-    // distanceMeters: offset distance in meters (default ~15m, good for road separation)
-    function offsetToRight(start, end, distanceMeters = 15) {
-        // Handle edge case: if start and end are the same, return start unchanged
+    // Offset a [lng, lat] point to the right of the travel direction
+    // position: the point to offset [lng, lat]
+    // directionEnd: the point vehicle is heading towards [lng, lat]
+    // distanceMeters: offset distance (null = auto-calculate based on zoom)
+    // directionStart: optional starting point for direction calc (defaults to position)
+    function offsetToRight(position, directionEnd, distanceMeters = null, directionStart = null) {
+        // Use directionStart if provided, otherwise use position
+        const start = directionStart || position;
+        const end = directionEnd;
+
+        // Handle edge case: if start and end are the same, return position unchanged
         const dx = end[0] - start[0];
         const dy = end[1] - start[1];
         if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) {
-            return start;
+            return position;
+        }
+
+        // Calculate zoom-aware offset distance
+        // At lower zoom levels, markers appear larger relative to the map, so we need more offset
+        // At higher zoom levels, we can use smaller offsets
+        if (distanceMeters === null) {
+            const zoom = map.current ? map.current.getZoom() : 15;
+            // Base offset: 20m at zoom 15, scales up at lower zooms, down at higher zooms
+            // At zoom 13: ~45m, at zoom 15: ~20m, at zoom 17: ~10m
+            distanceMeters = 30 * Math.pow(2, (15 - zoom) * 0.4);
+            // Clamp between 8m and 60m
+            distanceMeters = Math.max(8, Math.min(60, distanceMeters));
         }
 
         // Calculate bearing from start to end using proper geodesic formula
@@ -340,14 +360,15 @@ function Map() {
         // Convert distance from meters to degrees, accounting for latitude
         // At the equator: 1 degree ≈ 111,320 meters
         // Longitude degrees shrink by cos(latitude)
+        const posLat = position[1] * Math.PI / 180;
         const metersPerDegreeLat = 111320;
-        const metersPerDegreeLon = 111320 * Math.cos(lat1);
+        const metersPerDegreeLon = 111320 * Math.cos(posLat);
 
         // Calculate offset in degrees
         const dLat = (distanceMeters * Math.cos(rightBearing)) / metersPerDegreeLat;
         const dLng = (distanceMeters * Math.sin(rightBearing)) / metersPerDegreeLon;
 
-        return [start[0] + dLng, start[1] + dLat];
+        return [position[0] + dLng, position[1] + dLat];
     }
 
     // Calculate bearing between two points (for clustering)
@@ -577,7 +598,8 @@ function Map() {
                     existingEntry.superclusterId = cluster.id;
 
                     // Update z-index based on current cluster size
-                    existingEntry.marker.getElement().style.zIndex = Math.min(10 + clusterVehicles.length, 50);
+                    // Dynamic z-index: larger clusters on top, but stay below map controls
+                    existingEntry.marker.getElement().style.zIndex = Math.min(1 + clusterVehicles.length, 5);
 
                     // Re-render the React component with updated vehicles
                     existingEntry.root.render(
@@ -596,7 +618,8 @@ function Map() {
                 const el = document.createElement('div');
                 el.className = 'marker cluster-marker-el';
                 // Dynamic z-index: larger clusters render on top
-                el.style.zIndex = Math.min(10 + clusterVehicles.length, 50);
+                // Dynamic z-index: larger clusters on top, but stay below map controls
+                el.style.zIndex = Math.min(1 + clusterVehicles.length, 5);
                 const root = ReactDOM.createRoot(el);
 
                 root.render(
@@ -776,8 +799,11 @@ function Map() {
             el.classList.add('marker-in-cluster');
         }
 
-        const offsetLngLat = (vehicle.nextCoords && vehicle.nextCoords[0] !== undefined)
-            ? offsetToRight(vehicle.lngLat, vehicle.nextCoords)
+        // Use currentCoords -> nextCoords for direction, but offset from lngLat (actual position)
+        const hasDirection = vehicle.currentCoords && vehicle.nextCoords &&
+            vehicle.currentCoords[0] !== undefined && vehicle.nextCoords[0] !== undefined;
+        const offsetLngLat = hasDirection
+            ? offsetToRight(vehicle.lngLat, vehicle.nextCoords, null, vehicle.currentCoords)
             : vehicle.lngLat;
 
         const mapboxMarker = new mapboxgl.Marker(el)
@@ -932,8 +958,11 @@ function Map() {
                     const vehi = currentVehiclesMap.get(entry.vehicle.label);
                     if (!vehi) return;
 
-                    const end = (vehi.nextCoords && vehi.nextCoords[0] !== undefined)
-                        ? offsetToRight(vehi.lngLat, vehi.nextCoords)
+                    // Use currentCoords -> nextCoords for direction, but offset from lngLat (actual position)
+                    const hasDirection = vehi.currentCoords && vehi.nextCoords &&
+                        vehi.currentCoords[0] !== undefined && vehi.nextCoords[0] !== undefined;
+                    const end = hasDirection
+                        ? offsetToRight(vehi.lngLat, vehi.nextCoords, null, vehi.currentCoords)
                         : vehi.lngLat;
 
                     // Check if position actually changed (threshold to avoid micro-movements)
@@ -1237,6 +1266,9 @@ function Map() {
                 showUserHeading: true,
             })
 
+            // Store ref for re-triggering on iOS visibility change
+            geoControlRef.current = geo;
+
             geo.on('geolocate', (e) => {
                 userCoords.current = {
                     latitude: e.coords.latitude,
@@ -1253,9 +1285,6 @@ function Map() {
             map.current.on('load', () => {
                 // Initialize cluster indexes
                 initializeClusterIndexes();
-
-                // Set initial zoom level for CSS-based marker scaling
-                document.getElementById('map')?.style.setProperty('--map-zoom', map.current.getZoom());
 
                 // Map is now ready to process vehicle data
                 onMapReady();
@@ -1385,10 +1414,6 @@ function Map() {
 
             // Update clusters on zoom changes
             map.current.on('zoomend', () => {
-                // Update CSS custom property for zoom-based marker scaling
-                const zoom = map.current.getZoom();
-                document.getElementById('map')?.style.setProperty('--map-zoom', zoom);
-
                 if (!selectedVehicleRef.current) {
                     updateMarkerClusterVisibility();
                     debouncedRenderClusters();
@@ -2230,6 +2255,20 @@ function Map() {
                 map.current.resize();
             }
             handleSocketOns(true)
+
+            // Re-trigger geolocation on iOS to refresh user heading after returning from background
+            // iOS pauses geolocation when app is in background, this ensures heading updates resume
+            if (geoControlRef.current && geoControlRef.current._watchState === 'ACTIVE_LOCK') {
+                // Small delay to allow the page to fully resume
+                setTimeout(() => {
+                    try {
+                        // Trigger a fresh position update to refresh heading
+                        geoControlRef.current.trigger();
+                    } catch (e) {
+                        console.log('Could not re-trigger geolocation:', e);
+                    }
+                }, 500);
+            }
         } else {
             if(socket.current) {
                 socket.current.disconnect()
@@ -2303,7 +2342,16 @@ function Map() {
                 const shownNotifications = JSON.parse(localStorage.getItem('shown_notifications') || '[]');
 
                 if (!shownNotifications.includes(data.id)) {
-                    // Save the notification id to localStorage
+                    // Save full notification object with timestamp for history
+                    const savedNotifications = JSON.parse(localStorage.getItem('saved_notifications') || '[]');
+                    savedNotifications.unshift({
+                        ...data,
+                        receivedAt: new Date().toISOString()
+                    });
+                    // Keep only last 20 notifications
+                    localStorage.setItem('saved_notifications', JSON.stringify(savedNotifications.slice(0, 20)));
+
+                    // Save the notification id to shown list
                     shownNotifications.push(data.id);
                     localStorage.setItem('shown_notifications', JSON.stringify(shownNotifications));
 
