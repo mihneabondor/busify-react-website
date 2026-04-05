@@ -2,17 +2,18 @@ import '../Orare/Orare.css'
 import '../Stiri/Stiri.css'
 import {useEffect, useState} from "react";
 import Form from "react-bootstrap/Form";
-import BottomBar from "../OtherComponents/BottomBar";
 import {ReactComponent as StireIcon} from '../Images/stireIcon.svg'
 import Card from "react-bootstrap/Card";
-import {ReactComponent as ArrowUpRight} from "../Images/arrow-up-right.svg";
-import {useNavigate} from "react-router-dom";
-import { IoNotificationsOutline, IoInformationCircle, IoWarning, IoAlertCircle, IoCheckmarkCircle } from "react-icons/io5";
+import { IoNotificationsOutline, IoInformationCircle, IoWarning, IoAlertCircle, IoCheckmarkCircle, IoOpenOutline } from "react-icons/io5";
+import {BottomSheet} from 'react-spring-bottom-sheet'
+import 'react-spring-bottom-sheet/dist/style.css';
+import CloseButton from "react-bootstrap/esm/CloseButton";
 
 function Stiri() {
     const [news, setNews] = useState([]);
     const [searchValue, setSearchValue] = useState('');
     const [notifications, setNotifications] = useState([]);
+    const [selectedArticle, setSelectedArticle] = useState(null);
 
     const fetchData = async () => {
         try {
@@ -76,6 +77,7 @@ function Stiri() {
         window.dispatchEvent(new Event('storage'));
     }, [])
 
+    
     return(
         <div className="stiri-container">
             <div className="orare-content-header">
@@ -123,34 +125,67 @@ function Stiri() {
                     <Card key={elem.link} className="text-white mt-3" style={{
                         borderRadius: '10px',
                         display: searchValue === '' || elem.title.toLowerCase().includes(searchValue.toLowerCase()) || elem.description.toLowerCase().includes(searchValue.toLowerCase()) ? 'flex' : 'none'
-                    }} onClick={() => {
-                        window.open(elem.link)
-                    }}>
+                    }} onClick={() => setSelectedArticle(elem)}>
                         <Card.Img src={require(`../Images/ThumbnailsStiri/image${elem.thumbnail}.png`)}
-                                  style={{maxHeight: '25vh', objectFit: "cover", borderRadius: "10px 10px 0 0"}}/>
+                                  style={{maxHeight: '25vh', objectFit: "cover", borderRadius: "10px"}}/>
                         <Card.ImgOverlay style={{
                             background: "rgba(0, 0, 0, 0.5)",
                             backdropFilter: "blur(10px)",
                             height: "min-content",
                             overflow: "hidden"
                         }}>
-                            <div>
+                        <div style={{margin: '-5px'}}>
                                 <Card.Text className="truncate"> {formatRomanianDate(elem.pubDate)} <br/>
                                     <b> {elem.title} </b> </Card.Text>
                             </div>
                         </Card.ImgOverlay>
-                        <Card.Footer
-                            style={{color: "#40464C", display: 'flex', justifyContent: 'center', alignItems: 'center'}}
-                            onClick={() => window.location.href = elem.link}>
-                            <b> Citește articolul </b>
-                            <ArrowUpRight/>
-                        </Card.Footer>
                     </Card>
                 ))}
             </div>
             <br/>
             <br/><br/><br/>
-            {/*<BottomBar/>*/}
+
+            <BottomSheet
+                open={selectedArticle !== null}
+                onDismiss={() => setSelectedArticle(null)}
+                snapPoints={({ maxHeight }) => [maxHeight * 0.95]}
+                header={
+                    selectedArticle && (
+                        <div className="stiri-sheet-header">
+                            <div className="stiri-sheet-header-content">
+                                <span className="stiri-modal-date">{formatRomanianDate(selectedArticle.pubDate)}</span>
+                                <h3 className="stiri-modal-title">{selectedArticle.title}</h3>
+                            </div>
+                            <CloseButton onClick={() => setSelectedArticle(null)} />
+                        </div>
+                    )
+                }
+            >
+                {selectedArticle && (
+                    <div className="stiri-sheet-body">
+                        <img
+                            src={require(`../Images/ThumbnailsStiri/image${selectedArticle.thumbnail}.png`)}
+                            alt={selectedArticle.title}
+                            className="stiri-sheet-image"
+                        />
+                        <div
+                            className="stiri-modal-body"
+                            dangerouslySetInnerHTML={{
+                                __html: selectedArticle.fullContent
+                                    ? selectedArticle.fullContent.replace(/\n/g, '<br/>')
+                                    : selectedArticle.content
+                            }}
+                        />
+                        <button
+                            className="stiri-modal-link"
+                            onClick={() => window.open(selectedArticle.link)}
+                        >
+                            <IoOpenOutline size={18} />
+                            Deschide în browser
+                        </button>
+                    </div>
+                )}
+            </BottomSheet>
         </div>
     )
 }

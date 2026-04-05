@@ -6,10 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Stiri/Stiri 2.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Stiri/Stiri 2.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Stiri/Stiri.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Stiri/Stiri.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Stiri/Stiri.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Stiri/Stiri.js" afterDir="false" />
     </list>
@@ -202,6 +200,9 @@
       <workItem from="1774715416892" duration="217000" />
       <workItem from="1774789406771" duration="716000" />
       <workItem from="1774797682581" duration="2876000" />
+      <workItem from="1775035532768" duration="1434000" />
+      <workItem from="1775063219433" duration="282000" />
+      <workItem from="1775379636964" duration="1689000" />
     </task>
     <servers />
   </component>
