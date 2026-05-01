@@ -277,30 +277,30 @@ function Stiri() {
             </div>
 
             <div className="stiri-body-container">
-                <div className="stiri-body-container-label" style={{justifyContent: "left"}}>
-                    <IoNotificationsOutline style={{width: 20, height: 20}}/>
-                    <b style={{color: '#40464C'}}>Notificări</b>
-                </div>
+                {/*<div className="stiri-body-container-label" style={{justifyContent: "left"}}>*/}
+                {/*    <IoNotificationsOutline style={{width: 20, height: 20}}/>*/}
+                {/*    <b style={{color: '#40464C'}}>Notificări</b>*/}
+                {/*</div>*/}
 
-                {notifications.length === 0 ? (
-                    <p className="notificari-empty">Nu ai notificări</p>
-                ) : (
-                    notifications.map(notif => (
-                        <div key={notif.id} className="notificare-card">
-                            <div className="notificare-icon">
-                                {getNotificationIcon(notif.type)}
-                            </div>
-                            <div className="notificare-content">
-                                <b>{notif.title}</b>
-                                <p>{notif.message}</p>
-                                <small>{formatRelativeTime(notif.receivedAt)}</small>
-                            </div>
-                        </div>
-                    ))
-                )}
+                {/*{notifications.length === 0 ? (*/}
+                {/*    <p className="notificari-empty">Nu ai notificări</p>*/}
+                {/*) : (*/}
+                {/*    notifications.map(notif => (*/}
+                {/*        <div key={notif.id} className="notificare-card">*/}
+                {/*            <div className="notificare-icon">*/}
+                {/*                {getNotificationIcon(notif.type)}*/}
+                {/*            </div>*/}
+                {/*            <div className="notificare-content">*/}
+                {/*                <b>{notif.title}</b>*/}
+                {/*                <p>{notif.message}</p>*/}
+                {/*                <small>{formatRelativeTime(notif.receivedAt)}</small>*/}
+                {/*            </div>*/}
+                {/*        </div>*/}
+                {/*    ))*/}
+                {/*)}*/}
 
                 {/* Evenimente section */}
-                <div className="stiri-body-container-label" style={{marginTop: '24px', justifyContent: 'left'}}>
+                <div className="stiri-body-container-label" style={{justifyContent: 'left'}}>
                     <img src={require('../Images/Logo/bearmenu-logo.png')} alt={''} style={{width: 20, height: 20}}/>
                     <b style={{color: '#40464C', marginLeft: '5px'}}>Evenimente oferite de Bearmenu</b>
                 </div>
@@ -347,11 +347,6 @@ function Stiri() {
                                         <span className="event-badge">
                                             <IoLocationOutline size={14} /> {event.place_name}
                                         </span>
-                                        {event.entry_fee && (
-                                            <span className="event-badge">
-                                                {event.entry_fee === 'free' ? 'Gratis' : event.entry_fee}
-                                            </span>
-                                        )}
                                     </div>
                                     <div className="event-tag-container">
                                         {getPrimaryTags(event, 3).map((tag, idx) => (

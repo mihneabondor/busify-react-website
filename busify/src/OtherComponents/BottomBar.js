@@ -56,8 +56,31 @@ function BottomBar() {
         }
     };
 
+    const checkUnseenEvents = async () => {
+        try {
+            const savedRaw = localStorage.getItem('events_last_time_visited');
+            const lastVisited = savedRaw ? new Date(savedRaw) : new Date(0);
+
+            const res = await fetch('/cluj-events-busify-7d.json');
+            const events = await res.json();
+
+            const eventsDate = new Date(events.from);
+
+            if (eventsDate > lastVisited) {
+                setHasUnseenNotifications(true);
+            } else {
+                setHasUnseenNotifications(false);
+            }
+
+        } catch (e) {
+            console.error(e);
+            setHasUnseenNotifications(false);
+        }
+    };
+
     useEffect(() => {
         checkUnseenNotifications();
+        checkUnseenEvents();
 
         window.addEventListener('storage', checkUnseenNotifications);
         window.addEventListener('focus', checkUnseenNotifications);
@@ -155,6 +178,12 @@ function BottomBar() {
             selected={selectedIndex >= 0 ? selectedIndex : 0}
             onItemClick={(item, index) => {
                 sessionStorage.setItem("navigation_last_page", location.pathname);
+
+                // pentru events
+                if(location.pathname === '/stiri') {
+                    localStorage.setItem('events_last_time_visited', new Date().toISOString());
+                }
+
                 nav(item.page, { replace: false });
             }}
             disableSelection

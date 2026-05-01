@@ -5,8 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/busify/public/cluj-events-busify-7d.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/public/cluj-events-busify-7d.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/public/cluj-events-busify-7d.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/BottomBar.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Stiri/Stiri.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Stiri/Stiri.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Stiri/Stiri.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Stiri/Stiri.js" afterDir="false" />
     </list>
@@ -58,8 +59,8 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/busify/src/Images/Logo" />
       <recent name="$PROJECT_DIR$/busify/public" />
+      <recent name="$PROJECT_DIR$/busify/src/Images/Logo" />
       <recent name="$PROJECT_DIR$/busify/src/Images" />
     </key>
   </component>
@@ -208,6 +209,8 @@
       <workItem from="1776171502042" duration="8242000" />
       <workItem from="1776532443478" duration="3759000" />
       <workItem from="1777297561741" duration="7324000" />
+      <workItem from="1777548611998" duration="569000" />
+      <workItem from="1777632076973" duration="2278000" />
     </task>
     <servers />
   </component>
