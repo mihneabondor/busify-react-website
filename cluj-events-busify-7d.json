@@ -1,0 +1,1362 @@
+{
+  "source": "BearMenu",
+  "source_url": "https://bear.menu/events",
+  "location": "cluj-napoca",
+  "from": "2026-04-29T00:00:00+03:00",
+  "to": "2026-05-06T00:00:00+03:00",
+  "generated_at": "2026-04-29T21:38:02+03:00",
+  "event_count": 46,
+  "events": [
+    {
+      "title": "Costel Biju - Golden Ball Awards la Club NOA",
+      "description": "Costel Biju revine la Club NOA pe 1 mai pentru o noapte legendară în cadrul evenimentului Golden Ball Awards.",
+      "location": "Club NOA",
+      "place_name": "NOA Club",
+      "place_lat": 46.7568631,
+      "place_lon": 23.594412199999997,
+      "starts_at": "2026-05-01T22:00:00+03:00",
+      "ends_at": "2026-05-02T05:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3875219951472629063",
+      "event_concept_slug": "1-mai",
+      "event_concept_title": "1 Mai",
+      "tags": [
+        {
+          "slug": "live",
+          "axis": "activity",
+          "name": "Live"
+        }
+      ]
+    },
+    {
+      "title": "SANTSAT Afterparty la Atelier Café",
+      "description": "O petrecere de 1 Mai ce începe pe terasă și continuă în club cu seturi de la Mareeenà, of__mai, cultatum, Boda, Centrifugazzi și Hani.",
+      "location": "Atelier Café",
+      "place_name": "Atelier Café",
+      "place_lat": 46.7697576,
+      "place_lon": 23.5876512,
+      "starts_at": "2026-05-01T20:00:00+03:00",
+      "ends_at": "2026-05-02T05:00:00+03:00",
+      "entry_fee": "49.00 lei",
+      "image_url": "https://cdn.bear.menu/events/3882250196642544078",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "electronic",
+          "axis": "genre",
+          "name": "Electronic"
+        },
+        {
+          "slug": "holiday",
+          "axis": "occasion",
+          "name": "Holiday"
+        },
+        {
+          "slug": "terrace",
+          "axis": "setting",
+          "name": "Terrace"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "Crying Out Loud Act 3 x Supernova",
+      "description": "Eveniment de muzică electronică cu Supernova în lineup la The Matter pe 30 aprilie.",
+      "location": "The Matter",
+      "place_name": "MATTER",
+      "place_lat": 46.7680736,
+      "place_lon": 23.5902744,
+      "starts_at": "2026-04-30T20:00:00+03:00",
+      "ends_at": "2026-05-01T04:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3875198399645779138",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "electronic",
+          "axis": "genre",
+          "name": "Electronic"
+        }
+      ]
+    },
+    {
+      "title": "Marko Glass x Bvcovia - Bando Tour",
+      "description": "Marko Glass și Bvcovia vin la Matter Club în Cluj pentru un concert trap în cadrul turneului Bando Tour.",
+      "location": "Matter Club, Cluj",
+      "place_name": "MATTER",
+      "place_lat": 46.7680736,
+      "place_lon": 23.5902744,
+      "starts_at": "2026-05-01T22:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3866496951244302193",
+      "tags": [
+        {
+          "slug": "live",
+          "axis": "activity",
+          "name": "Live"
+        },
+        {
+          "slug": "hip-hop",
+          "axis": "genre",
+          "name": "Hip-Hop"
+        }
+      ]
+    },
+    {
+      "title": "Slam Poetry - Open Mic la Bulgakov",
+      "description": "O seară de slam poetry și open mic organizată de Nest la Café Bulgakov, unde oricine poate urca pe scenă.",
+      "location": "Café Bulgakov",
+      "place_name": "Café Bulgakov",
+      "place_lat": 46.7671968,
+      "place_lon": 23.588068,
+      "starts_at": "2026-04-30T19:00:00+03:00",
+      "ends_at": "2026-04-30T23:59:59+03:00",
+      "entry_fee": "free",
+      "image_url": "https://cdn.bear.menu/events/3881783913811066509",
+      "tags": [
+        {
+          "slug": "workshop",
+          "axis": "activity",
+          "name": "Workshop"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "Quiz Night & Karaoke Night",
+      "description": "O seară care îmbină un quiz distractiv cu o sesiune de karaoke.",
+      "location": "Flying Circus",
+      "place_name": "Flying Circus",
+      "place_lat": 46.7705937,
+      "place_lon": 23.5886298,
+      "starts_at": "2026-04-29T20:00:00+03:00",
+      "ends_at": "2026-04-30T04:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884528977054562019",
+      "tags": [
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "games",
+          "axis": "activity",
+          "name": "Games"
+        }
+      ]
+    },
+    {
+      "title": "Bad Bunny Party - Spanish Hits",
+      "description": "O noapte plină de hituri spaniole și petrecere tematică Bad Bunny.",
+      "location": "Flying Circus",
+      "place_name": "Flying Circus",
+      "place_lat": 46.7705937,
+      "place_lon": 23.5886298,
+      "starts_at": "2026-04-30T22:00:00+03:00",
+      "ends_at": "2026-05-01T05:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884528977054562019",
+      "tags": [
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "latino",
+          "axis": "genre",
+          "name": "Latino"
+        }
+      ]
+    },
+    {
+      "title": "Guilty Pleasure Party",
+      "description": "Petrecere Guilty Pleasure cu melodiile pe care le asculți în duș.",
+      "location": "Flying Circus",
+      "place_name": "Flying Circus",
+      "place_lat": 46.7705937,
+      "place_lon": 23.5886298,
+      "starts_at": "2026-05-01T22:00:00+03:00",
+      "ends_at": "2026-05-02T05:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884528977054562019",
+      "tags": [
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "pop",
+          "axis": "genre",
+          "name": "Pop"
+        }
+      ]
+    },
+    {
+      "title": "Everything 90s - Retro Party",
+      "description": "Petrecere retro cu cele mai bune hituri din anii '90.",
+      "location": "Flying Circus",
+      "place_name": "Flying Circus",
+      "place_lat": 46.7705937,
+      "place_lon": 23.5886298,
+      "starts_at": "2026-05-02T22:00:00+03:00",
+      "ends_at": "2026-05-03T05:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884528977054562019",
+      "tags": [
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "retro",
+          "axis": "genre",
+          "name": "Retro"
+        }
+      ]
+    },
+    {
+      "title": "Karaoke Night",
+      "description": "Seară săptămânală de karaoke la Flying Circus.",
+      "location": "Flying Circus",
+      "place_name": "Flying Circus",
+      "place_lat": 46.7705937,
+      "place_lon": 23.5886298,
+      "starts_at": "2026-05-03T22:00:00+03:00",
+      "ends_at": "2026-05-04T04:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884528977054562019",
+      "tags": [
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        }
+      ]
+    },
+    {
+      "title": "Broke but Sexy - International Student Party",
+      "description": "Petrecerea pentru studenți internaționali revine cu o nouă ediție.",
+      "location": "Flying Circus",
+      "place_name": "Flying Circus",
+      "place_lat": 46.7705937,
+      "place_lon": 23.5886298,
+      "starts_at": "2026-05-04T22:00:00+03:00",
+      "ends_at": "2026-05-05T05:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884528977054562019",
+      "tags": [
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        },
+        {
+          "slug": "student",
+          "axis": "audience",
+          "name": "Student"
+        }
+      ]
+    },
+    {
+      "title": "She Mode Activated la After Eight",
+      "description": "O seară dedicată fetelor cu muzică mixată de DJ Underr, intrare liberă pentru doamne și ofertă specială la Vodka Orange.",
+      "location": "After Eight",
+      "place_name": "After Eight",
+      "place_lat": 46.7726607,
+      "place_lon": 23.5931641,
+      "starts_at": "2026-04-29T23:00:00+03:00",
+      "ends_at": "2026-04-30T05:00:00+03:00",
+      "entry_fee": "30.00 lei",
+      "image_url": "https://cdn.bear.menu/events/3885398679662407471",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "ladies",
+          "axis": "audience",
+          "name": "Ladies"
+        }
+      ]
+    },
+    {
+      "title": "KNOX la Braseria Locală",
+      "description": "O seară cu KNOX la Braseria Locală.",
+      "location": "Braseria Locală",
+      "place_name": "Braseria Locală",
+      "place_lat": 46.770751999999995,
+      "place_lon": 23.5877196,
+      "starts_at": "2026-04-30T20:00:00+03:00",
+      "ends_at": "2026-05-01T04:00:00+03:00",
+      "entry_fee": "free",
+      "image_url": "https://cdn.bear.menu/events/3885440682613865789",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "iPAD CHAOS la Braseria Locală",
+      "description": "Sărbătorim 1 Mai cu iPAD CHAOS la Braseria Locală.",
+      "location": "Braseria Locală",
+      "place_name": "Braseria Locală",
+      "place_lat": 46.770751999999995,
+      "place_lon": 23.5877196,
+      "starts_at": "2026-05-01T20:00:00+03:00",
+      "ends_at": "2026-05-02T04:00:00+03:00",
+      "entry_fee": "free",
+      "image_url": "https://cdn.bear.menu/events/3885440682613865789",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "holiday",
+          "axis": "occasion",
+          "name": "Holiday"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "CEMI la Braseria Locală",
+      "description": "O seară cu CEMI la Braseria Locală.",
+      "location": "Braseria Locală",
+      "place_name": "Braseria Locală",
+      "place_lat": 46.770751999999995,
+      "place_lon": 23.5877196,
+      "starts_at": "2026-05-02T20:00:00+03:00",
+      "ends_at": "2026-05-03T04:00:00+03:00",
+      "entry_fee": "free",
+      "image_url": "https://cdn.bear.menu/events/3885440682613865789",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "Stand-up Comedy Show la Shto Bar",
+      "description": "Spectacol de stand-up comedy cu Beni Vatavu, Traian Dobra, George Mesaroş şi Token Paddy.",
+      "location": "Shto Bar, Memorandumului 6, Cluj-Napoca",
+      "place_name": "Shto Bar",
+      "place_lat": 46.770048,
+      "place_lon": 23.5877002,
+      "starts_at": "2026-05-03T20:00:00+03:00",
+      "ends_at": "2026-05-03T22:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3876471600237294643",
+      "tags": [
+        {
+          "slug": "comedy",
+          "axis": "activity",
+          "name": "Comedy"
+        }
+      ]
+    },
+    {
+      "title": "Cafea în grădină de 1 Mai",
+      "description": "Vă invităm să bem cafeaua împreună în grădina GOK cu ocazia zilei de 1 Mai.",
+      "location": "GOK",
+      "place_name": "GOK",
+      "place_lat": 46.763708099999995,
+      "place_lon": 23.6084945,
+      "starts_at": "2026-05-01T12:00:00+03:00",
+      "ends_at": "2026-05-01T18:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3885197178159282804",
+      "event_concept_slug": "1-mai",
+      "event_concept_title": "1 Mai",
+      "tags": [
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        },
+        {
+          "slug": "holiday",
+          "axis": "occasion",
+          "name": "Holiday"
+        },
+        {
+          "slug": "garden",
+          "axis": "setting",
+          "name": "Garden"
+        }
+      ]
+    },
+    {
+      "title": "Husa & Zeyada live la ukyo X",
+      "description": "Duo-ul electronic Husa & Zeyada aduce un mix de bedroom pop și deep house live la ukyo X, cu un warm-up de Vlademir.",
+      "location": "ukyo X",
+      "place_name": "ukyo X",
+      "place_lat": 46.768456,
+      "place_lon": 23.590154700000003,
+      "starts_at": "2026-05-02T19:00:00+03:00",
+      "ends_at": "2026-05-03T02:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3885470398360113497",
+      "tags": [
+        {
+          "slug": "live",
+          "axis": "activity",
+          "name": "Live"
+        },
+        {
+          "slug": "pop",
+          "axis": "genre",
+          "name": "Pop"
+        },
+        {
+          "slug": "electronic",
+          "axis": "genre",
+          "name": "Electronic"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "The Time Machine",
+      "description": "O călătorie muzicală prin decenii cu DJ Kamil și MC Shuthy, de la hiturile anilor '80 până în prezent.",
+      "location": "After Eight, Cluj-Napoca",
+      "place_name": "After Eight",
+      "place_lat": 46.7726607,
+      "place_lon": 23.5931641,
+      "starts_at": "2026-05-02T23:00:00+03:00",
+      "ends_at": "2026-05-03T05:00:00+03:00",
+      "entry_fee": "30.00 lei",
+      "image_url": "https://cdn.bear.menu/events/3884007150104392112",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "pop",
+          "axis": "genre",
+          "name": "Pop"
+        },
+        {
+          "slug": "retro",
+          "axis": "genre",
+          "name": "Retro"
+        },
+        {
+          "slug": "ladies",
+          "axis": "audience",
+          "name": "Ladies"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "AKOS + Digital Love la Iconic Garden",
+      "description": "Seturi de DJ cu AKOS și Digital Love începând cu ora 15:00 la Iconic Garden.",
+      "location": "Iconic Garden - Food & Drinks",
+      "place_name": "Iconic Garden - Food & Drinks",
+      "place_lat": 46.7725144,
+      "place_lon": 23.625341499999998,
+      "starts_at": "2026-05-02T15:00:00+03:00",
+      "ends_at": "2026-05-02T23:59:59+03:00",
+      "bookings": "+40755488076",
+      "image_url": "https://cdn.bear.menu/events/3885443343891361399",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "electronic",
+          "axis": "genre",
+          "name": "Electronic"
+        },
+        {
+          "slug": "terrace",
+          "axis": "setting",
+          "name": "Terrace"
+        },
+        {
+          "slug": "garden",
+          "axis": "setting",
+          "name": "Garden"
+        }
+      ]
+    },
+    {
+      "title": "After Dinner Party cu Digitalove & Rydm",
+      "description": "O petrecere de seară cu Digitalove și Rydm la Form Café, continuând energia de 1 Mai.",
+      "location": "Form Café",
+      "place_name": "Form Café",
+      "place_lat": 46.7723591,
+      "place_lon": 23.5873022,
+      "starts_at": "2026-05-01T20:00:00+03:00",
+      "ends_at": "2026-05-02T04:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3881556412195318058",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "food",
+          "axis": "activity",
+          "name": "Food"
+        },
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "Robert Irimies la Iconic Garden",
+      "description": "Artistul local Robert Irimies mixează live în cadrul seriei More Local Artists la Iconic Garden.",
+      "location": "Iconic Garden - Food & Drinks",
+      "place_name": "Iconic Garden - Food & Drinks",
+      "place_lat": 46.7725144,
+      "place_lon": 23.625341499999998,
+      "starts_at": "2026-05-01T18:00:00+03:00",
+      "entry_fee": "free",
+      "bookings": "+40755488076",
+      "image_url": "https://cdn.bear.menu/events/3881686722979596061",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "food",
+          "axis": "activity",
+          "name": "Food"
+        },
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        },
+        {
+          "slug": "garden",
+          "axis": "setting",
+          "name": "Garden"
+        }
+      ]
+    },
+    {
+      "title": "FORM Park Weekend Lounge cu DJ Magda",
+      "description": "O zi de relaxare în parcul I.L. Caragiale cu muzică bună, beanbag-uri și un set de DJ Magda.",
+      "location": "I.L. Caragiale Park",
+      "place_name": "Form Café",
+      "place_lat": 46.7723591,
+      "place_lon": 23.5873022,
+      "starts_at": "2026-05-01T17:00:00+03:00",
+      "ends_at": "2026-05-01T22:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3882350645491706827",
+      "tags": [
+        {
+          "slug": "live",
+          "axis": "activity",
+          "name": "Live"
+        },
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "family",
+          "axis": "audience",
+          "name": "Family"
+        },
+        {
+          "slug": "garden",
+          "axis": "setting",
+          "name": "Garden"
+        }
+      ]
+    },
+    {
+      "title": "Malex la Booha Bar",
+      "description": "Seturi eclectice care îmbină energia hip-hop, funk, house și jazz.",
+      "location": "Booha Bar",
+      "place_name": "Booha Bar",
+      "place_lat": 46.7637291,
+      "place_lon": 23.5772798,
+      "starts_at": "2026-05-01T23:00:00+03:00",
+      "ends_at": "2026-05-02T03:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884819617617883439",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "electronic",
+          "axis": "genre",
+          "name": "Electronic"
+        },
+        {
+          "slug": "jazz",
+          "axis": "genre",
+          "name": "Jazz"
+        },
+        {
+          "slug": "hip-hop",
+          "axis": "genre",
+          "name": "Hip-Hop"
+        }
+      ]
+    },
+    {
+      "title": "Bumtz B2B Viron la Booha Bar",
+      "description": "Seturi groovy, dinamice și funky, gata să surprindă ringul de dans.",
+      "location": "Booha Bar",
+      "place_name": "Booha Bar",
+      "place_lat": 46.7637291,
+      "place_lon": 23.5772798,
+      "starts_at": "2026-05-02T23:00:00+03:00",
+      "ends_at": "2026-05-03T03:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884819617617883439",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        }
+      ]
+    },
+    {
+      "title": "1 Mai Muncitoresc - Kitsch Party cu DA'CRISS",
+      "description": "O petrecere kitsch de 1 Mai cu muzică din toate genurile mixată de DA'CRISS și oferte speciale pentru fete și studenți.",
+      "location": "After Eight",
+      "place_name": "After Eight",
+      "place_lat": 46.7726607,
+      "place_lon": 23.5931641,
+      "starts_at": "2026-05-01T20:00:00+03:00",
+      "entry_fee": "30.00 lei",
+      "image_url": "https://cdn.bear.menu/events/3880382675823666186",
+      "event_concept_slug": "1-mai",
+      "event_concept_title": "1 Mai",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "pop",
+          "axis": "genre",
+          "name": "Pop"
+        },
+        {
+          "slug": "student",
+          "axis": "audience",
+          "name": "Student"
+        },
+        {
+          "slug": "ladies",
+          "axis": "audience",
+          "name": "Ladies"
+        },
+        {
+          "slug": "holiday",
+          "axis": "occasion",
+          "name": "Holiday"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "1 Mai la AMAR cu Draosmusic",
+      "description": "Sărbătorește 1 Mai cu un DJ live set semnat de Draosmusic la restaurantul AMAR.",
+      "location": "AMAR, Strada Napoca, Nr. 8",
+      "place_name": "AMAR",
+      "place_lat": 46.7682188,
+      "place_lon": 23.5883315,
+      "starts_at": "2026-05-01T19:00:00+03:00",
+      "ends_at": "2026-05-01T23:59:59+03:00",
+      "bookings": "+40746080099",
+      "image_url": "https://cdn.bear.menu/events/3884624835876037044",
+      "event_concept_slug": "1-mai",
+      "event_concept_title": "1 Mai",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "food",
+          "axis": "activity",
+          "name": "Food"
+        },
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "Community Party cu LSSV la Plan B",
+      "description": "O petrecere dedicată comunității și studenților, organizată la Plan B pe 30 aprilie.",
+      "location": "Plan B",
+      "place_name": "Plan B",
+      "place_lat": 46.76388619999999,
+      "place_lon": 23.5767899,
+      "starts_at": "2026-04-30T20:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3885265956943728356",
+      "tags": [
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "student",
+          "axis": "audience",
+          "name": "Student"
+        }
+      ]
+    },
+    {
+      "title": "Catalin V la Plan B",
+      "description": "Petrecere cu Catalin V la Plan B pentru weekendul de 1 Mai.",
+      "location": "Plan B",
+      "place_name": "Plan B",
+      "place_lat": 46.76388619999999,
+      "place_lon": 23.5767899,
+      "starts_at": "2026-05-01T20:00:00+03:00",
+      "ends_at": "2026-05-02T04:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884595967706329499",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "ladies",
+          "axis": "audience",
+          "name": "Ladies"
+        }
+      ]
+    },
+    {
+      "title": "Toni Maier la Plan B",
+      "description": "Sâmbătă seara continuă distracția la Plan B cu Toni Maier.",
+      "location": "Plan B",
+      "place_name": "Plan B",
+      "place_lat": 46.76388619999999,
+      "place_lon": 23.5767899,
+      "starts_at": "2026-05-02T20:00:00+03:00",
+      "ends_at": "2026-05-03T04:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884595967706329499",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "ladies",
+          "axis": "audience",
+          "name": "Ladies"
+        }
+      ]
+    },
+    {
+      "title": "Warm up pentru 1 Mai cu Varobe",
+      "description": "Petrecere de încălzire pentru 1 Mai cu un set DJ susținut de Varobe la Cafe Solas.",
+      "location": "Cafe Solas, Piezisa",
+      "place_name": "Cafe Solas",
+      "place_lat": 46.7638146,
+      "place_lon": 23.5767623,
+      "starts_at": "2026-04-30T20:00:00+03:00",
+      "ends_at": "2026-05-01T03:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3885338068466223596",
+      "event_concept_slug": "1-mai",
+      "event_concept_title": "1 Mai",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "electronic",
+          "axis": "genre",
+          "name": "Electronic"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "Uno de Mayo la Cimbru",
+      "description": "Sărbătorim 1 Mai cu mici de la Prime Beef, cartofi prăjiți și vin spumant Carassia.",
+      "location": "Cimbru Restaurant",
+      "place_name": "Cimbru Restaurant",
+      "place_lat": 46.7790123,
+      "place_lon": 23.5891067,
+      "starts_at": "2026-05-01T12:00:00+03:00",
+      "ends_at": "2026-05-01T22:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884704833760735052",
+      "event_concept_slug": "1-mai",
+      "event_concept_title": "1 Mai",
+      "tags": [
+        {
+          "slug": "food",
+          "axis": "activity",
+          "name": "Food"
+        },
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        }
+      ]
+    },
+    {
+      "title": "Babylon Night",
+      "description": "Petrecere cu muzică Balkan și Latino mixată de DJ Antonio la Obsession Social Bar & Lounge.",
+      "location": "Obsession Social Bar & Lounge, Bd. Eroilor 9, Cluj-Napoca",
+      "place_name": "Obsession Social Bar & Lounge",
+      "place_lat": 46.769747599999995,
+      "place_lon": 23.592053699999997,
+      "starts_at": "2026-04-29T21:00:00+03:00",
+      "ends_at": "2026-04-30T00:30:00+03:00",
+      "entry_fee": "20.00 lei",
+      "bookings": "+40786489013",
+      "image_url": "https://cdn.bear.menu/events/3885324477961660204",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "latino",
+          "axis": "genre",
+          "name": "Latino"
+        },
+        {
+          "slug": "ladies",
+          "axis": "audience",
+          "name": "Ladies"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "Formula 1: Marele Premiu din Miami - Sprint și Calificări",
+      "description": "Urmărește sesiunile de sprint de la 19:00 și calificările de la 23:00 pentru Marele Premiu din Miami în direct la Blériot Cafe.",
+      "location": "Blériot Cafe",
+      "place_name": "Blériot",
+      "place_lat": 46.7712806,
+      "place_lon": 23.5919391,
+      "starts_at": "2026-05-02T19:00:00+03:00",
+      "ends_at": "2026-05-03T01:00:00+03:00",
+      "bookings": "+40758350625",
+      "image_url": "https://cdn.bear.menu/events/3884405089007836652",
+      "tags": [
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        },
+        {
+          "slug": "sports",
+          "axis": "activity",
+          "name": "Sports"
+        }
+      ]
+    },
+    {
+      "title": "Formula 1: Marele Premiu din Miami - Cursa",
+      "description": "Vino să urmărești cursa Marelui Premiu din Miami în direct la Blériot Cafe, începând cu ora 23:00.",
+      "location": "Blériot Cafe",
+      "place_name": "Blériot",
+      "place_lat": 46.7712806,
+      "place_lon": 23.5919391,
+      "starts_at": "2026-05-03T23:00:00+03:00",
+      "ends_at": "2026-05-04T01:00:00+03:00",
+      "bookings": "+40758350625",
+      "image_url": "https://cdn.bear.menu/events/3884405089007836652",
+      "tags": [
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        },
+        {
+          "slug": "sports",
+          "axis": "activity",
+          "name": "Sports"
+        }
+      ]
+    },
+    {
+      "title": "Weekend de 1 Mai la Eratto",
+      "description": "Sărbătorește weekendul de 1 Mai cu un meniu românesc special și bere gratis între orele 12:00 și 17:00.",
+      "location": "Eratto, Str. Făgetului nr. 74",
+      "place_name": "Eratto Restaurant",
+      "place_lat": 46.7251457,
+      "place_lon": 23.5798925,
+      "starts_at": "2026-05-01T12:00:00+03:00",
+      "ends_at": "2026-05-03T22:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3880748453357997043",
+      "event_concept_slug": "1-mai",
+      "event_concept_title": "1 Mai",
+      "tags": [
+        {
+          "slug": "food",
+          "axis": "activity",
+          "name": "Food"
+        },
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        },
+        {
+          "slug": "holiday",
+          "axis": "occasion",
+          "name": "Holiday"
+        },
+        {
+          "slug": "terrace",
+          "axis": "setting",
+          "name": "Terrace"
+        }
+      ]
+    },
+    {
+      "title": "Special de 1 Mai: Un Mic Taco",
+      "description": "O fuziune între street food și mici, disponibilă special de 1 Mai la Form Café.",
+      "location": "Form Café",
+      "place_name": "Form Café",
+      "place_lat": 46.7723591,
+      "place_lon": 23.5873022,
+      "starts_at": "2026-05-01T12:00:00+03:00",
+      "ends_at": "2026-05-03T22:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3885443734624316745",
+      "event_concept_slug": "1-mai",
+      "event_concept_title": "1 Mai",
+      "tags": [
+        {
+          "slug": "food",
+          "axis": "activity",
+          "name": "Food"
+        },
+        {
+          "slug": "holiday",
+          "axis": "occasion",
+          "name": "Holiday"
+        }
+      ]
+    },
+    {
+      "title": "After Dark DJ Night",
+      "description": "O seară de vineri specială cu DJ live și cină în cadrul evenimentului After Dark la Eratto.",
+      "location": "Eratto, Str. Făgetului nr. 74",
+      "place_name": "Eratto Restaurant",
+      "place_lat": 46.7251457,
+      "place_lon": 23.5798925,
+      "starts_at": "2026-05-01T20:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3880748453357997043",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "food",
+          "axis": "activity",
+          "name": "Food"
+        },
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "Irina Rimes at Euphoria Music Hall",
+      "description": "Live concert by the popular Romanian singer Irina Rimes.",
+      "location": "Euphoria Music Hall",
+      "place_name": "Fabrica de Bere",
+      "place_lat": 46.7629399,
+      "place_lon": 23.5714383,
+      "starts_at": "2026-05-02T20:00:00+03:00",
+      "tickets": "https://livetickets.ro/evenimente/euphoria-music-hall-1",
+      "image_url": "https://cdn.bear.menu/events/3851976770807909160",
+      "tags": [
+        {
+          "slug": "live",
+          "axis": "activity",
+          "name": "Live"
+        },
+        {
+          "slug": "pop",
+          "axis": "genre",
+          "name": "Pop"
+        }
+      ]
+    },
+    {
+      "title": "Osasuna vs Barcelona la Blériot",
+      "description": "Vizionare live a meciului de fotbal Osasuna vs Barcelona din LaLiga.",
+      "location": "Blériot",
+      "place_name": "Blériot",
+      "place_lat": 46.7712806,
+      "place_lon": 23.5919391,
+      "starts_at": "2026-05-02T22:00:00+03:00",
+      "ends_at": "2026-05-03T00:30:00+03:00",
+      "bookings": "+40758350625",
+      "image_url": "https://cdn.bear.menu/events/3884388592214626332",
+      "tags": [
+        {
+          "slug": "sports",
+          "axis": "activity",
+          "name": "Sports"
+        }
+      ]
+    },
+    {
+      "title": "Drinks Come True: Drink Your Vegetables",
+      "description": "O seară dedicată cocktailurilor de autor pe bază de legume la Visuin.",
+      "location": "Visuin",
+      "place_name": "Visuin",
+      "place_lat": 46.7677483,
+      "place_lon": 23.589898,
+      "starts_at": "2026-04-30T19:00:00+03:00",
+      "ends_at": "2026-04-30T23:59:59+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884695477719703869",
+      "tags": [
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "Afro Latino Fiesta – Una Noche in Rio la After Eight",
+      "description": "O noapte de petrecere cu ritmuri de Brazilian Funk, Afro, Dancehall, Shatta și Reggaeton, inspirată de festivalurile din Rio.",
+      "location": "After Eight",
+      "place_name": "After Eight",
+      "place_lat": 46.7726607,
+      "place_lon": 23.5931641,
+      "starts_at": "2026-04-30T20:00:00+03:00",
+      "ends_at": "2026-05-01T05:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3884735835001712021",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "latino",
+          "axis": "genre",
+          "name": "Latino"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "Thirsty Thursday la Samsara",
+      "description": "O seară de joi cu muzică live și vinuri alese de la Villa Vinea și Crama Serve.",
+      "location": "Samsara, Cluj",
+      "place_name": "Samsara Foodhouse",
+      "place_lat": 46.7708278,
+      "place_lon": 23.583632299999998,
+      "starts_at": "2026-04-30T20:00:00+03:00",
+      "ends_at": "2026-04-30T23:59:59+03:00",
+      "image_url": "https://cdn.bear.menu/events/3865081588577226119",
+      "tags": [
+        {
+          "slug": "live",
+          "axis": "activity",
+          "name": "Live"
+        },
+        {
+          "slug": "drinks",
+          "axis": "activity",
+          "name": "Drinks"
+        }
+      ]
+    },
+    {
+      "title": "All You Can Eat Garden Grill la Casa Numaà",
+      "description": "O zi de răsfăț cu grătar în grădină, preparate gătite live, cocktailuri și muzică bună.",
+      "location": "Casa Numaà, Piața Unirii nr. 24, Cluj-Napoca",
+      "place_name": "CASA NUMAÀ - Restaurant Cluj Napoca",
+      "place_lat": 46.770884099999996,
+      "place_lon": 23.589130599999997,
+      "starts_at": "2026-05-01T20:00:00+03:00",
+      "ends_at": "2026-05-01T23:59:59+03:00",
+      "entry_fee": "188.00 lei",
+      "bookings": "+40751102070",
+      "image_url": "https://cdn.bear.menu/events/3878145484351359113",
+      "event_concept_slug": "1-mai",
+      "event_concept_title": "1 Mai",
+      "tags": [
+        {
+          "slug": "food",
+          "axis": "activity",
+          "name": "Food"
+        },
+        {
+          "slug": "terrace",
+          "axis": "setting",
+          "name": "Terrace"
+        },
+        {
+          "slug": "garden",
+          "axis": "setting",
+          "name": "Garden"
+        }
+      ]
+    },
+    {
+      "title": "Basarabian Party cu DJ Artiom",
+      "description": "O petrecere basarabeană plină de energie și ritmuri antrenante alături de DJ Artiom la The MATTER.",
+      "location": "The MATTER",
+      "place_name": "MATTER",
+      "place_lat": 46.7680736,
+      "place_lon": 23.5902744,
+      "starts_at": "2026-05-02T23:00:00+03:00",
+      "ends_at": "2026-05-03T05:00:00+03:00",
+      "image_url": "https://cdn.bear.menu/events/3883224008879797804",
+      "tags": [
+        {
+          "slug": "dj",
+          "axis": "activity",
+          "name": "DJ"
+        },
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    },
+    {
+      "title": "Y2K Dream la Irish Music Pub",
+      "description": "O petrecere tematică a anilor 2000 cu karaoke, concurs de costume și dans pentru o cauză caritabilă.",
+      "location": "Irish Music Pub",
+      "place_name": "Irish Music Pub",
+      "place_lat": 46.7749988,
+      "place_lon": 23.5870242,
+      "starts_at": "2026-05-04T19:00:00+03:00",
+      "ends_at": "2026-05-05T03:00:00+03:00",
+      "entry_fee": "15.00 lei",
+      "image_url": "https://cdn.bear.menu/events/3884559399792689644",
+      "tags": [
+        {
+          "slug": "party",
+          "axis": "activity",
+          "name": "Party"
+        },
+        {
+          "slug": "games",
+          "axis": "activity",
+          "name": "Games"
+        },
+        {
+          "slug": "retro",
+          "axis": "genre",
+          "name": "Retro"
+        },
+        {
+          "slug": "indoor",
+          "axis": "setting",
+          "name": "Indoor"
+        }
+      ]
+    }
+  ]
+}
