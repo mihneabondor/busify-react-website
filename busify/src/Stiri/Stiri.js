@@ -1,6 +1,6 @@
 import '../Orare/Orare.css'
 import '../Stiri/Stiri.css'
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import Form from "react-bootstrap/Form";
 import {ReactComponent as StireIcon} from '../Images/stireIcon.svg'
 import Card from "react-bootstrap/Card";
@@ -8,6 +8,8 @@ import { IoNotificationsOutline, IoInformationCircle, IoWarning, IoAlertCircle, 
 import {BottomSheet} from 'react-spring-bottom-sheet'
 import 'react-spring-bottom-sheet/dist/style.css';
 import CloseButton from "react-bootstrap/esm/CloseButton";
+import {TbRoute} from "react-icons/tb";
+import {useNavigate} from "react-router";
 
 function Stiri() {
     const [news, setNews] = useState([]);
@@ -25,6 +27,8 @@ function Stiri() {
     const [imageErrors, setImageErrors] = useState({});
     const [showAllEvents, setShowAllEvents] = useState(false);
     const [showAllNews, setShowAllNews] = useState(false);
+
+    const nav = useNavigate();
 
     const fetchData = async () => {
         try {
@@ -261,6 +265,49 @@ function Stiri() {
         setFilteredEvents(filtered);
     }, [events, dateFilter, categoryFilter, locationSearch])
 
+    function normalizeDiacritics(str) {
+        return str
+            .toLowerCase()
+            .replace(/[ăâ]/g, 'a')
+            .replace(/[î]/g,  'i')
+            .replace(/[ș]/g,  's')
+            .replace(/[ț]/g,  't');
+    }
+
+    function applySearchFilter(events, query) {
+        if (!query || query.trim() === '') return events;
+        const q = normalizeDiacritics(query.trim());
+
+        const norm = (str) => normalizeDiacritics(str || '');
+
+        return events.filter(event => {
+            const inTitle = norm(event.title).includes(q);
+            const inDesc  = norm(event.description).includes(q);
+            const inPlace = norm(event.place_name).includes(q);
+            const inTags  = event.tags?.some(tag => norm(tag.name).includes(q));
+
+            const date = parseEventDate(event.starts_at);
+            const weekdayLong = new Intl.DateTimeFormat('ro-RO', { weekday: 'long'                                }).format(date);
+            const dayMonth    = new Intl.DateTimeFormat('ro-RO', { day: 'numeric', month: 'long'                  }).format(date);
+            const fullDate    = new Intl.DateTimeFormat('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+            const numericDate = new Intl.DateTimeFormat('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+            const inDate = [weekdayLong, dayMonth, fullDate, numericDate]
+                .some(s => norm(s).includes(q));
+
+            return inTitle || inDesc || inPlace || inTags || inDate;
+        });
+    }
+
+    useEffect(() => {
+        let filtered = events;
+        filtered = filterByDate(filtered, dateFilter);
+        filtered = filterByCategory(filtered, categoryFilter);
+        filtered = filterByLocation(filtered, locationSearch);
+        filtered = applySearchFilter(filtered, searchValue); // ← add this line
+        filtered = filtered.sort((a, b) => { /* existing sort logic */ });
+        setFilteredEvents(filtered);
+    }, [events, dateFilter, categoryFilter, locationSearch, searchValue]); // ← add searchValue
+
     
     return(
         <div className="stiri-container">
@@ -268,37 +315,15 @@ function Stiri() {
                 <h2><b>Știri</b></h2>
                 <Form style={{width: '90vw'}}>
                     <Form.Group>
-                        <Form.Control type="Text" placeholder="Caută articole de știri" value={searchValue}
+                        <Form.Control type="Text" placeholder="Caută articole de știri, evenimente sau locuri" value={searchValue}
                                       onChange={(e) => {
                                           setSearchValue(e.target.value)
                                       }}/>
                     </Form.Group>
                 </Form>
             </div>
-
+            <div className="stiri-top-border-radius"/>
             <div className="stiri-body-container">
-                {/*<div className="stiri-body-container-label" style={{justifyContent: "left"}}>*/}
-                {/*    <IoNotificationsOutline style={{width: 20, height: 20}}/>*/}
-                {/*    <b style={{color: '#40464C'}}>Notificări</b>*/}
-                {/*</div>*/}
-
-                {/*{notifications.length === 0 ? (*/}
-                {/*    <p className="notificari-empty">Nu ai notificări</p>*/}
-                {/*) : (*/}
-                {/*    notifications.map(notif => (*/}
-                {/*        <div key={notif.id} className="notificare-card">*/}
-                {/*            <div className="notificare-icon">*/}
-                {/*                {getNotificationIcon(notif.type)}*/}
-                {/*            </div>*/}
-                {/*            <div className="notificare-content">*/}
-                {/*                <b>{notif.title}</b>*/}
-                {/*                <p>{notif.message}</p>*/}
-                {/*                <small>{formatRelativeTime(notif.receivedAt)}</small>*/}
-                {/*            </div>*/}
-                {/*        </div>*/}
-                {/*    ))*/}
-                {/*)}*/}
-
                 {/* Evenimente section */}
                 <div className="stiri-body-container-label" style={{justifyContent: 'left'}}>
                     <img src={require('../Images/Logo/bearmenu-logo.png')} alt={''} style={{width: 20, height: 20}}/>
@@ -323,7 +348,7 @@ function Stiri() {
                 ) : (
                     <>
                         {(showAllEvents ? filteredEvents : filteredEvents.slice(0, getTodayEventsCount(filteredEvents) >= 3 ? getTodayEventsCount(filteredEvents) : 5)).map((event, index) => (
-                            <div key={`${event.title}-${index}`} className="event-card" style={{display: hasEventPassed(event.starts_at) ? "none" : "flex"}} onClick={() => setSelectedEvent(event)}>
+                            <div key={`${event.title}-${index}`} className="event-card" style={{display: hasEventPassed(event.starts_at) ? "none" : "block"}} onClick={() => setSelectedEvent(event)}>
                                 {getEventImageSrc(event) ? (
                                     <img
                                         src={getEventImageSrc(event)}
@@ -334,6 +359,7 @@ function Stiri() {
                                 ) : (
                                     <div className="event-card-image event-card-placeholder">
                                         <img src={require('../Images/Logo/bearmenu-logo.png')} alt="Bearmenu" />
+                                        <hr/>
                                     </div>
                                 )}
                                 <div className="event-card-overlay">
@@ -514,9 +540,16 @@ function Stiri() {
                             )}
                             <button
                                 className="event-action-btn secondary"
-                                onClick={() => window.open(`https://bear.menu/ro/cluj-napoca/events`)}
+                                onClick={() => { nav(`/directii?destName=${selectedEvent.place_name}&destLat=${selectedEvent.place_lat}&destLng=${selectedEvent.place_lon}`) }}
                             >
-                                <img src={require('../Images/Logo/bearmenu-logo.png')} style={{width: "25px", height: "25px"}} />
+                                <TbRoute style={{width: "20px", height: "20px"}}/>
+                                Navighează cu Busify
+                            </button>
+                            <button
+                                className="event-action-btn secondary"
+                                onClick={() => window.location.href = `https://bear.menu/ro/cluj-napoca/events`}
+                            >
+                                <img src={require('../Images/Logo/bearmenu-logo.png')} style={{width: "20px", height: "20px"}} />
                                 Vezi pe Bearmenu
                             </button>
                         </div>
@@ -579,7 +612,7 @@ function Stiri() {
                         <div className="event-modal-actions">
                             <button
                                 className="event-action-btn primary"
-                                onClick={() => window.open(selectedArticle.link)}
+                                onClick={() => window.location.href = selectedArticle.link}
                             >
                                 <IoOpenOutline size={18} />
                                 Deschide în browser

@@ -329,7 +329,7 @@ export default function Paywall(props) {
                                 </div>
                             </div>
                             <small style={{color: 'gray'}}>
-                                În curând, donatorii vor putea alege dintr-o varietate de iconițe predefinite cu
+                                Donatorii vor putea alege dintr-o varietate de iconițe predefinite cu
                                 diferite tematici.
                             </small>
                         </div>

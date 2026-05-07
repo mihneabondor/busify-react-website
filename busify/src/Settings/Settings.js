@@ -182,28 +182,6 @@ function Settings() {
                         marginLeft: 'auto'
                     }}/>
                 </Button>
-                <Button variant="undefined" style={{
-                    boxShadow: "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;",
-                    background: 'white',
-                    width: '90vw',
-                    textAlign: 'left',
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center'
-                }} onClick={() => {
-                    window.location.href = "https://www.instagram.com/mihnea.bondor?igsh=bWFtdDJ2bHBpeHM2&utm_source=qr"
-                }}>
-                    <IoLogoInstagram style={{
-                        marginRight: 10,
-                        scale: "1.4",
-                        filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)'
-                    }}/>
-                    <div>Instagram - @mihnea.bondor</div>
-                    <ArrowRight style={{
-                        filter: 'brightness(0) saturate(100%) invert(68%) sepia(98%) saturate(1%) hue-rotate(359deg) brightness(87%) contrast(93%)',
-                        marginLeft: 'auto'
-                    }}/>
-                </Button>
             </ButtonGroup>
 
                 <br/>

@@ -2154,7 +2154,7 @@ function Map() {
     useActivate(() => {
         if(map.current) {
             map.current.resize();
-            if(sessionStorage.getItem("navigation_last_page") === "/setari") {
+            if(sessionStorage.getItem("navigation_last_page").includes("/setari")) {
                 setShownVehicles()
                 resetMarkers()
             }
