@@ -137,7 +137,6 @@ function VehicleHighlight(props) {
     }, [selectedStop, selectedStopRef])
 
     useEffect(() => {
-        console.log('VehicleHighlight show:', isOpen);
         setSheetOpen(isOpen);
     }, [isOpen, setSheetOpen]);
 

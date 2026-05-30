@@ -6,11 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/public/_redirects 2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/public/apple-app-site-association 2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/public/assetlinks 2.json" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/public/cluj-events-busify-7d.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/public/cluj-events-busify-7d.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Directions/Directions.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Directions/Directions.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Paywall/Paywall.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Paywall/Paywall.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Settings/Settings.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Settings/Settings.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/Orare/Favorite.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Orare/Favorite.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/VehicleHighlight.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/VehicleHighlight.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Stiri/Stiri.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Stiri/Stiri.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Stiri/Stiri.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Stiri/Stiri.js" afterDir="false" />
     </list>
@@ -215,7 +218,16 @@
       <workItem from="1777548611998" duration="569000" />
       <workItem from="1777632076973" duration="2478000" />
       <workItem from="1778082414738" duration="3572000" />
-      <workItem from="1778141311485" duration="5141000" />
+      <workItem from="1778141311485" duration="5229000" />
+      <workItem from="1778146615774" duration="442000" />
+      <workItem from="1778402913669" duration="892000" />
+      <workItem from="1778476242899" duration="423000" />
+      <workItem from="1778770391976" duration="180000" />
+      <workItem from="1778917171467" duration="273000" />
+      <workItem from="1779097381614" duration="2020000" />
+      <workItem from="1779291284754" duration="1457000" />
+      <workItem from="1779361712768" duration="658000" />
+      <workItem from="1779639304574" duration="4848000" />
     </task>
     <servers />
   </component>

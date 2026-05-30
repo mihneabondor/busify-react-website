@@ -315,7 +315,7 @@ function Stiri() {
                 <h2><b>Știri</b></h2>
                 <Form style={{width: '90vw'}}>
                     <Form.Group>
-                        <Form.Control type="Text" placeholder="Caută articole de știri, evenimente sau locuri" value={searchValue}
+                        <Form.Control type="Text" placeholder="Caută știri, evenimente, locuri, etc." value={searchValue}
                                       onChange={(e) => {
                                           setSearchValue(e.target.value)
                                       }}/>

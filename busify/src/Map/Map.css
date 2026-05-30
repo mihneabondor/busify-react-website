@@ -11,6 +11,23 @@
     height: calc(100dvh - 60px);
 }
 
+.map-container .mapboxgl-ctrl-bottom-left {
+    display: none;
+}
+
+.map-container .mapboxgl-ctrl-bottom-right {
+    display: none;
+}
+
+.last-update-label {
+    position: absolute;
+    bottom: 66px;
+    left: 8px;
+    color: gray;
+    pointer-events: none;
+    z-index: 100;
+}
+
 .vehicle-marker-teste {
     background: #1976d2;
     color: white;

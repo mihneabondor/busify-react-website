@@ -127,11 +127,12 @@ function Map() {
     // Position history for improved bus stop detection
     // Stores {lat, lng, timestamp, nearestStopId} for voting-based detection
     const positionHistoryRef = useRef([]);
-    const POSITION_HISTORY_SIZE = 10; // Keep last 10 positions (~10 seconds at 1s interval)
 
     const nav = useNavigate();
 
-    // OPTIMIZATION: Cache localStorage values to avoid repeated reads
+    const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
+    const lastUpdateTimeRef = useRef(Date.now());
+
     const localStorageCache = useRef({
         linii_selectate: null,
         iconite: null,
@@ -313,7 +314,7 @@ function Map() {
             // Only show vehicles whose label is in foundLabels
             return !foundLabelsRef.current.includes(vehicle.label);
         }
-        return unique.current.find(elem => elem[0] === vehicle.line)[1] === false;
+        return unique.current.find(elem => elem[0] === vehicle.line)?.[1] === false;
     }
 
     // Offset a [lng, lat] point to the right of the travel direction
@@ -1592,12 +1593,10 @@ function Map() {
                             polylineCoordinates.filter(elem => (polylineCoordinates.indexOf(elem) <= polylineCoordinates.indexOf(closestCoordsBetweenUserPolyline) && polylineCoordinates.indexOf(elem) >= nearestCoordsToVehicleIndex)).forEach(elem => {
                                 bounds.extend(elem);
                             })
-                            console.log("intram in centrating on user")
                         } else {
                             polylineCoordinates.filter(elem => (polylineCoordinates.indexOf(elem) >= nearestCoordsToVehicleIndex)).forEach(elem => {
                                 bounds.extend(elem);
                             })
-                            console.log("nu intram in centrating on user")
                         }
                         const normalPadding = 110
                         const padding= {
@@ -2031,6 +2030,8 @@ function Map() {
         };
 
         if (!loaded && !loadedFirstTime) {
+            lastUpdateTimeRef.current = Date.now();
+            setSecondsSinceUpdate(0);
             // ✅ Initial setup (no diffing here, always run)
             vehicles.current = newVehicles;
 
@@ -2142,6 +2143,8 @@ function Map() {
             }
         } else {
             if (hasChanged()) {
+                lastUpdateTimeRef.current = Date.now();
+                setSecondsSinceUpdate(0);
                 vehicles.current = newVehicles;
                 lastVehiclesRef.current = newVehicles;
                 debouncedUpdateMarker();
@@ -2154,7 +2157,7 @@ function Map() {
     useActivate(() => {
         if(map.current) {
             map.current.resize();
-            if(sessionStorage.getItem("navigation_last_page").includes("/setari")) {
+            if(sessionStorage.getItem("navigation_last_page")?.includes("/setari")) {
                 setShownVehicles()
                 resetMarkers()
             }
@@ -2192,23 +2195,49 @@ function Map() {
     // Track if initial data has been loaded (to avoid processing socket data as "first load")
     const initialDataLoadedRef = useRef(false);
 
-    const connectSocket = (visChange = false) => {
-        if (socket.current) return; // Already connected
+    const connectSocket = () => {
+        if (socket.current?.connected) return;
 
-        socket.current = io('https://busifyserver.onrender.com');
-        // socket.current = io('http://192.168.0.221:3001')
+        // Clean up any existing broken socket first
+        if (socket.current) {
+            socket.current.disconnect();
+            socket.current = null;
+        }
+
+        socket.current = io('https://busifyserver.onrender.com', {
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+        });
+
+        socket.current.on('connect', () => {
+            console.log('Socket connected');
+        });
+
+        socket.current.on('connect_error', (err) => {
+            console.log('Socket connect error:', err.message);
+            // Let socket.io handle retries via reconnection config above
+            // No manual retry needed here
+        });
+
+        socket.current.on('reconnect_failed', () => {
+            // All reconnection attempts exhausted — clean up and let
+            // the next visibilitychange or interval trigger a fresh attempt
+            console.log('Reconnection failed, cleaning up');
+            socket.current = null;
+        });
 
         socket.current.on('allVehicleData', data => {
-            // Socket now only handles updates, not initial load
             socketData(data);
-            setTimeout(() => {
-                checkMarkerVisibility();
-            }, 1500);
+            setTimeout(() => checkMarkerVisibility(), 1500);
         });
 
         socket.current.on('notifications', data => {
             let notificariRamase = JSON.parse(data);
-            notificariRamase = notificariRamase.filter(elem => elem.userId === searchParams.get('notificationUserId'));
+            notificariRamase = notificariRamase.filter(
+                elem => elem.userId === searchParams.get('notificationUserId')
+            );
             localStorage.setItem('scheduledNotifications', JSON.stringify(notificariRamase));
         });
     };
@@ -2216,7 +2245,6 @@ function Map() {
     const prefetchVehicleData = async () => {
         try {
             const data = await fetch('https://busifyserver.onrender.com/allVehicleData').then(r => r.json()).catch(() => [])
-            console.log(data)
             socketData(data)
         } catch {}
     }
@@ -2228,7 +2256,7 @@ function Map() {
             socket.current = null;
         }
         prefetchVehicleData();
-        connectSocket(visChange);
+        connectSocket();
     };
 
     // Called when map is ready - process prefetched vehicle data immediately
@@ -2254,7 +2282,10 @@ function Map() {
             if(map.current) {
                 map.current.resize();
             }
-            handleSocketOns(true)
+
+            setTimeout(() => {
+                handleSocketOns(true);
+            }, 300);
 
             // Re-trigger geolocation on iOS to refresh user heading after returning from background
             // iOS pauses geolocation when app is in background, this ensures heading updates resume
@@ -2373,6 +2404,14 @@ function Map() {
             resetMarkers();
         }
     }, [loaded]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - lastUpdateTimeRef.current) / 1000);
+            setSecondsSinceUpdate(elapsed);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         if (map.current) return;
@@ -2989,6 +3028,9 @@ function Map() {
         <div className='body'>
             <Badges/>
             <div id='map' className="map-container" style={{ visibility: loaded ? 'visible' : 'hidden' }} />
+            <div className="last-update-label">
+                <small>Ultimul update: acum {secondsSinceUpdate}s</small>
+            </div>
             <Spinner animation="grow" variant='dark' className='spinner-container' style={{ visibility: !loaded ? 'visible' : 'hidden' }} />
             <Search
                 show={showSearch}
