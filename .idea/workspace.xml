@@ -6,15 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="ac8ee853-77a9-4117-93ae-d5e83c08825c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/public/_redirects 2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/public/apple-app-site-association 2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/public/assetlinks 2.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/public/cluj-events-busify-7d.json" beforeDir="false" afterPath="$PROJECT_DIR$/busify/public/cluj-events-busify-7d.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Map/Map.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Map/Map.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Orare/Favorite.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Orare/Favorite.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/OtherComponents/VehicleHighlight.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/OtherComponents/VehicleHighlight.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/busify/src/Stiri/Stiri.css" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Stiri/Stiri.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/busify/src/Stiri/Stiri.js" beforeDir="false" afterPath="$PROJECT_DIR$/busify/src/Stiri/Stiri.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -228,6 +219,10 @@
       <workItem from="1779291284754" duration="1457000" />
       <workItem from="1779361712768" duration="658000" />
       <workItem from="1779639304574" duration="4848000" />
+      <workItem from="1780162895426" duration="144000" />
+      <workItem from="1780163055642" duration="153000" />
+      <workItem from="1780163240301" duration="349000" />
+      <workItem from="1780295205540" duration="1889000" />
     </task>
     <servers />
   </component>

@@ -41,7 +41,7 @@ function Stiri() {
 
     const fetchEvents = async () => {
         try {
-            const response = await fetch('/cluj-events-busify-7d.json');
+            const response = await fetch('https://server.busify.ro/events');
             const data = await response.json();
             setEvents(data.events || []);
             setFilteredEvents(data.events || []);
@@ -327,23 +327,13 @@ function Stiri() {
                 {/* Evenimente section */}
                 <div className="stiri-body-container-label" style={{justifyContent: 'left'}}>
                     <img src={require('../Images/Logo/bearmenu-logo.png')} alt={''} style={{width: 20, height: 20}}/>
-                    <b style={{color: '#40464C', marginLeft: '5px'}}>Evenimente oferite de Bearmenu</b>
+                    <b style={{color: '#40464C', marginLeft: '5px'}}>Evenimente oferite de BearMenu</b>
                 </div>
 
                 {/* Event Cards */}
                 {filteredEvents.length === 0 ? (
                     <div className="events-empty-state">
-                        <p>Nu am găsit evenimente cu filtrele selectate.</p>
-                        <button
-                            onClick={() => {
-                                setDateFilter('all');
-                                setCategoryFilter('all');
-                                setLocationSearch('');
-                            }}
-                            className="reset-filters-btn"
-                        >
-                            Resetează filtrele
-                        </button>
+                        <p>Nu am găsit evenimente.</p>
                     </div>
                 ) : (
                     <>
